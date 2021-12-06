@@ -169,48 +169,55 @@ getopts: for (let i = 0; i < argv.length; i++) {
   }
 }
 
-const resolverOptions = {
-  dnsMode: options.dnsMode,
-  dnsCacheSize: options.dnsCacheSize,
-  dotHost: options.dotHost,
-  dotPort: options.dotPort,
-  dotTlsServername: options.dotTlsServername,
-  dotTlsPin: options.dotTlsPin,
-};
+(async () => {
+  if (options.workers > 0 && cluster.isPrimary) {
+    cluster.on("online", (worker) => {
+      console.log(`Worker ${worker.process.pid} started`);
+    });
 
-if (options.workers > 0 && cluster.isPrimary) {
-  cluster.on("online", (worker) => {
-    console.log(`Worker ${worker.process.pid} started`);
-  });
+    cluster.on("exit", (worker, code, signal) => {
+      console.log(`Worker ${worker.process.pid} died (${signal || code})`);
+    });
 
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died (${signal || code})`);
-  });
+    const resolver = new DemergiResolverMaster({
+      dnsMode: options.dnsMode,
+      dnsCacheSize: options.dnsCacheSize,
+      dotHost: options.dotHost,
+      dotPort: options.dotPort,
+      dotTlsServername: options.dotTlsServername,
+      dotTlsPin: options.dotTlsPin,
+    });
 
-  const resolver = new DemergiResolverMaster(resolverOptions);
+    for (let i = 0; i < options.workers; i++) {
+      const worker = cluster.fork();
+      resolver.addMessageListener(worker);
+    }
+  } else {
+    const proxy = new DemergiProxy({
+      host: options.host,
+      port: options.port,
+      httpsClientHelloSize: options.httpsClientHelloSize,
+      httpNewlineSeparator: options.httpNewlineSeparator,
+      httpMethodSeparator: options.httpMethodSeparator,
+      httpTargetSeparator: options.httpTargetSeparator,
+      httpHostHeaderSeparator: options.httpHostHeaderSeparator,
+      httpMixHostHeaderCase: options.httpMixHostHeaderCase,
+      resolver: cluster.isWorker
+        ? new DemergiResolverWorker()
+        : new DemergiResolver({
+            dnsMode: options.dnsMode,
+            dnsCacheSize: options.dnsCacheSize,
+            dotHost: options.dotHost,
+            dotPort: options.dotPort,
+            dotTlsServername: options.dotTlsServername,
+            dotTlsPin: options.dotTlsPin,
+          }),
+    });
 
-  for (let i = 0; i < options.workers; i++) {
-    const worker = cluster.fork();
-    resolver.addMessageListener(worker);
+    await proxy.start();
+    console.log(`Listening on ${proxy.host}:${proxy.port}`);
+
+    process.on("SIGINT", async () => await proxy.stop());
+    process.on("SIGTERM", async () => await proxy.stop());
   }
-} else {
-  const proxy = new DemergiProxy({
-    host: options.host,
-    port: options.port,
-    httpsClientHelloSize: options.httpsClientHelloSize,
-    httpNewlineSeparator: options.httpNewlineSeparator,
-    httpMethodSeparator: options.httpMethodSeparator,
-    httpTargetSeparator: options.httpTargetSeparator,
-    httpHostHeaderSeparator: options.httpHostHeaderSeparator,
-    httpMixHostHeaderCase: options.httpMixHostHeaderCase,
-    resolver: cluster.isWorker
-      ? new DemergiResolverWorker()
-      : new DemergiResolver(resolverOptions),
-  });
-
-  await proxy.start();
-  console.log(`Listening on ${proxy.host}:${proxy.port}`);
-
-  process.on("SIGINT", async () => await proxy.stop());
-  process.on("SIGTERM", async () => await proxy.stop());
-}
+})();
