@@ -13,9 +13,9 @@
     "url": "https://github.com/hectorm/demergi/issues"
   },
   "type": "module",
-  "main": "./src/proxy.js",
+  "main": "./src/index.js",
   "bin": {
-    "demergi": "./bin/proxy.js"
+    "demergi": "./bin/demergi.js"
   },
   "files": [
     "bin/",
@@ -24,8 +24,8 @@
   "scripts": {
     "lint": "eslint --ext .js --ext .cjs ./",
     "test": "jest",
-    "start": "node -- ./bin/proxy.js",
-    "watch": "nodemon -- ./bin/proxy.js",
+    "start": "node -- ./bin/demergi.js",
+    "watch": "nodemon -- ./bin/demergi.js",
     "preversion": "npm run lint && npm run test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
