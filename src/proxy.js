@@ -3,13 +3,37 @@ import { URL } from "url";
 import { DemergiResolver } from "./resolver.js";
 
 export class DemergiProxy {
+  #methods = new Set([
+    "GET",
+    "HEAD",
+    "POST",
+    "PUT",
+    "DELETE",
+    "CONNECT",
+    "OPTIONS",
+    "TRACE",
+    "PATCH",
+  ]);
+
   constructor({
     host = "::",
     port = 8080,
+    httpsClientHelloSize = 100,
+    httpNewlineSeparator = "\r\n",
+    httpMethodSeparator = " ",
+    httpTargetSeparator = " ",
+    httpHostHeaderSeparator = ":",
+    httpMixHostHeaderCase = true,
     resolver = new DemergiResolver(),
   } = {}) {
     this.host = host;
     this.port = port;
+    this.httpsClientHelloSize = httpsClientHelloSize;
+    this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
+    this.httpMethodSeparator = this.#unescape(httpMethodSeparator);
+    this.httpTargetSeparator = this.#unescape(httpTargetSeparator);
+    this.httpHostHeaderSeparator = this.#unescape(httpHostHeaderSeparator);
+    this.httpMixHostHeaderCase = httpMixHostHeaderCase;
     this.resolver = resolver;
     this.sockets = new Set();
 
@@ -19,23 +43,52 @@ export class DemergiProxy {
       clientSocket.once("data", async (clientFirstData) => {
         clientSocket.pause();
 
-        const requestLine = this.#parseRequestLine(clientFirstData);
-        if (!requestLine) {
+        const requestLine = this.#getLine(clientFirstData, 0);
+        if (requestLine === null) {
+          console.error(
+            `Received an empty request from client ${clientSocket.remoteAddress}`
+          );
           this.#closeSocket(clientSocket);
-          console.error("Invalid request");
           return;
         }
 
-        const isHTTPS = requestLine.method === "CONNECT";
+        const requestTokens = this.#getTokens(
+          requestLine.data,
+          [0x09, 0x20],
+          3
+        );
+        if (requestTokens.length !== 3) {
+          console.error(
+            `Received an invalid request from client ${clientSocket.remoteAddress}`
+          );
+          this.#closeSocket(clientSocket);
+          return;
+        }
+
+        const clientMethod = requestTokens[0].toString("utf8");
+        const clientTarget = requestTokens[1].toString("utf8");
+        const clientHttpVersion = requestTokens[2].toString("utf8");
+        if (!this.#methods.has(clientMethod)) {
+          console.error(
+            `Received a request with an unsupported method from client ${clientSocket.remoteAddress}`
+          );
+          this.#closeSocket(clientSocket);
+          return;
+        }
+
+        const isHTTPS = clientMethod === "CONNECT";
 
         let upstreamURL;
         try {
           upstreamURL = new URL(
-            isHTTPS ? `https://${requestLine.target}` : requestLine.target
+            isHTTPS ? `https://${clientTarget}` : clientTarget
           );
         } catch (error) {
+          console.error(
+            `Exception occurred while processing a request from client ${clientSocket.remoteAddress}:`,
+            error.message
+          );
           this.#closeSocket(clientSocket);
-          console.error(error.message);
           return;
         }
 
@@ -46,14 +99,17 @@ export class DemergiProxy {
               ? await this.resolver.resolve(upstreamURL.hostname)
               : upstreamURL.hostname;
         } catch (error) {
+          console.error(
+            `Exception occurred while processing a request from client ${clientSocket.remoteAddress}:`,
+            error.message
+          );
           this.#closeSocket(clientSocket);
-          console.error(error.message);
           return;
         }
 
         let upstreamPort;
         if (upstreamURL.port.length > 0) {
-          upstreamPort = upstreamURL.port;
+          upstreamPort = Number.parseInt(upstreamURL.port, 10);
         } else {
           upstreamPort = isHTTPS ? 443 : 80;
         }
@@ -62,7 +118,6 @@ export class DemergiProxy {
           host: upstreamAddr,
           port: upstreamPort,
         });
-
         this.sockets.add(upstreamSocket);
 
         upstreamSocket.on("close", () => {
@@ -70,9 +125,8 @@ export class DemergiProxy {
           this.#closeSocket(clientSocket);
         });
 
-        upstreamSocket.on("error", (error) => {
+        upstreamSocket.on("error", () => {
           this.#closeSocket(upstreamSocket);
-          console.error(error.message);
         });
 
         clientSocket.on("close", () => {
@@ -80,9 +134,8 @@ export class DemergiProxy {
           this.#closeSocket(upstreamSocket);
         });
 
-        clientSocket.on("error", (error) => {
+        clientSocket.on("error", () => {
           this.#closeSocket(clientSocket);
-          console.error(error.message);
         });
 
         if (isHTTPS) {
@@ -90,13 +143,20 @@ export class DemergiProxy {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
             try {
-              for (let i = 0; i < clientHello.length; i += 100) {
-                const clientHelloChunk = clientHello.subarray(i, i + 100);
-                upstreamSocket.write(clientHelloChunk);
+              if (this.httpsClientHelloSize > 0) {
+                const chunkSize = this.httpsClientHelloSize;
+                for (let i = 0; i < clientHello.length; i += chunkSize) {
+                  upstreamSocket.write(clientHello.subarray(i, i + chunkSize));
+                }
+              } else {
+                upstreamSocket.write(clientHello);
               }
             } catch (error) {
+              console.error(
+                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}:`,
+                error.message
+              );
               this.#closeSocket(upstreamSocket);
-              console.error(error.message);
               return;
             }
           });
@@ -104,40 +164,60 @@ export class DemergiProxy {
           try {
             clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
           } catch (error) {
+            console.error(
+              `Exception occurred while sending data to client ${clientSocket.remoteAddress}:`,
+              error.message
+            );
             this.#closeSocket(clientSocket);
-            console.error(error.message);
             return;
           }
         } else {
           upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-          try {
-            const mixedTarget =
-              this.#mixCase(upstreamURL.origin) +
-              upstreamURL.pathname +
-              upstreamURL.search;
-            upstreamSocket.write(
-              `${requestLine.method}  ${mixedTarget} ${requestLine.version}\r\n`
-            );
+          let clientData =
+            clientMethod +
+            this.httpMethodSeparator +
+            clientTarget +
+            this.httpTargetSeparator +
+            clientHttpVersion +
+            this.httpNewlineSeparator;
 
-            let sol = requestLine.length;
-            let eol = clientFirstData.indexOf(0x0a, sol) + 1;
-            while (eol > 0) {
-              const line = clientFirstData.subarray(sol, eol);
-              const match = line.toString("utf8").match(/^(.+?):\s*(.+)$/m);
-              if (match && match[1].toUpperCase() === "HOST") {
-                const mixedKey = this.#mixCase(match[1]);
-                const mixedValue = this.#mixCase(match[2]);
-                upstreamSocket.write(`${mixedKey}:${mixedValue}\r\n`);
+          let nextOffset = requestLine.size;
+          let nextLine = this.#getLine(clientFirstData, nextOffset);
+          while (nextLine !== null) {
+            const nextTokens = this.#getTokens(
+              nextLine.data,
+              [0x09, 0x20, 0x3a],
+              1
+            );
+            if (nextTokens.length === 2) {
+              const key = nextTokens[0].toString("utf8");
+              const val = nextTokens[1].toString("utf8");
+              if (key.toLowerCase() === "host") {
+                clientData +=
+                  (this.httpMixHostHeaderCase ? this.#mixCase(key) : key) +
+                  this.httpHostHeaderSeparator +
+                  (this.httpMixHostHeaderCase ? this.#mixCase(val) : val) +
+                  this.httpNewlineSeparator;
               } else {
-                upstreamSocket.write(line);
+                clientData += key + ": " + val + this.httpNewlineSeparator;
               }
-              sol = eol;
-              eol = clientFirstData.indexOf(0x0a, sol) + 1;
+            } else {
+              const val = nextLine.data.toString("utf8");
+              clientData += val + this.httpNewlineSeparator;
             }
+            nextOffset += nextLine.size;
+            nextLine = this.#getLine(clientFirstData, nextOffset);
+          }
+
+          try {
+            upstreamSocket.write(clientData);
           } catch (error) {
+            console.error(
+              `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}:`,
+              error.message
+            );
             this.#closeSocket(upstreamSocket);
-            console.error(error.message);
             return;
           }
         }
@@ -166,17 +246,37 @@ export class DemergiProxy {
     });
   }
 
-  #parseRequestLine(buf) {
-    const firstLineBuf = buf.subarray(0, buf.indexOf("\r\n", 0));
-    const firstLineArr = firstLineBuf.toString().split(/\s+/);
-    if (firstLineArr.length === 3) {
-      return {
-        method: firstLineArr[0],
-        target: firstLineArr[1],
-        version: firstLineArr[2],
-        length: firstLineBuf.length + 2,
-      };
+  #getLine(buf, offset = 0) {
+    const sol = offset;
+    const eol = buf.indexOf(0x0a, sol);
+    if (eol > 0) {
+      const data = buf.subarray(sol, buf[eol - 1] === 0x0d ? eol - 1 : eol);
+      const size = eol - sol + 1;
+      return { data, size };
     }
+    return null;
+  }
+
+  #getTokens(buf, separators, limit = -1, offset = 0) {
+    const tokens = [];
+    let sot = offset;
+    let eot = -1;
+    for (let i = offset; i < buf.length; i++) {
+      if (separators.includes(buf[i])) {
+        if (sot <= eot) {
+          if (limit > -1 && limit <= tokens.length) break;
+          tokens.push(buf.subarray(sot, eot + 1));
+        }
+        sot = i + 1;
+        eot = -1;
+      } else {
+        eot = i;
+      }
+    }
+    if (sot < buf.length) {
+      tokens.push(buf.subarray(sot));
+    }
+    return tokens;
   }
 
   #mixCase(str) {
@@ -185,6 +285,17 @@ export class DemergiProxy {
       mstr += i % 2 === 0 ? str[i].toLowerCase() : str[i].toUpperCase();
     }
     return mstr;
+  }
+
+  #unescape(str) {
+    return str
+      .replace(/\\0/g, "\0")
+      .replace(/\\b/g, "\b")
+      .replace(/\\f/g, "\f")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\r")
+      .replace(/\\t/g, "\t")
+      .replace(/\\v/g, "\v");
   }
 
   #closeSocket(socket) {

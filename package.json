@@ -24,8 +24,8 @@
   "scripts": {
     "lint": "eslint --ext .js --ext .cjs ./",
     "test": "jest",
-    "start": "node ./bin/proxy.js",
-    "watch": "nodemon ./bin/proxy.js",
+    "start": "node -- ./bin/proxy.js",
+    "watch": "nodemon -- ./bin/proxy.js",
     "preversion": "npm run lint && npm run test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },

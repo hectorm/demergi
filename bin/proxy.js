@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import cluster from "cluster";
+import { getEnv, toStr, toInt, toBool } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import {
   DemergiResolver,
@@ -8,16 +9,22 @@ import {
   DemergiResolverWorker,
 } from "../src/resolver.js";
 
-const config = {
-  host: process.env.PROXY_HOST || "::",
-  port: Number.parseInt(process.env.PROXY_PORT, 10) || 8080,
-  dnsMode: process.env.PROXY_DNS_MODE || "dot",
-  dnsCacheSize: Number.parseInt(process.env.PROXY_DNS_CACHE_SIZE, 10) || 100000,
-  dotHost: process.env.PROXY_DOT_HOST || "1.1.1.1",
-  dotPort: Number.parseInt(process.env.PROXY_DOT_PORT) || 853,
-  dotTlsServername: process.env.PROXY_DOT_TLS_HOSTNAME || null,
-  dotTlsPin: process.env.PROXY_DOT_PIN || null,
-  workers: Number.parseInt(process.env.PROXY_WORKERS, 10) || 0,
+const options = {
+  host: toStr(getEnv("DEMERGI_HOST")),
+  port: toInt(getEnv("DEMERGI_PORT")),
+  workers: toInt(getEnv("DEMERGI_WORKERS")),
+  dnsMode: toStr(getEnv("DEMERGI_DNS_MODE")),
+  dnsCacheSize: toInt(getEnv("DEMERGI_DNS_CACHE_SIZE")),
+  dotHost: toStr(getEnv("DEMERGI_DOT_HOST")),
+  dotPort: toInt(getEnv("DEMERGI_DOT_PORT")),
+  dotTlsServername: toStr(getEnv("DEMERGI_DOT_TLS_SERVERNAME")),
+  dotTlsPin: toStr(getEnv("DEMERGI_DOT_TLS_PIN")),
+  httpsClientHelloSize: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_SIZE")),
+  httpNewlineSeparator: toStr(getEnv("DEMERGI_HTTP_NEWLINE_SEPARATOR")),
+  httpMethodSeparator: toStr(getEnv("DEMERGI_HTTP_METHOD_SEPARATOR")),
+  httpTargetSeparator: toStr(getEnv("DEMERGI_HTTP_TARGET_SEPARATOR")),
+  httpHostHeaderSeparator: toStr(getEnv("DEMERGI_HTTP_HOST_HEADER_SEPARATOR")),
+  httpMixHostHeaderCase: toBool(getEnv("DEMERGI_HTTP_MIX_HOST_HEADER_CASE")),
 };
 
 const argv = process.argv.slice(2);
@@ -25,33 +32,51 @@ getopts: for (let i = 0; i < argv.length; i++) {
   switch (argv[i]) {
     case "-H":
     case "--host":
-      config.host = argv[++i];
+      options.host = toStr(argv[++i]);
       break;
     case "-P":
     case "--port":
-      config.port = Number.parseInt(argv[++i], 10);
+      options.port = toInt(argv[++i]);
       break;
     case "-W":
     case "--workers":
-      config.workers = Number.parseInt(argv[++i], 10);
+      options.workers = toInt(argv[++i]);
       break;
     case "--dns-mode":
-      config.dnsMode = argv[++i];
+      options.dnsMode = toStr(argv[++i]);
       break;
     case "--dns-cache-size":
-      config.dnsCacheSize = Number.parseInt(argv[++i], 10);
+      options.dnsCacheSize = toInt(argv[++i]);
       break;
     case "--dot-host":
-      config.dotHost = argv[++i];
+      options.dotHost = toStr(argv[++i]);
       break;
     case "--dot-port":
-      config.dotPort = Number.parseInt(argv[++i], 10);
+      options.dotPort = toInt(argv[++i]);
       break;
     case "--dot-tls-servername":
-      config.dotTlsServername = argv[++i];
+      options.dotTlsServername = toStr(argv[++i]);
       break;
     case "--dot-tls-pin":
-      config.dotTlsPin = argv[++i];
+      options.dotTlsPin = toStr(argv[++i]);
+      break;
+    case "--https-clienthello-size":
+      options.httpsClientHelloSize = toInt(argv[++i]);
+      break;
+    case "--http-newline-separator":
+      options.httpNewlineSeparator = toStr(argv[++i]);
+      break;
+    case "--http-method-separator":
+      options.httpMethodSeparator = toStr(argv[++i]);
+      break;
+    case "--http-target-separator":
+      options.httpTargetSeparator = toStr(argv[++i]);
+      break;
+    case "--http-host-header-separator":
+      options.httpHostHeaderSeparator = toStr(argv[++i]);
+      break;
+    case "--http-mix-host-header-case":
+      options.httpMixHostHeaderCase = toBool(argv[++i]);
       break;
     case "-v":
     case "--version":
@@ -62,28 +87,72 @@ getopts: for (let i = 0; i < argv.length; i++) {
     case "--help":
       console.log(
         [
-          `Usage: demergi [OPTION]...\n\n`,
-          `A proxy server that helps to bypass the DPI systems implemented by various ISPs.\n`,
-          `\nProxy:\n`,
-          `  -H, --host STR            The host to bind the server to ("::" by default).\n`,
-          `  -P, --port NUM            The port to bind the server to (8080 by default).\n`,
-          `  -W, --workers NUM         The number of workers (0 by default).\n`,
-          `\nResolver:\n`,
-          `  --dns-mode STR            The DNS resolver mode, valid values are "plain" and\n`,
-          `                              "dot" ("dot" by default).\n`,
-          `  --dns-cache-size NUM      The maximum number of entries in the DNS cache\n`,
-          `                              (100000 by default).\n`,
-          `  --dot-host STR            The DoT server host ("1.1.1.1" by default).\n`,
-          `  --dot-port NUM            The DoT server port (853 by default).\n`,
-          `  --dot-tls-servername STR  The server name to check in the DoT server\n`,
-          `                              certificate (unspecified by default).\n`,
-          `  --dot-tls-pin STR         The pin to check in the DoT server certificate.\n`,
-          `                              The pin must be a base64 encoded SHA256 hash of\n`,
-          `                              the public key (unspecified by default).\n`,
-          `\nStartup:\n`,
-          `  -v, --version             Show version and quit.\n`,
-          `  -h, --help                Show this help and quit.\n`,
-        ].join("")
+          `Usage: demergi [OPTION]...`,
+          ``,
+          `A proxy server that helps to bypass the DPI systems implemented by various ISPs.`,
+          ``,
+          `Proxy:`,
+          `  -H, --host STR, $DEMERGI_HOST`,
+          `  The host to bind the server to ("::" by default).`,
+          ``,
+          `  -P, --port NUM, $DEMERGI_PORT`,
+          `  The port to bind the server to (8080 by default).`,
+          ``,
+          `  -W, --workers NUM, $DEMERGI_WORKERS`,
+          `  The number of workers (0 by default).`,
+          ``,
+          `Resolver:`,
+          `  --dns-mode STR, $DEMERGI_DNS_MODE`,
+          `  The DNS resolver mode, valid values are "plain" and "dot" ("dot" by default).`,
+          ``,
+          `  --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE`,
+          `  The maximum number of entries in the DNS cache (100000 by default).`,
+          ``,
+          `  --dot-host STR, $DEMERGI_DOT_HOST`,
+          `  The DoT server host ("1.1.1.1" by default).`,
+          ``,
+          `  --dot-port NUM, $DEMERGI_DOT_PORT`,
+          `  The DoT server port (853 by default).`,
+          ``,
+          `  --dot-tls-servername STR, $DEMERGI_DOT_TLS_SERVERNAME`,
+          `  The server name to check in the DoT server certificate (unspecified by`,
+          `  default).`,
+          ``,
+          `  --dot-tls-pin STR, $DEMERGI_DOT_TLS_PIN`,
+          `  The pin to check in the DoT server certificate. The pin must be a base64`,
+          `  encoded SHA256 hash of the public key (unspecified by default).`,
+          ``,
+          `HTTPS:`,
+          `  --https-clienthello-size NUM, $DEMERGI_HTTPS_CLIENTHELLO_SIZE`,
+          `  The maximum chunk size in bytes for the ClientHello packet. A less than 1`,
+          `  value disables fragmentation (100 by default).`,
+          ``,
+          `HTTP:`,
+          `  --http-newline-separator STR, $DEMERGI_HTTP_NEWLINE_SEPARATOR`,
+          `  The string to use to separate new lines ("\\r\\n" by default).`,
+          ``,
+          `  --http-method-separator STR, $DEMERGI_HTTP_METHOD_SEPARATOR`,
+          `  The string to use to separate the HTTP method from the target (" " by`,
+          `  default).`,
+          ``,
+          `  --http-target-separator STR, $DEMERGI_HTTP_TARGET_SEPARATOR`,
+          `  The string to use to separate the target from the HTTP version (" " by`,
+          `  default).`,
+          ``,
+          `  --http-host-header-separator STR, $DEMERGI_HTTP_HOST_HEADER_SEPARATOR`,
+          `  The string to use to separate the host header key from its value (":" by`,
+          `  default).`,
+          ``,
+          `  --http-mix-host-header-case BOOL, $DEMERGI_HTTP_MIX_HOST_HEADER_CASE`,
+          `  Alternate upper and lower case in the host header (true by default).`,
+          ``,
+          `Info:`,
+          `  -v, --version`,
+          `  Show version and quit.`,
+          ``,
+          `  -h, --help`,
+          `  Show this help and quit.`,
+        ].join("\n")
       );
       process.exit(0);
       break;
@@ -92,24 +161,24 @@ getopts: for (let i = 0; i < argv.length; i++) {
     default:
       console.log(
         [
-          `Illegal option "${argv[i]}".\n`,
+          `Illegal option "${argv[i]}".`,
           `Try "--help" for usage information.`,
-        ].join("")
+        ].join("\n")
       );
       process.exit(1);
   }
 }
 
 const resolverOptions = {
-  dnsMode: config.dnsMode,
-  dnsCacheSize: config.dnsCacheSize,
-  dotHost: config.dotHost,
-  dotPort: config.dotPort,
-  dotTlsServername: config.dotTlsServername,
-  dotTlsPin: config.dotTlsPin,
+  dnsMode: options.dnsMode,
+  dnsCacheSize: options.dnsCacheSize,
+  dotHost: options.dotHost,
+  dotPort: options.dotPort,
+  dotTlsServername: options.dotTlsServername,
+  dotTlsPin: options.dotTlsPin,
 };
 
-if (config.workers > 0 && cluster.isPrimary) {
+if (options.workers > 0 && cluster.isPrimary) {
   cluster.on("online", (worker) => {
     console.log(`Worker ${worker.process.pid} started`);
   });
@@ -120,14 +189,20 @@ if (config.workers > 0 && cluster.isPrimary) {
 
   const resolver = new DemergiResolverMaster(resolverOptions);
 
-  for (let i = 0; i < config.workers; i++) {
+  for (let i = 0; i < options.workers; i++) {
     const worker = cluster.fork();
     resolver.addMessageListener(worker);
   }
 } else {
   const proxy = new DemergiProxy({
-    host: config.host,
-    port: config.port,
+    host: options.host,
+    port: options.port,
+    httpsClientHelloSize: options.httpsClientHelloSize,
+    httpNewlineSeparator: options.httpNewlineSeparator,
+    httpMethodSeparator: options.httpMethodSeparator,
+    httpTargetSeparator: options.httpTargetSeparator,
+    httpHostHeaderSeparator: options.httpHostHeaderSeparator,
+    httpMixHostHeaderCase: options.httpMixHostHeaderCase,
     resolver: cluster.isWorker
       ? new DemergiResolverWorker()
       : new DemergiResolver(resolverOptions),
