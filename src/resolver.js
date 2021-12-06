@@ -196,7 +196,7 @@ export class DemergiResolver {
         const ancount = answer.readUInt16BE((offset += 2));
         const nscount = answer.readUInt16BE((offset += 2));
         const arcount = answer.readUInt16BE((offset += 2));
-        if (qdcount !== 1 || ancount < 1 || nscount !== 0 || arcount !== 0) {
+        if (qdcount !== 1 || ancount < 0 || nscount < 0 || arcount < 0) {
           reject(
             new Error(
               [
