@@ -26,6 +26,10 @@
     "test": "jest",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
+    "build-bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node16 --outfile=./dist/demergi.js ./bin/demergi.js",
+    "build-binary": "pkg --target=node16-linuxstatic-x64,node16-linuxstatic-arm64,node16-win-x64 --out-path=./dist/ ./dist/demergi.js",
+    "build": "npm run build-bundle && npm run build-binary",
+    "clean": "rm -rf ./dist/",
     "preversion": "npm run lint && npm run test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
@@ -35,12 +39,14 @@
     "@babel/eslint-plugin": "~7.14.5",
     "@babel/preset-env": "~7.16.4",
     "babel-jest": "~27.4.2",
+    "esbuild": "~0.14.2",
+    "eslint": "~8.4.0",
     "eslint-config-prettier": "~8.3.0",
     "eslint-plugin-jest": "~25.3.0",
     "eslint-plugin-prettier": "~4.0.0",
-    "eslint": "~8.4.0",
     "jest": "~27.4.3",
     "nodemon": "~2.0.15",
+    "pkg": "~5.5.1",
     "prettier": "~2.5.1"
   }
 }
