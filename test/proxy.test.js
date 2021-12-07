@@ -111,7 +111,7 @@ describe("Proxy", () => {
     const res = await makeProxiedHttpsRequest({
       proxyHost: proxy.host,
       proxyPort: proxy.port,
-      host: "1.1.1.1",
+      host: "1.0.0.1",
     });
 
     expect(res.complete).toBe(true);
@@ -123,7 +123,7 @@ describe("Proxy", () => {
     const res = await makeProxiedHttpsRequest({
       proxyHost: proxy.host,
       proxyPort: proxy.port,
-      host: "1.1.1.1",
+      host: "1.0.0.1",
       port: 443,
     });
 
@@ -161,7 +161,7 @@ describe("Proxy", () => {
     const res = await makeProxiedHttpRequest({
       proxyHost: proxy.host,
       proxyPort: proxy.port,
-      host: "1.1.1.1",
+      host: "1.0.0.1",
     });
 
     expect(res.complete).toBe(true);
@@ -173,7 +173,7 @@ describe("Proxy", () => {
     const res = await makeProxiedHttpRequest({
       proxyHost: proxy.host,
       proxyPort: proxy.port,
-      host: "1.1.1.1",
+      host: "1.0.0.1",
       port: 80,
     });
 

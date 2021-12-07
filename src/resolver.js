@@ -7,7 +7,7 @@ export class DemergiResolver {
   constructor({
     dnsMode = "dot",
     dnsCacheSize = 100000,
-    dotHost = "1.1.1.1",
+    dotHost = "1.0.0.1",
     dotPort = 853,
     dotTlsServername,
     dotTlsPin,

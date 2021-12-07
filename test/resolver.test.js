@@ -7,7 +7,7 @@ describe("Resolver", () => {
 
     expect(defaults.dnsMode).toBe("dot");
     expect(defaults.dnsCache.max).toBe(100000);
-    expect(defaults.dotHost).toBe("1.1.1.1");
+    expect(defaults.dotHost).toBe("1.0.0.1");
     expect(defaults.dotPort).toBe(853);
     expect(defaults.dotTlsServername).toBeUndefined();
     expect(defaults.dotTlsPin).toBeUndefined();
@@ -42,7 +42,7 @@ describe("Resolver", () => {
   test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
@@ -53,7 +53,7 @@ describe("Resolver", () => {
   test("Must resolve example.com to an IPv6 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
@@ -108,7 +108,7 @@ describe("Resolver", () => {
   test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
     });
 
@@ -119,7 +119,7 @@ describe("Resolver", () => {
   test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
       dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
     });
@@ -131,7 +131,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
@@ -161,7 +161,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
     });
 
@@ -171,7 +171,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsPin: "aHVudGVyMg==",
     });
 
@@ -181,7 +181,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
       dotTlsPin: "aHVudGVyMg==",
     });
@@ -192,7 +192,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
       dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
     });
@@ -203,7 +203,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.1.1.1",
+      dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
       dotTlsPin: "aHVudGVyMg==",
     });

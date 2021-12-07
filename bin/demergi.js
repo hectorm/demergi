@@ -109,7 +109,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  The maximum number of entries in the DNS cache (100000 by default).`,
           ``,
           `  --dot-host STR, $DEMERGI_DOT_HOST`,
-          `  The DoT server host ("1.1.1.1" by default).`,
+          `  The DoT server host ("1.0.0.1" by default).`,
           ``,
           `  --dot-port NUM, $DEMERGI_DOT_PORT`,
           `  The DoT server port (853 by default).`,
