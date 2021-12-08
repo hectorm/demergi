@@ -20,6 +20,7 @@ const options = {
   dotTlsServername: toStr(getEnv("DEMERGI_DOT_TLS_SERVERNAME")),
   dotTlsPin: toStr(getEnv("DEMERGI_DOT_TLS_PIN")),
   httpsClientHelloSize: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_SIZE")),
+  httpsClientHelloTLSv: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_TLSV")),
   httpNewlineSeparator: toStr(getEnv("DEMERGI_HTTP_NEWLINE_SEPARATOR")),
   httpMethodSeparator: toStr(getEnv("DEMERGI_HTTP_METHOD_SEPARATOR")),
   httpTargetSeparator: toStr(getEnv("DEMERGI_HTTP_TARGET_SEPARATOR")),
@@ -62,6 +63,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
       break;
     case "--https-clienthello-size":
       options.httpsClientHelloSize = toInt(argv[++i]);
+      break;
+    case "--https-clienthello-tlsv":
+      options.httpsClientHelloTLSv = toStr(argv[++i]);
       break;
     case "--http-newline-separator":
       options.httpNewlineSeparator = toStr(argv[++i]);
@@ -126,6 +130,10 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  --https-clienthello-size NUM, $DEMERGI_HTTPS_CLIENTHELLO_SIZE`,
           `  The maximum chunk size in bytes for the ClientHello packet. A less than 1`,
           `  value disables fragmentation (40 by default).`,
+          ``,
+          `  --https-clienthello-tlsv STR, $DEMERGI_HTTPS_CLIENTHELLO_TLSV`,
+          `  The TLS protocol version to set in the ClientHello packet, valid values are`,
+          `  "1.0", "1.1", "1.2" and "1.3" ("1.3" by default).`,
           ``,
           `HTTP:`,
           `  --http-newline-separator STR, $DEMERGI_HTTP_NEWLINE_SEPARATOR`,
@@ -197,6 +205,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
       host: options.host,
       port: options.port,
       httpsClientHelloSize: options.httpsClientHelloSize,
+      httpsClientHelloTLSv: options.httpsClientHelloTLSv,
       httpNewlineSeparator: options.httpNewlineSeparator,
       httpMethodSeparator: options.httpMethodSeparator,
       httpTargetSeparator: options.httpTargetSeparator,

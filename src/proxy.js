@@ -15,10 +15,18 @@ export class DemergiProxy {
     "PATCH",
   ]);
 
+  #tlsVersions = new Map([
+    ["1.0", 0x0301],
+    ["1.1", 0x0302],
+    ["1.2", 0x0303],
+    ["1.3", 0x0304],
+  ]);
+
   constructor({
     host = "::",
     port = 8080,
     httpsClientHelloSize = 40,
+    httpsClientHelloTLSv = "1.3",
     httpNewlineSeparator = "\r\n",
     httpMethodSeparator = " ",
     httpTargetSeparator = " ",
@@ -29,6 +37,7 @@ export class DemergiProxy {
     this.host = host;
     this.port = port;
     this.httpsClientHelloSize = httpsClientHelloSize;
+    this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
     this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
     this.httpMethodSeparator = this.#unescape(httpMethodSeparator);
     this.httpTargetSeparator = this.#unescape(httpTargetSeparator);
@@ -36,6 +45,10 @@ export class DemergiProxy {
     this.httpMixHostHeaderCase = httpMixHostHeaderCase;
     this.resolver = resolver;
     this.sockets = new Set();
+
+    if (this.httpsClientHelloTLSv === undefined) {
+      throw new Error(`Unsupported TLS version ${httpsClientHelloTLSv}`);
+    }
 
     this.server = net.createServer((clientSocket) => {
       this.sockets.add(clientSocket);
@@ -141,6 +154,8 @@ export class DemergiProxy {
         if (isHTTPS) {
           clientSocket.once("data", (clientHello) => {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
+
+            clientHello.writeUInt16BE(this.httpsClientHelloTLSv, 1);
 
             try {
               if (this.httpsClientHelloSize > 0) {
