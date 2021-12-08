@@ -125,7 +125,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `HTTPS:`,
           `  --https-clienthello-size NUM, $DEMERGI_HTTPS_CLIENTHELLO_SIZE`,
           `  The maximum chunk size in bytes for the ClientHello packet. A less than 1`,
-          `  value disables fragmentation (100 by default).`,
+          `  value disables fragmentation (40 by default).`,
           ``,
           `HTTP:`,
           `  --http-newline-separator STR, $DEMERGI_HTTP_NEWLINE_SEPARATOR`,

@@ -18,7 +18,7 @@ export class DemergiProxy {
   constructor({
     host = "::",
     port = 8080,
-    httpsClientHelloSize = 100,
+    httpsClientHelloSize = 40,
     httpNewlineSeparator = "\r\n",
     httpMethodSeparator = " ",
     httpTargetSeparator = " ",
