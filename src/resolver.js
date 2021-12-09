@@ -312,13 +312,13 @@ export class DemergiResolver {
       name.bytesLength = 1;
       return name;
     }
-    if (len === 0xc0) {
+    if (len >= 0xc0) {
       const name = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
       name.bytesLength = 2;
       return name;
     }
     while (len > 0) {
-      if (len === 0xc0) {
+      if (len >= 0xc0) {
         const label = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
         labels.push(label);
         const name = new String(labels.join("."));
