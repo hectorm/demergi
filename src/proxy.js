@@ -1,9 +1,8 @@
 import net from "net";
-import { URL } from "url";
 import { DemergiResolver } from "./resolver.js";
 
 export class DemergiProxy {
-  #methods = new Set([
+  #httpMethods = new Set([
     "GET",
     "HEAD",
     "POST",
@@ -56,75 +55,60 @@ export class DemergiProxy {
       clientSocket.once("data", async (clientFirstData) => {
         clientSocket.pause();
 
-        const requestLine = this.#getLine(clientFirstData, 0);
+        const requestLine = this.#readLine(clientFirstData, 0);
         if (requestLine === null) {
-          console.error(
-            `Received an empty request from client ${clientSocket.remoteAddress}`
+          this.#closeSocket(
+            clientSocket,
+            `Received an empty request line from client ${clientSocket.remoteAddress}`
           );
-          this.#closeSocket(clientSocket);
           return;
         }
 
-        const requestTokens = this.#getTokens(
-          requestLine.data,
-          [0x09, 0x20],
-          3
-        );
+        const requestTokens = this.#tokenize(requestLine.data, [0x09, 0x20], 3);
         if (requestTokens.length !== 3) {
-          console.error(
-            `Received an invalid request from client ${clientSocket.remoteAddress}`
+          this.#closeSocket(
+            clientSocket,
+            `Received an invalid request line from client ${clientSocket.remoteAddress}`
           );
-          this.#closeSocket(clientSocket);
           return;
         }
 
         const clientMethod = requestTokens[0].toString("utf8");
         const clientTarget = requestTokens[1].toString("utf8");
         const clientHttpVersion = requestTokens[2].toString("utf8");
-        if (!this.#methods.has(clientMethod)) {
-          console.error(
-            `Received a request with an unsupported method from client ${clientSocket.remoteAddress}`
+        if (!this.#httpMethods.has(clientMethod)) {
+          this.#closeSocket(
+            clientSocket,
+            `Received an unsupported method from client ${clientSocket.remoteAddress}`
           );
-          this.#closeSocket(clientSocket);
           return;
         }
 
         const isHTTPS = clientMethod === "CONNECT";
 
-        let upstreamURL;
-        try {
-          upstreamURL = new URL(
-            isHTTPS ? `https://${clientTarget}` : clientTarget
+        const upstreamOrigin = this.#splitOrigin(clientTarget);
+        const upstreamHost = upstreamOrigin[0];
+        const upstreamPort = upstreamOrigin[1] || (isHTTPS ? 443 : 80);
+        if (!upstreamHost || !upstreamPort) {
+          this.#closeSocket(
+            clientSocket,
+            `Received an invalid target from client ${clientSocket.remoteAddress}`
           );
-        } catch (error) {
-          console.error(
-            `Exception occurred while processing a request from client ${clientSocket.remoteAddress}:`,
-            error.message
-          );
-          this.#closeSocket(clientSocket);
           return;
         }
 
         let upstreamAddr;
         try {
           upstreamAddr =
-            net.isIP(upstreamURL.hostname) === 0
-              ? await this.resolver.resolve(upstreamURL.hostname)
-              : upstreamURL.hostname;
+            net.isIP(upstreamHost) === 0
+              ? await this.resolver.resolve(upstreamHost)
+              : upstreamHost;
         } catch (error) {
-          console.error(
-            `Exception occurred while processing a request from client ${clientSocket.remoteAddress}:`,
-            error.message
+          this.#closeSocket(
+            clientSocket,
+            `Exception occurred while resolving target for client ${clientSocket.remoteAddress}: ${error.message}`
           );
-          this.#closeSocket(clientSocket);
           return;
-        }
-
-        let upstreamPort;
-        if (upstreamURL.port.length > 0) {
-          upstreamPort = Number.parseInt(upstreamURL.port, 10);
-        } else {
-          upstreamPort = isHTTPS ? 443 : 80;
         }
 
         const upstreamSocket = net.createConnection({
@@ -167,11 +151,10 @@ export class DemergiProxy {
                 upstreamSocket.write(clientHello);
               }
             } catch (error) {
-              console.error(
-                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}:`,
-                error.message
+              this.#closeSocket(
+                upstreamSocket,
+                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
               );
-              this.#closeSocket(upstreamSocket);
               return;
             }
           });
@@ -179,11 +162,10 @@ export class DemergiProxy {
           try {
             clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
           } catch (error) {
-            console.error(
-              `Exception occurred while sending data to client ${clientSocket.remoteAddress}:`,
-              error.message
+            this.#closeSocket(
+              clientSocket,
+              `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
             );
-            this.#closeSocket(clientSocket);
             return;
           }
         } else {
@@ -198,9 +180,9 @@ export class DemergiProxy {
             this.httpNewlineSeparator;
 
           let nextOffset = requestLine.size;
-          let nextLine = this.#getLine(clientFirstData, nextOffset);
+          let nextLine = this.#readLine(clientFirstData, nextOffset);
           while (nextLine !== null) {
-            const nextTokens = this.#getTokens(
+            const nextTokens = this.#tokenize(
               nextLine.data,
               [0x09, 0x20, 0x3a],
               1
@@ -222,17 +204,16 @@ export class DemergiProxy {
               clientData += val + this.httpNewlineSeparator;
             }
             nextOffset += nextLine.size;
-            nextLine = this.#getLine(clientFirstData, nextOffset);
+            nextLine = this.#readLine(clientFirstData, nextOffset);
           }
 
           try {
             upstreamSocket.write(clientData);
           } catch (error) {
-            console.error(
-              `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}:`,
-              error.message
+            this.#closeSocket(
+              upstreamSocket,
+              `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
             );
-            this.#closeSocket(upstreamSocket);
             return;
           }
         }
@@ -261,7 +242,7 @@ export class DemergiProxy {
     });
   }
 
-  #getLine(buf, offset = 0) {
+  #readLine(buf, offset = 0) {
     const sol = offset;
     const eol = buf.indexOf(0x0a, sol);
     if (eol > 0) {
@@ -272,7 +253,7 @@ export class DemergiProxy {
     return null;
   }
 
-  #getTokens(buf, separators, limit = -1, offset = 0) {
+  #tokenize(buf, separators, limit = -1, offset = 0) {
     const tokens = [];
     let sot = offset;
     let eot = -1;
@@ -294,6 +275,15 @@ export class DemergiProxy {
     return tokens;
   }
 
+  #splitOrigin(origin) {
+    const match = origin.match(
+      // Extracts the hostname (also IPv4 or IPv6 address)
+      // and port of a URL with or without protocol.
+      /^(?:.*?:\/\/)?(?:\[?([^/]*?)\]?)(?::([0-9]+))?(?:\/.*)?$/
+    );
+    return match !== null ? [match[1], Number.parseInt(match[2], 10)] : [];
+  }
+
   #mixCase(str) {
     let mstr = "";
     for (let i = 0; i < str.length; i++) {
@@ -313,7 +303,8 @@ export class DemergiProxy {
       .replace(/\\v/g, "\v");
   }
 
-  #closeSocket(socket) {
+  #closeSocket(socket, reason) {
     if (socket && !socket.destroyed) socket.destroy();
+    if (reason) console.error(reason);
   }
 }
