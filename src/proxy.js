@@ -111,10 +111,7 @@ export class DemergiProxy {
           return;
         }
 
-        const upstreamSocket = net.createConnection({
-          host: upstreamAddr,
-          port: upstreamPort,
-        });
+        const upstreamSocket = new net.Socket();
         this.sockets.add(upstreamSocket);
 
         upstreamSocket.on("close", () => {
@@ -134,6 +131,20 @@ export class DemergiProxy {
         clientSocket.on("error", () => {
           this.#closeSocket(clientSocket);
         });
+
+        try {
+          upstreamSocket.connect({
+            host: upstreamAddr,
+            port: upstreamPort,
+            lookup: (_, __, cb) => cb(),
+          });
+        } catch (error) {
+          this.#closeSocket(
+            clientSocket,
+            `Exception occurred while creating upstream socket for client ${clientSocket.remoteAddress}: ${error.message}`
+          );
+          return;
+        }
 
         if (isHTTPS) {
           clientSocket.once("data", (clientHello) => {
