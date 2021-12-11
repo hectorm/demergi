@@ -20,37 +20,37 @@ export class DemergiResolver {
     this.dotTlsPin = dotTlsPin;
   }
 
-  async resolve(domain, family = 4) {
-    const cached = this.dnsCache.get(domain);
+  async resolve(hostname, family = 4) {
+    const cached = this.dnsCache.get(hostname);
     if (cached === undefined) {
       let resolved;
       switch (this.dnsMode) {
         case "plain":
-          resolved = await this.#dnsResolve(domain, family);
+          resolved = await this.#dnsResolve(hostname, family);
           break;
         case "dot":
-          resolved = await this.#dotResolve(domain, family);
+          resolved = await this.#dotResolve(hostname, family);
           break;
         default:
           throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
       }
-      this.dnsCache.set(domain, resolved.addr, resolved.ttl);
+      this.dnsCache.set(hostname, resolved.addr, resolved.ttl);
       return resolved.addr;
     }
     return cached;
   }
 
-  #dnsResolve(domain, family) {
+  #dnsResolve(hostname, family) {
     return new Promise((resolve, reject) => {
       const resolver = family === 6 ? dns.resolve6 : dns.resolve4;
-      resolver(domain, { ttl: true }, (error, addrs) => {
+      resolver(hostname, { ttl: true }, (error, addrs) => {
         if (error) reject(error);
         else resolve({ addr: addrs[0].address, ttl: addrs[0].ttl });
       });
     });
   }
 
-  #dotResolve(domain, family) {
+  #dotResolve(hostname, family) {
     return new Promise((resolve, reject) => {
       let socket;
       try {
@@ -89,7 +89,7 @@ export class DemergiResolver {
         0x00,
         0x00,
         // QNAME
-        ...this.#encodeName(domain),
+        ...this.#encodeName(hostname),
         // QTYPE
         ...(family === 4 ? [0x00, 0x01] : []),
         ...(family === 6 ? [0x00, 0x1c] : []),
@@ -341,9 +341,9 @@ export class DemergiResolver {
 
 export class DemergiResolverMaster extends DemergiResolver {
   addMessageListener(worker) {
-    worker.on("message", async ({ domain, family }) => {
+    worker.on("message", async ({ hostname, family }) => {
       try {
-        const addr = await this.resolve(domain, family);
+        const addr = await this.resolve(hostname, family);
         worker.send(addr);
       } catch (error) {
         console.error(error.message);
@@ -354,7 +354,7 @@ export class DemergiResolverMaster extends DemergiResolver {
 }
 
 export class DemergiResolverWorker extends DemergiResolver {
-  async resolve(domain, family) {
+  async resolve(hostname, family) {
     return new Promise((resolve, reject) => {
       process.once("message", (addr) => {
         if (!addr) {
@@ -363,7 +363,7 @@ export class DemergiResolverWorker extends DemergiResolver {
         }
         resolve(addr);
       });
-      process.send({ domain, family });
+      process.send({ hostname, family });
     });
   }
 }
