@@ -99,10 +99,13 @@ export class DemergiResolver {
       ]);
       query.writeUInt16BE(query.byteLength - 2, 0);
 
-      socket.on("secureConnect", () => {
+      let answered = false;
+
+      socket.once("secureConnect", () => {
         if (typeof this.dotTlsPin === "string") {
           const pubkey256 = this.#sha256(socket.getPeerCertificate().pubkey);
           if (this.dotTlsPin !== pubkey256) {
+            answered = true;
             socket.destroy();
             reject(
               new Error(
@@ -120,7 +123,8 @@ export class DemergiResolver {
         socket.write(query);
       });
 
-      socket.on("data", (answer) => {
+      socket.once("data", (answer) => {
+        answered = true;
         socket.destroy();
 
         const length = answer.readUInt16BE(0);
@@ -283,8 +287,20 @@ export class DemergiResolver {
         );
       });
 
+      socket.on("close", () => {
+        if (!answered) {
+          reject(
+            new Error(
+              [
+                "Connection closed without response",
+                `Encoded query: ${query.toString("base64")}`,
+              ].join("\n")
+            )
+          );
+        }
+      });
+
       socket.on("error", (error) => {
-        if (!socket.destroyed) socket.destroy();
         reject(error);
       });
     });
