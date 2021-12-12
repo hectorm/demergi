@@ -320,7 +320,7 @@ export class DemergiProxy {
     const match = origin.match(
       // Extracts the hostname (also IPv4 or IPv6 address)
       // and port of a URL with or without protocol.
-      /^(?:.*?:\/\/)?(?:\[?([^/]*?)\]?)(?::([0-9]+))?(?:\/.*)?$/
+      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]*?)\]?)(?::([0-9]+))?(?:\/.*)?$/i
     );
     return match !== null
       ? [match[1].toLowerCase(), Number.parseInt(match[2], 10)]
