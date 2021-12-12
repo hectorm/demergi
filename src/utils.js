@@ -13,3 +13,7 @@ export const toInt = (value) => {
 export const toBool = (value) => {
   return value !== undefined ? `${value}`.toLowerCase() === "true" : undefined;
 };
+
+export const toList = (value) => {
+  return value !== undefined ? `${value}`.split(/[\s,]+/) : undefined;
+};

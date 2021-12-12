@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import cluster from "cluster";
-import { getEnv, toStr, toInt, toBool } from "../src/utils.js";
+import { getEnv, toStr, toInt, toBool, toList } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import {
   DemergiResolver,
@@ -10,8 +10,9 @@ import {
 } from "../src/resolver.js";
 
 const options = {
-  host: toStr(getEnv("DEMERGI_HOST")),
+  addr: toStr(getEnv("DEMERGI_ADDR")),
   port: toInt(getEnv("DEMERGI_PORT")),
+  hostList: toList(getEnv("DEMERGI_HOST_LIST")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
   dnsMode: toStr(getEnv("DEMERGI_DNS_MODE")),
   dnsCacheSize: toInt(getEnv("DEMERGI_DNS_CACHE_SIZE")),
@@ -31,13 +32,17 @@ const options = {
 const argv = process.argv.slice(2);
 getopts: for (let i = 0; i < argv.length; i++) {
   switch (argv[i]) {
-    case "-H":
-    case "--host":
-      options.host = toStr(argv[++i]);
+    case "-A":
+    case "--addr":
+      options.addr = toStr(argv[++i]);
       break;
     case "-P":
     case "--port":
       options.port = toInt(argv[++i]);
+      break;
+    case "-H":
+    case "--host-list":
+      options.hostList = toList(argv[++i]);
       break;
     case "-W":
     case "--workers":
@@ -96,11 +101,15 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `A proxy server that helps to bypass the DPI systems implemented by various ISPs.`,
           ``,
           `Proxy:`,
-          `  -H, --host STR, $DEMERGI_HOST`,
-          `  The host to bind the server to ("::" by default).`,
+          `  -A, --addr STR, $DEMERGI_ADDR`,
+          `  The address to bind the server to ("::" by default).`,
           ``,
           `  -P, --port NUM, $DEMERGI_PORT`,
           `  The port to bind the server to (8080 by default).`,
+          ``,
+          `  -H, --host-list STR, $DEMERGI_HOST_LIST`,
+          `  The host list separated by commas or spaces to apply the evasion techniques,`,
+          `  will be applied to all hosts if unspecified (unspecified by default).`,
           ``,
           `  -W, --workers NUM, $DEMERGI_WORKERS`,
           `  The number of workers (0 by default).`,
@@ -202,8 +211,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
     }
   } else {
     const proxy = new DemergiProxy({
-      host: options.host,
+      addr: options.addr,
       port: options.port,
+      hostList: options.hostList,
       httpsClientHelloSize: options.httpsClientHelloSize,
       httpsClientHelloTLSv: options.httpsClientHelloTLSv,
       httpNewlineSeparator: options.httpNewlineSeparator,

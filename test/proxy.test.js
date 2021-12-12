@@ -5,7 +5,7 @@ import { DemergiProxy } from "../src/proxy.js";
 global.console.error = jest.fn();
 
 const proxy = new DemergiProxy({
-  host: "127.0.0.1",
+  addr: "127.0.0.1",
   port: 58080,
 });
 
@@ -69,7 +69,7 @@ describe("Proxy", () => {
   test("Must have specific defaults", () => {
     const defaults = new DemergiProxy();
 
-    expect(defaults.host).toBe("::");
+    expect(defaults.addr).toBe("::");
     expect(defaults.port).toBe(8080);
     expect(defaults.resolver).toBeDefined();
   });
@@ -77,14 +77,14 @@ describe("Proxy", () => {
   test("Must be listening on the expected port", () => {
     expect(proxy.server.listening).toBe(true);
     expect(proxy.server.address()).toMatchObject({
-      address: proxy.host,
+      address: proxy.addr,
       port: proxy.port,
     });
   });
 
   test("Must establish an HTTPS connection to a valid domain", async () => {
     const res = await makeProxiedHttpsRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "cloudflare-dns.com",
     });
@@ -96,7 +96,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTPS connection to a valid domain and port", async () => {
     const res = await makeProxiedHttpsRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "cloudflare-dns.com",
       port: 443,
@@ -109,7 +109,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTPS connection to a valid IP address", async () => {
     const res = await makeProxiedHttpsRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "1.0.0.1",
     });
@@ -121,7 +121,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTPS connection to a valid IP address and port", async () => {
     const res = await makeProxiedHttpsRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "1.0.0.1",
       port: 443,
@@ -134,7 +134,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTP connection to a valid domain", async () => {
     const res = await makeProxiedHttpRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "cloudflare-dns.com",
     });
@@ -146,7 +146,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTP connection to a valid domain and port", async () => {
     const res = await makeProxiedHttpRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "cloudflare-dns.com",
       port: 80,
@@ -159,7 +159,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTP connection to a valid IP address", async () => {
     const res = await makeProxiedHttpRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "1.0.0.1",
     });
@@ -171,7 +171,7 @@ describe("Proxy", () => {
 
   test("Must establish an HTTP connection to a valid IP address and port", async () => {
     const res = await makeProxiedHttpRequest({
-      proxyHost: proxy.host,
+      proxyHost: proxy.addr,
       proxyPort: proxy.port,
       host: "1.0.0.1",
       port: 80,
@@ -185,7 +185,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTPS request to an invalid domain", async () => {
     await expect(
       makeProxiedHttpsRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "example.invalid",
       })
@@ -195,7 +195,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTPS request to an invalid domain and port", async () => {
     await expect(
       makeProxiedHttpsRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "example.invalid",
         port: 443,
@@ -206,7 +206,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTPS request to an invalid IP address", async () => {
     await expect(
       makeProxiedHttpsRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "300.300.300.300",
       })
@@ -216,7 +216,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTPS request to an invalid IP address and port", async () => {
     await expect(
       makeProxiedHttpsRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "300.300.300.300",
         port: 443,
@@ -227,7 +227,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTP request to an invalid domain", async () => {
     await expect(
       makeProxiedHttpRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "example.invalid",
       })
@@ -237,7 +237,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTP request to an invalid domain and port", async () => {
     await expect(
       makeProxiedHttpRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "example.invalid",
         port: 80,
@@ -248,7 +248,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTP request to an invalid IP address", async () => {
     await expect(
       makeProxiedHttpRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "300.300.300.300",
       })
@@ -258,7 +258,7 @@ describe("Proxy", () => {
   test("Must throw an exception for an HTTP request to an invalid IP address and port", async () => {
     await expect(
       makeProxiedHttpRequest({
-        proxyHost: proxy.host,
+        proxyHost: proxy.addr,
         proxyPort: proxy.port,
         host: "300.300.300.300",
         port: 80,

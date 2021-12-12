@@ -22,8 +22,9 @@ export class DemergiProxy {
   ]);
 
   constructor({
-    host = "::",
+    addr = "::",
     port = 8080,
+    hostList = [],
     httpsClientHelloSize = 40,
     httpsClientHelloTLSv = "1.3",
     httpNewlineSeparator = "\r\n",
@@ -33,8 +34,9 @@ export class DemergiProxy {
     httpMixHostHeaderCase = true,
     resolver = new DemergiResolver(),
   } = {}) {
-    this.host = host;
+    this.addr = addr;
     this.port = port;
+    this.hostList = new Set(hostList.map((h) => this.#splitOrigin(h)[0]));
     this.httpsClientHelloSize = httpsClientHelloSize;
     this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
     this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
@@ -146,21 +148,81 @@ export class DemergiProxy {
           return;
         }
 
-        if (isHTTPS) {
-          clientSocket.once("data", (clientHello) => {
-            upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
+        if (this.hostList.size === 0 || this.hostList.has(upstreamHost)) {
+          if (isHTTPS) {
+            clientSocket.once("data", (clientHello) => {
+              upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-            clientHello.writeUInt16BE(this.httpsClientHelloTLSv, 1);
+              clientHello.writeUInt16BE(this.httpsClientHelloTLSv, 1);
+
+              try {
+                if (this.httpsClientHelloSize > 0) {
+                  const size = this.httpsClientHelloSize;
+                  for (let i = 0; i < clientHello.length; i += size) {
+                    upstreamSocket.write(clientHello.subarray(i, i + size));
+                  }
+                } else {
+                  upstreamSocket.write(clientHello);
+                }
+              } catch (error) {
+                this.#closeSocket(
+                  upstreamSocket,
+                  `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
+                );
+                return;
+              }
+            });
 
             try {
-              if (this.httpsClientHelloSize > 0) {
-                const chunkSize = this.httpsClientHelloSize;
-                for (let i = 0; i < clientHello.length; i += chunkSize) {
-                  upstreamSocket.write(clientHello.subarray(i, i + chunkSize));
+              clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+            } catch (error) {
+              this.#closeSocket(
+                clientSocket,
+                `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
+              );
+              return;
+            }
+          } else {
+            upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
+
+            let clientData =
+              clientMethod +
+              this.httpMethodSeparator +
+              clientTarget +
+              this.httpTargetSeparator +
+              clientHttpVersion +
+              this.httpNewlineSeparator;
+
+            let nextOffset = requestLine.size;
+            let nextLine = this.#readLine(clientFirstData, nextOffset);
+            while (nextLine !== null) {
+              const nextTokens = this.#tokenize(
+                nextLine.data,
+                [0x09, 0x20, 0x3a],
+                1
+              );
+              if (nextTokens.length === 2) {
+                const key = nextTokens[0].toString("utf8");
+                const val = nextTokens[1].toString("utf8");
+                if (key.toLowerCase() === "host") {
+                  clientData +=
+                    (this.httpMixHostHeaderCase ? this.#mixCase(key) : key) +
+                    this.httpHostHeaderSeparator +
+                    (this.httpMixHostHeaderCase ? this.#mixCase(val) : val) +
+                    this.httpNewlineSeparator;
+                } else {
+                  clientData += key + ": " + val + this.httpNewlineSeparator;
                 }
               } else {
-                upstreamSocket.write(clientHello);
+                const val = nextLine.data.toString("utf8");
+                clientData += val + this.httpNewlineSeparator;
               }
+              nextOffset += nextLine.size;
+              nextLine = this.#readLine(clientFirstData, nextOffset);
+            }
+
+            try {
+              upstreamSocket.write(clientData);
             } catch (error) {
               this.#closeSocket(
                 upstreamSocket,
@@ -168,64 +230,32 @@ export class DemergiProxy {
               );
               return;
             }
-          });
-
-          try {
-            clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
-          } catch (error) {
-            this.#closeSocket(
-              clientSocket,
-              `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
-            );
-            return;
           }
         } else {
-          upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
+          if (isHTTPS) {
+            upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-          let clientData =
-            clientMethod +
-            this.httpMethodSeparator +
-            clientTarget +
-            this.httpTargetSeparator +
-            clientHttpVersion +
-            this.httpNewlineSeparator;
-
-          let nextOffset = requestLine.size;
-          let nextLine = this.#readLine(clientFirstData, nextOffset);
-          while (nextLine !== null) {
-            const nextTokens = this.#tokenize(
-              nextLine.data,
-              [0x09, 0x20, 0x3a],
-              1
-            );
-            if (nextTokens.length === 2) {
-              const key = nextTokens[0].toString("utf8");
-              const val = nextTokens[1].toString("utf8");
-              if (key.toLowerCase() === "host") {
-                clientData +=
-                  (this.httpMixHostHeaderCase ? this.#mixCase(key) : key) +
-                  this.httpHostHeaderSeparator +
-                  (this.httpMixHostHeaderCase ? this.#mixCase(val) : val) +
-                  this.httpNewlineSeparator;
-              } else {
-                clientData += key + ": " + val + this.httpNewlineSeparator;
-              }
-            } else {
-              const val = nextLine.data.toString("utf8");
-              clientData += val + this.httpNewlineSeparator;
+            try {
+              clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+            } catch (error) {
+              this.#closeSocket(
+                clientSocket,
+                `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
+              );
+              return;
             }
-            nextOffset += nextLine.size;
-            nextLine = this.#readLine(clientFirstData, nextOffset);
-          }
+          } else {
+            upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-          try {
-            upstreamSocket.write(clientData);
-          } catch (error) {
-            this.#closeSocket(
-              upstreamSocket,
-              `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
-            );
-            return;
+            try {
+              upstreamSocket.write(clientFirstData);
+            } catch (error) {
+              this.#closeSocket(
+                upstreamSocket,
+                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
+              );
+              return;
+            }
           }
         }
 
@@ -236,7 +266,7 @@ export class DemergiProxy {
 
   start() {
     return new Promise((resolve, reject) => {
-      this.server.listen(this.port, this.host, (error) => {
+      this.server.listen(this.port, this.addr, (error) => {
         if (error) reject(error);
         else resolve();
       });
@@ -292,7 +322,9 @@ export class DemergiProxy {
       // and port of a URL with or without protocol.
       /^(?:.*?:\/\/)?(?:\[?([^/]*?)\]?)(?::([0-9]+))?(?:\/.*)?$/
     );
-    return match !== null ? [match[1], Number.parseInt(match[2], 10)] : [];
+    return match !== null
+      ? [match[1].toLowerCase(), Number.parseInt(match[2], 10)]
+      : [];
   }
 
   #mixCase(str) {
