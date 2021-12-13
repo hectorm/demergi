@@ -54,6 +54,31 @@ export class DemergiProxy {
     this.server = net.createServer((clientSocket) => {
       this.sockets.add(clientSocket);
 
+      const upstreamSocket = new net.Socket();
+      this.sockets.add(upstreamSocket);
+
+      upstreamSocket.on("close", () => {
+        this.sockets.delete(upstreamSocket);
+        this.#closeSocket(clientSocket);
+      });
+
+      upstreamSocket.on("error", (error) => {
+        if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
+          console.error(error.message);
+        }
+      });
+
+      clientSocket.on("close", () => {
+        this.sockets.delete(clientSocket);
+        this.#closeSocket(upstreamSocket);
+      });
+
+      clientSocket.on("error", (error) => {
+        if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
+          console.error(error.message);
+        }
+      });
+
       clientSocket.once("data", async (clientFirstData) => {
         clientSocket.pause();
 
@@ -112,27 +137,6 @@ export class DemergiProxy {
           );
           return;
         }
-
-        const upstreamSocket = new net.Socket();
-        this.sockets.add(upstreamSocket);
-
-        upstreamSocket.on("close", () => {
-          this.sockets.delete(upstreamSocket);
-          this.#closeSocket(clientSocket);
-        });
-
-        upstreamSocket.on("error", () => {
-          this.#closeSocket(upstreamSocket);
-        });
-
-        clientSocket.on("close", () => {
-          this.sockets.delete(clientSocket);
-          this.#closeSocket(upstreamSocket);
-        });
-
-        clientSocket.on("error", () => {
-          this.#closeSocket(clientSocket);
-        });
 
         try {
           upstreamSocket.connect({
@@ -347,7 +351,8 @@ export class DemergiProxy {
   }
 
   #closeSocket(socket, reason) {
-    if (socket && !socket.destroyed) socket.destroy();
-    if (reason) console.error(reason);
+    if (socket && !socket.destroyed) {
+      socket.destroy(reason ? new Error(reason) : undefined);
+    }
   }
 }
