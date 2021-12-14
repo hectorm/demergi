@@ -2,6 +2,8 @@ import net from "net";
 import { DemergiResolver } from "./resolver.js";
 
 export class DemergiProxy {
+  #httpVersions = new Set(["HTTP/1.0", "HTTP/1.1"]);
+
   #httpMethods = new Set([
     "GET",
     "HEAD",
@@ -36,7 +38,7 @@ export class DemergiProxy {
   } = {}) {
     this.addr = addr;
     this.port = port;
-    this.hostList = new Set(hostList.map((h) => this.#splitOrigin(h)[0]));
+    this.hostList = new Set(hostList.map((e) => this.#parseOrigin(e).host));
     this.httpsClientHelloSize = httpsClientHelloSize;
     this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
     this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
@@ -83,7 +85,7 @@ export class DemergiProxy {
         clientSocket.pause();
 
         const requestLine = this.#readLine(clientFirstData, 0);
-        if (requestLine === null) {
+        if (requestLine.data === undefined) {
           this.#closeSocket(
             clientSocket,
             `Received an empty request line from client ${clientSocket.remoteAddress}`
@@ -101,8 +103,6 @@ export class DemergiProxy {
         }
 
         const clientMethod = requestTokens[0].toString("utf8");
-        const clientTarget = requestTokens[1].toString("utf8");
-        const clientHttpVersion = requestTokens[2].toString("utf8");
         if (!this.#httpMethods.has(clientMethod)) {
           this.#closeSocket(
             clientSocket,
@@ -111,18 +111,29 @@ export class DemergiProxy {
           return;
         }
 
-        const isHTTPS = clientMethod === "CONNECT";
-
-        const upstreamOrigin = this.#splitOrigin(clientTarget);
-        const upstreamHost = upstreamOrigin[0];
-        const upstreamPort = upstreamOrigin[1] || (isHTTPS ? 443 : 80);
-        if (!upstreamHost || !upstreamPort) {
+        const clientTarget = requestTokens[1].toString("utf8");
+        const upstreamOrigin = this.#parseOrigin(clientTarget);
+        if (upstreamOrigin.host === undefined) {
           this.#closeSocket(
             clientSocket,
             `Received an invalid target from client ${clientSocket.remoteAddress}`
           );
           return;
         }
+
+        const clientHttpVersion = requestTokens[2].toString("utf8");
+        if (!this.#httpVersions.has(clientHttpVersion)) {
+          this.#closeSocket(
+            clientSocket,
+            `Received an unsupported HTTP version from client ${clientSocket.remoteAddress}`
+          );
+          return;
+        }
+
+        const isConnect = clientMethod === "CONNECT";
+
+        const upstreamHost = upstreamOrigin.host;
+        const upstreamPort = upstreamOrigin.port || (isConnect ? 443 : 80);
 
         let upstreamAddr;
         try {
@@ -153,7 +164,7 @@ export class DemergiProxy {
         }
 
         if (this.hostList.size === 0 || this.hostList.has(upstreamHost)) {
-          if (isHTTPS) {
+          if (isConnect) {
             clientSocket.once("data", (clientHello) => {
               upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
@@ -199,7 +210,7 @@ export class DemergiProxy {
 
             let nextOffset = requestLine.size;
             let nextLine = this.#readLine(clientFirstData, nextOffset);
-            while (nextLine !== null) {
+            while (nextLine.data !== undefined) {
               const nextTokens = this.#tokenize(
                 nextLine.data,
                 [0x09, 0x20, 0x3a],
@@ -236,7 +247,7 @@ export class DemergiProxy {
             }
           }
         } else {
-          if (isHTTPS) {
+          if (isConnect) {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
             try {
@@ -288,14 +299,15 @@ export class DemergiProxy {
   }
 
   #readLine(buf, offset = 0) {
+    let data;
+    let size;
     const sol = offset;
     const eol = buf.indexOf(0x0a, sol);
     if (eol > 0) {
-      const data = buf.subarray(sol, buf[eol - 1] === 0x0d ? eol - 1 : eol);
-      const size = eol - sol + 1;
-      return { data, size };
+      data = buf.subarray(sol, buf[eol - 1] === 0x0d ? eol - 1 : eol);
+      size = eol - sol + 1;
     }
-    return null;
+    return { data, size };
   }
 
   #tokenize(buf, separators, limit = -1, offset = 0) {
@@ -320,15 +332,19 @@ export class DemergiProxy {
     return tokens;
   }
 
-  #splitOrigin(origin) {
+  #parseOrigin(origin) {
+    let host;
+    let port;
     const match = origin.match(
       // Extracts the hostname (also IPv4 or IPv6 address)
       // and port of a URL with or without protocol.
-      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]*?)\]?)(?::([0-9]+))?(?:\/.*)?$/i
+      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]+?)\]?)(?::([0-9]+))?(?:\/.*)?$/i
     );
-    return match !== null
-      ? [match[1].toLowerCase(), Number.parseInt(match[2], 10)]
-      : [];
+    if (match !== null) {
+      if (match[1] !== undefined) host = match[1].toLowerCase();
+      if (match[2] !== undefined) port = Number.parseInt(match[2], 10);
+    }
+    return { host, port };
   }
 
   #mixCase(str) {
