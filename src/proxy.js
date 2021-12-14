@@ -215,29 +215,39 @@ export class DemergiProxy {
             let nextOffset = requestLine.size;
             let nextLine = this.#readLine(clientFirstData, nextOffset);
             while (nextLine.data !== undefined) {
-              const nextTokens = this.#tokenize(
-                nextLine.data,
-                [0x09, 0x20, 0x3a],
-                1
-              );
-              if (nextTokens.length === 2) {
-                const key = nextTokens[0].toString("utf8");
-                const val = nextTokens[1].toString("utf8");
-                if (key.toLowerCase() === "host") {
-                  clientData +=
-                    (this.httpMixHostHeaderCase ? this.#mixCase(key) : key) +
-                    this.httpHostHeaderSeparator +
-                    (this.httpMixHostHeaderCase ? this.#mixCase(val) : val) +
-                    this.httpNewlineSeparator;
-                } else {
-                  clientData += key + ": " + val + this.httpNewlineSeparator;
-                }
+              // Break loop when the request header ends
+              if (nextLine.data.byteLength === 0) break;
+
+              const firstHostBytes = nextLine.data.subarray(0, 5);
+              if (firstHostBytes.toString("utf8").toLowerCase() === "host:") {
+                const hostKey = "Host";
+                const hostVal = nextLine.data
+                  .subarray(5)
+                  .toString("utf8")
+                  .trim();
+                clientData +=
+                  (this.httpMixHostHeaderCase
+                    ? this.#mixCase(hostKey)
+                    : hostKey) +
+                  this.httpHostHeaderSeparator +
+                  (this.httpMixHostHeaderCase
+                    ? this.#mixCase(hostVal)
+                    : hostVal) +
+                  this.httpNewlineSeparator;
               } else {
-                const val = nextLine.data.toString("utf8");
-                clientData += val + this.httpNewlineSeparator;
+                const data = nextLine.data.toString("utf8");
+                clientData += data + this.httpNewlineSeparator;
               }
+
               nextOffset += nextLine.size;
               nextLine = this.#readLine(clientFirstData, nextOffset);
+            }
+
+            // Write the request body
+            if (nextOffset < clientFirstData.byteLength) {
+              clientData += clientFirstData
+                .subarray(nextOffset)
+                .toString("utf8");
             }
 
             try {
@@ -310,6 +320,9 @@ export class DemergiProxy {
     if (eol > 0) {
       data = buf.subarray(sol, buf[eol - 1] === 0x0d ? eol - 1 : eol);
       size = eol - sol + 1;
+    } else if (offset < buf.byteLength) {
+      data = buf.subarray(offset);
+      size = data.byteLength;
     }
     return { data, size };
   }
