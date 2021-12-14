@@ -165,19 +165,23 @@ export class DemergiProxy {
 
         if (this.hostList.size === 0 || this.hostList.has(upstreamHost)) {
           if (isConnect) {
-            clientSocket.once("data", (clientHello) => {
+            clientSocket.once("data", (clientConnData) => {
               upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-              clientHello.writeUInt16BE(this.httpsClientHelloTLSv, 1);
+              const isHandshake = clientConnData.readUInt8(0) === 0x16;
+
+              if (isHandshake) {
+                clientConnData.writeUInt16BE(this.httpsClientHelloTLSv, 1);
+              }
 
               try {
-                if (this.httpsClientHelloSize > 0) {
+                if (isHandshake && this.httpsClientHelloSize > 0) {
                   const size = this.httpsClientHelloSize;
-                  for (let i = 0; i < clientHello.length; i += size) {
-                    upstreamSocket.write(clientHello.subarray(i, i + size));
+                  for (let i = 0; i < clientConnData.length; i += size) {
+                    upstreamSocket.write(clientConnData.subarray(i, i + size));
                   }
                 } else {
-                  upstreamSocket.write(clientHello);
+                  upstreamSocket.write(clientConnData);
                 }
               } catch (error) {
                 this.#closeSocket(
