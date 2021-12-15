@@ -4,17 +4,14 @@ ARG NODE_VERSION=16
 ## "build" stage
 ##################################################
 
-FROM docker.io/node:$NODE_VERSION-alpine as build
+FROM registry.access.redhat.com/ubi8/nodejs-$NODE_VERSION:latest as build
 
-WORKDIR /usr/local/src/demergi/
-RUN chown node:node ./
+WORKDIR $APP_ROOT/src/
 
-USER node:node
-
-COPY --chown=node:node ./package*.json ./
+COPY ./package*.json ./
 RUN npm ci
 
-COPY --chown=node:node ./ ./
+COPY ./ ./
 RUN npm run lint
 RUN npm run test
 RUN npm run build-bundle
@@ -23,14 +20,12 @@ RUN npm run build-bundle
 ## "main" stage
 ##################################################
 
-FROM docker.io/node:$NODE_VERSION-alpine as main
+FROM registry.access.redhat.com/ubi8/nodejs-$NODE_VERSION-minimal:latest as main
 
-WORKDIR /usr/local/lib/demergi/
-RUN chown root:root ./
+WORKDIR $APP_ROOT
 
-USER node:node
+COPY --from=build $APP_ROOT/src/dist/demergi.js ./
 
-COPY --from=build --chown=root:root /usr/local/src/demergi/dist/ ./
-
-ENTRYPOINT ["/usr/local/bin/node", "./demergi.js"]
+USER nobody:nobody
+ENTRYPOINT ["/usr/bin/node", "./demergi.js"]
 CMD []

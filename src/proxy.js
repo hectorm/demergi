@@ -215,7 +215,7 @@ export class DemergiProxy {
             let nextOffset = requestLine.size;
             let nextLine = this.#readLine(clientFirstData, nextOffset);
             while (nextLine.data !== undefined) {
-              // Break loop when the request header ends
+              // Break loop when the request header ends.
               if (nextLine.data.byteLength === 0) break;
 
               const firstHostBytes = nextLine.data.subarray(0, 5);
@@ -243,7 +243,7 @@ export class DemergiProxy {
               nextLine = this.#readLine(clientFirstData, nextOffset);
             }
 
-            // Write the request body
+            // Write the request body.
             if (nextOffset < clientFirstData.byteLength) {
               clientData += clientFirstData
                 .subarray(nextOffset)
