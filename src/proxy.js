@@ -204,7 +204,7 @@ export class DemergiProxy {
           } else {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
-            let clientData =
+            let clientHeaderData =
               clientMethod +
               this.httpMethodSeparator +
               clientTarget +
@@ -225,7 +225,7 @@ export class DemergiProxy {
                   .subarray(5)
                   .toString("utf8")
                   .trim();
-                clientData +=
+                clientHeaderData +=
                   (this.httpMixHostHeaderCase
                     ? this.#mixCase(hostKey)
                     : hostKey) +
@@ -236,22 +236,16 @@ export class DemergiProxy {
                   this.httpNewlineSeparator;
               } else {
                 const data = nextLine.data.toString("utf8");
-                clientData += data + this.httpNewlineSeparator;
+                clientHeaderData += data + this.httpNewlineSeparator;
               }
 
               nextOffset += nextLine.size;
               nextLine = this.#readLine(clientFirstData, nextOffset);
             }
 
-            // Write the request body.
-            if (nextOffset < clientFirstData.byteLength) {
-              clientData += clientFirstData
-                .subarray(nextOffset)
-                .toString("utf8");
-            }
-
             try {
-              upstreamSocket.write(clientData);
+              upstreamSocket.write(clientHeaderData);
+              upstreamSocket.write(clientFirstData.subarray(nextOffset));
             } catch (error) {
               this.#closeSocket(
                 upstreamSocket,
