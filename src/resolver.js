@@ -21,23 +21,26 @@ export class DemergiResolver {
   }
 
   async resolve(hostname, family = 4) {
-    const cached = this.dnsCache.get(hostname);
-    if (cached === undefined) {
-      let resolved;
+    let addr = this.dnsCache.get(hostname);
+    if (addr === undefined) {
+      let response;
       switch (this.dnsMode) {
         case "plain":
-          resolved = await this.#dnsResolve(hostname, family);
+          response = await this.#dnsResolve(hostname, family);
           break;
         case "dot":
-          resolved = await this.#dotResolve(hostname, family);
+          response = await this.#dotResolve(hostname, family);
           break;
         default:
           throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
       }
-      this.dnsCache.set(hostname, resolved.addr, resolved.ttl);
-      return resolved.addr;
+      this.dnsCache.set(hostname, response.addr, response.ttl);
+      addr = response.addr;
     }
-    return cached;
+    if (!addr) {
+      throw new Error("No address found");
+    }
+    return addr;
   }
 
   #dnsResolve(hostname, family) {
@@ -183,7 +186,7 @@ export class DemergiResolver {
           return;
         }
         const rcode = flags & 0x0f;
-        if (rcode !== 0) {
+        if (rcode !== 0 && rcode !== 3) {
           reject(
             new Error(
               [
@@ -230,7 +233,7 @@ export class DemergiResolver {
         }
 
         offset += 2;
-        for (let i = 0; i < ancount; i++) {
+        for (let i = 0; i < ancount + nscount; i++) {
           const aname = this.#decodeName(answer, offset);
           const atype = answer.readUInt16BE((offset += aname.bytesLength));
           const aclass = answer.readUInt16BE((offset += 2));
@@ -238,42 +241,64 @@ export class DemergiResolver {
           const rdlength = answer.readUInt16BE((offset += 4));
           const rdata = answer.slice((offset += 2), (offset += rdlength));
 
-          // Skip any record other than A or AAAA.
-          if ((atype !== 1 && atype !== 28) || aclass !== 1) {
-            continue;
-          }
+          // Skip any non IN class record.
+          if (aclass !== 1) continue;
 
-          if (
-            (family === 4 && rdlength !== 4) ||
-            (family === 6 && rdlength !== 16)
-          ) {
-            reject(
-              new Error(
-                [
-                  `Unexpected RDLENGTH ${rdlength} for address family ${family}`,
-                  `Encoded query: ${query.toString("base64")}`,
-                  `Encoded response: ${answer.toString("base64")}`,
-                ].join("\n")
-              )
-            );
-            return;
-          }
+          // Handle A type record.
+          if (atype === 1 && family === 4) {
+            if (rdlength !== 4) {
+              reject(
+                new Error(
+                  [
+                    `Unexpected RDLENGTH ${rdlength} for IPv4 address`,
+                    `Encoded query: ${query.toString("base64")}`,
+                    `Encoded response: ${answer.toString("base64")}`,
+                  ].join("\n")
+                )
+              );
+              return;
+            }
 
-          let addr = "";
-          if (family === 4) {
+            let addr = "";
             for (let i = 0; i < 4; i++) {
               if (i !== 0) addr += ".";
               addr += rdata[i].toString(10);
             }
-          } else if (family === 6) {
+
+            resolve({ addr, ttl });
+            return;
+          }
+
+          // Handle AAAA type record.
+          if (atype === 28 && family === 6) {
+            if (rdlength !== 16) {
+              reject(
+                new Error(
+                  [
+                    `Unexpected RDLENGTH ${rdlength} for IPv6 address`,
+                    `Encoded query: ${query.toString("base64")}`,
+                    `Encoded response: ${answer.toString("base64")}`,
+                  ].join("\n")
+                )
+              );
+              return;
+            }
+
+            let addr = "";
             for (let i = 0; i < 16; i += 2) {
               if (i !== 0) addr += ":";
               addr += ((rdata[i] << 8) | rdata[i + 1]).toString(16);
             }
+
+            resolve({ addr, ttl });
+            return;
           }
 
-          resolve({ addr, ttl });
-          return;
+          // Handle SOA type record.
+          if (atype === 6) {
+            resolve({ addr: "", ttl });
+            return;
+          }
         }
 
         reject(
