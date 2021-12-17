@@ -236,7 +236,11 @@ getopts: for (let i = 0; i < argv.length; i++) {
     await proxy.start();
     console.log(`Listening on ${proxy.addr}:${proxy.port}`);
 
-    process.on("SIGINT", async () => await proxy.stop());
-    process.on("SIGTERM", async () => await proxy.stop());
+    for (const event of ["SIGINT", "SIGTERM"]) {
+      process.on(event, async () => {
+        await proxy.stop();
+        process.exit(0);
+      });
+    }
   }
 })();
