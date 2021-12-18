@@ -37,6 +37,7 @@ jobs:
 
   build-docker:
     name: 'Docker'
+    needs: 'build-node'
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout'
