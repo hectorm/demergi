@@ -379,32 +379,3 @@ export class DemergiResolver {
     return crypto.createHash("sha256").update(data).digest("base64");
   }
 }
-
-export class DemergiResolverMaster extends DemergiResolver {
-  addMessageListener(worker) {
-    worker.on("message", async ({ hostname, family }) => {
-      try {
-        const addr = await this.resolve(hostname, family);
-        worker.send(addr);
-      } catch (error) {
-        console.error(error.message);
-        worker.send(null);
-      }
-    });
-  }
-}
-
-export class DemergiResolverWorker extends DemergiResolver {
-  async resolve(hostname, family) {
-    return new Promise((resolve, reject) => {
-      process.once("message", (addr) => {
-        if (!addr) {
-          reject(new Error("Resolver error"));
-          return;
-        }
-        resolve(addr);
-      });
-      process.send({ hostname, family });
-    });
-  }
-}

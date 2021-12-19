@@ -3,11 +3,7 @@
 import cluster from "cluster";
 import { getEnv, toStr, toInt, toBool, toList } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
-import {
-  DemergiResolver,
-  DemergiResolverMaster,
-  DemergiResolverWorker,
-} from "../src/resolver.js";
+import { DemergiResolver } from "../src/resolver.js";
 
 const options = {
   addr: toStr(getEnv("DEMERGI_ADDR")),
@@ -196,18 +192,8 @@ getopts: for (let i = 0; i < argv.length; i++) {
       console.log(`Worker ${worker.process.pid} died (${signal || code})`);
     });
 
-    const resolver = new DemergiResolverMaster({
-      dnsMode: options.dnsMode,
-      dnsCacheSize: options.dnsCacheSize,
-      dotHost: options.dotHost,
-      dotPort: options.dotPort,
-      dotTlsServername: options.dotTlsServername,
-      dotTlsPin: options.dotTlsPin,
-    });
-
     for (let i = 0; i < options.workers; i++) {
-      const worker = cluster.fork();
-      resolver.addMessageListener(worker);
+      cluster.fork();
     }
   } else {
     const proxy = new DemergiProxy({
@@ -221,16 +207,14 @@ getopts: for (let i = 0; i < argv.length; i++) {
       httpTargetSeparator: options.httpTargetSeparator,
       httpHostHeaderSeparator: options.httpHostHeaderSeparator,
       httpMixHostHeaderCase: options.httpMixHostHeaderCase,
-      resolver: cluster.isWorker
-        ? new DemergiResolverWorker()
-        : new DemergiResolver({
-            dnsMode: options.dnsMode,
-            dnsCacheSize: options.dnsCacheSize,
-            dotHost: options.dotHost,
-            dotPort: options.dotPort,
-            dotTlsServername: options.dotTlsServername,
-            dotTlsPin: options.dotTlsPin,
-          }),
+      resolver: new DemergiResolver({
+        dnsMode: options.dnsMode,
+        dnsCacheSize: options.dnsCacheSize,
+        dotHost: options.dotHost,
+        dotPort: options.dotPort,
+        dotTlsServername: options.dotTlsServername,
+        dotTlsPin: options.dotTlsPin,
+      }),
     });
 
     await proxy.start();
