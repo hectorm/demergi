@@ -14,7 +14,7 @@ RUN npm ci
 COPY ./ ./
 RUN npm run lint
 RUN npm run test
-RUN npm run build-bundle
+RUN npm run build
 
 ##################################################
 ## "main" stage

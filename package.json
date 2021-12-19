@@ -26,9 +26,8 @@
     "test": "jest",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
-    "build-bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node16 --outfile=./dist/demergi.js ./bin/demergi.js",
-    "build-binary": "pkg --target=node16-linuxstatic-x64,node16-linuxstatic-arm64,node16-win-x64 --out-path=./dist/ ./dist/demergi.js",
-    "build": "npm run build-bundle && npm run build-binary",
+    "build": "esbuild --bundle --minify --format=cjs --platform=node --target=node16 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
+    "build-binary": "npm run build && pkg --target=node16-linuxstatic-x64,node16-linuxstatic-arm64,node16-win-x64 --out-path=./dist/ ./dist/demergi.js",
     "clean": "rm -rf ./dist/",
     "preversion": "npm run lint && npm run test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
