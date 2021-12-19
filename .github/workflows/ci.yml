@@ -34,7 +34,7 @@ jobs:
       - name: 'Test'
         run: 'npm run test'
       - name: 'Build'
-        run: 'npm run build-bundle'
+        run: 'npm run build'
 
   build-docker:
     name: 'Docker'
