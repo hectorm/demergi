@@ -2,35 +2,53 @@
 ## "base-rootfs" stage
 ##################################################
 
-FROM registry.access.redhat.com/ubi8/ubi:latest as base-rootfs
+FROM registry.access.redhat.com/ubi8/ubi:latest AS base-rootfs
 
-RUN install -D /etc/yum.repos.d/ubi.repo /mnt/rootfs/etc/yum.repos.d/ubi.repo
-RUN dnf --installroot /mnt/rootfs/ module enable -y --releasever 8 nodejs:16
-RUN dnf --installroot /mnt/rootfs/ module install -y --releasever 8 --setopt install_weak_deps=false --nodocs nodejs:16/common
-RUN dnf --installroot /mnt/rootfs/ clean all && rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/dnf* /mnt/rootfs/var/log/yum.*
+RUN mkdir /mnt/rootfs/ \
+	&& install -D /etc/yum.repos.d/ubi.repo /mnt/rootfs/etc/yum.repos.d/ubi.repo \
+	&& dnf --installroot /mnt/rootfs/ install -y --releasever 8 --setopt install_weak_deps=false --nodocs coreutils-single glibc-minimal-langpack \
+	&& dnf --installroot /mnt/rootfs/ module reset -y nodejs && dnf --installroot /mnt/rootfs/ module enable -y nodejs:16 \
+	&& mkdir /mnt/rootfs/opt/app/ && chown 1001:0 /mnt/rootfs/opt/app/ && chmod 775 /mnt/rootfs/opt/app/ \
+	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
+
+##################################################
+## "build-rootfs" stage
+##################################################
+
+FROM base-rootfs AS build-rootfs
+
+RUN dnf --installroot /mnt/rootfs/ module install -y --setopt install_weak_deps=true --nodocs nodejs/development \
+	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
+
+##################################################
+## "main-rootfs" stage
+##################################################
+
+FROM base-rootfs AS main-rootfs
+
+RUN dnf --installroot /mnt/rootfs/ module install -y --setopt install_weak_deps=false --nodocs nodejs/minimal \
+	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
 
 ##################################################
 ## "base" stage
 ##################################################
 
-FROM scratch as base
+FROM scratch AS base
 
 ENV HOME=/opt/app/
 ENV NPM_CONFIG_PREFIX=${HOME}/.npm-global/
 ENV PATH=${HOME}/node_modules/.bin/:${NPM_CONFIG_PREFIX}/bin/:${PATH}
 
-COPY --from=base-rootfs /mnt/rootfs/ /
-
-RUN mkdir "${HOME:?}" && chown 1001:0 "${HOME:?}" && chmod 775 "${HOME:?}"
-WORKDIR ${HOME}
-
 USER 1001:0
+WORKDIR ${HOME}
 
 ##################################################
 ## "build" stage
 ##################################################
 
-FROM base as build
+FROM base AS build
+
+COPY --from=build-rootfs /mnt/rootfs/ /
 
 COPY --chown=1001:0 ./package*.json ./
 RUN npm ci
@@ -44,7 +62,9 @@ RUN npm run build
 ## "main" stage
 ##################################################
 
-FROM base as main
+FROM base AS main
+
+COPY --from=main-rootfs /mnt/rootfs/ /
 
 COPY --from=build ${HOME}/dist/demergi.js ./
 RUN /usr/bin/node ./demergi.js -v
