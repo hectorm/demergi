@@ -230,9 +230,7 @@ export class DemergiProxy {
                     ? this.#mixCase(hostKey)
                     : hostKey) +
                   this.httpHostHeaderSeparator +
-                  (this.httpMixHostHeaderCase
-                    ? this.#mixCase(hostVal)
-                    : hostVal) +
+                  hostVal +
                   this.httpNewlineSeparator;
               } else {
                 const data = nextLine.data.toString("utf8");
