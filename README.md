@@ -103,7 +103,7 @@ docker run -p 8080:8080 docker.io/hectormolinero/demergi:latest
 
 #### [GitHub Container Registry](https://github.com/hectorm/demergi/pkgs/container/demergi):
 ```sh
-docker run -p 8080:8080 docker pull ghcr.io/hectorm/demergi:latest
+docker run -p 8080:8080 ghcr.io/hectorm/demergi:latest
 ```
 
 ## License
