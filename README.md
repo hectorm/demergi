@@ -6,7 +6,7 @@
 
 # Demergi
 
-A zero dependency proxy server that helps to bypass the DPI (Deep Packet Inspection) systems implemented by various ISPs.
+A zero dependency proxy server that helps to bypass the DPI (Deep Packet Inspection) systems implemented by [various ISPs](./ISP.md).
 
 ## CLI
 
@@ -108,5 +108,4 @@ docker run -p 8080:8080 ghcr.io/hectorm/demergi:latest
 
 ## License
 
-[MIT License](https://github.com/hectorm/demergi/blob/master/LICENSE.md)
-© [Héctor Molinero Fernández](https://hector.molinero.dev/).
+[MIT License](./LICENSE.md) © [Héctor Molinero Fernández](https://hector.molinero.dev/).
