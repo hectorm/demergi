@@ -1,6 +1,6 @@
 [![Last version](https://img.shields.io/github/v/release/hectorm/demergi?label=version)](https://github.com/hectorm/demergi/releases)
 [![CI status](https://img.shields.io/github/workflow/status/hectorm/demergi/CI?label=build)](https://github.com/hectorm/demergi/actions/workflows/ci.yml)
-[![Docker image size](https://img.shields.io/docker/image-size/hectormolinero/demergi/latest?label=docker%20image%20size)](https://hub.docker.com/r/hectormolinero/demergi/tags)
+[![Docker image size](https://img.shields.io/docker/image-size/hectorm/demergi/latest?label=docker%20image%20size)](https://hub.docker.com/r/hectorm/demergi/tags)
 
 ***
 
@@ -96,9 +96,9 @@ Info:
 
 ## Docker
 
-#### [Docker Hub](https://hub.docker.com/r/hectormolinero/demergi/tags):
+#### [Docker Hub](https://hub.docker.com/r/hectorm/demergi/tags):
 ```sh
-docker run -p 8080:8080 docker.io/hectormolinero/demergi:latest
+docker run -p 8080:8080 docker.io/hectorm/demergi:latest
 ```
 
 #### [GitHub Container Registry](https://github.com/hectorm/demergi/pkgs/container/demergi):

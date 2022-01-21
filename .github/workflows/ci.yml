@@ -67,7 +67,7 @@ jobs:
         with:
           images: |
             ghcr.io/hectorm/demergi
-            docker.io/hectormolinero/demergi
+            docker.io/hectorm/demergi
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
