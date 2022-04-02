@@ -33,19 +33,19 @@
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
-    "@babel/core": "~7.17.5",
+    "@babel/core": "~7.17.8",
     "@babel/eslint-parser": "~7.17.0",
-    "@babel/eslint-plugin": "~7.16.5",
+    "@babel/eslint-plugin": "~7.17.7",
     "@babel/preset-env": "~7.16.11",
     "babel-jest": "~27.5.1",
-    "esbuild": "~0.14.23",
-    "eslint": "~8.10.0",
-    "eslint-config-prettier": "~8.4.0",
-    "eslint-plugin-jest": "~26.1.1",
+    "esbuild": "~0.14.30",
+    "eslint": "~8.12.0",
+    "eslint-config-prettier": "~8.5.0",
+    "eslint-plugin-jest": "~26.1.3",
     "eslint-plugin-prettier": "~4.0.0",
     "jest": "~27.5.1",
     "nodemon": "~2.0.15",
     "pkg": "~5.5.2",
-    "prettier": "~2.5.1"
+    "prettier": "~2.6.1"
   }
 }
