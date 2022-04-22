@@ -83,46 +83,7 @@ jobs:
           name: 'dist'
           path: './dist/*.js'
 
-  release:
-    name: 'Create GitHub release'
-    if: "startsWith(github.ref, 'refs/tags/')"
-    needs: ['build']
-    runs-on: 'ubuntu-latest'
-    permissions:
-      contents: 'write'
-    steps:
-      - name: 'Download artifacts'
-        uses: 'actions/download-artifact@v3'
-        with:
-          name: 'dist'
-      - name: 'Create release'
-        run: |
-          RELEASE_STATUS="$(curl -fs --proto '=https' --tlsv1.3 --globoff \
-            --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases/tags/${GITHUB_REF_NAME:?}" \
-            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            --header 'Accept: application/vnd.github.v3+json' \
-            --header 'Content-Type: application/json' \
-            --write-out '%{http_code}' --output /dev/null ||:)"
-          if [ "${RELEASE_STATUS:?}" != '200' ]; then
-            RELEASE_ID="$(curl -fsS --proto '=https' --tlsv1.3 --globoff \
-              --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases" \
-              --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-              --header 'Accept: application/vnd.github.v3+json' \
-              --header 'Content-Type: application/json' \
-              --data "$(jq -rn --arg tag "${GITHUB_REF_NAME:?}" '{"name": $tag, "tag_name": $tag, "generate_release_notes": true}')" | jq -r '.id')"
-            for asset in ./*; do
-              [ -f "${asset:?}" ] || continue
-              encodedAssetName="$(jq -rn --arg v "$(basename "${asset:?}")" '$v|@uri')"
-              curl -fsS --proto '=https' --tlsv1.3 --globoff \
-                --url "https://uploads.github.com/repos/${GITHUB_REPOSITORY:?}/releases/${RELEASE_ID:?}/assets?name=${encodedAssetName:?})" \
-                --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-                --header 'Accept: application/vnd.github.v3+json' \
-                --header 'Content-Type: application/octet-stream' \
-                --data-binary "@${asset:?}" --output /dev/null
-            done
-          fi
-
-  docker:
+  build-push-docker:
     name: 'Build and push Docker images'
     needs: ['build']
     runs-on: 'ubuntu-latest'
@@ -170,3 +131,42 @@ jobs:
           tags: '${{ steps.meta.outputs.tags }}'
           labels: '${{ steps.meta.outputs.labels }}'
           push: "${{ github.event_name != 'pull_request' }}"
+
+  release:
+    name: 'Create release'
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: ['build', 'build-push-docker']
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'write'
+    steps:
+      - name: 'Download artifacts'
+        uses: 'actions/download-artifact@v3'
+        with:
+          name: 'dist'
+      - name: 'Create release'
+        run: |
+          RELEASE_STATUS="$(curl -fs --proto '=https' --tlsv1.3 --globoff \
+            --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases/tags/${GITHUB_REF_NAME:?}" \
+            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'Accept: application/vnd.github.v3+json' \
+            --header 'Content-Type: application/json' \
+            --write-out '%{http_code}' --output /dev/null ||:)"
+          if [ "${RELEASE_STATUS:?}" != '200' ]; then
+            RELEASE_ID="$(curl -fsS --proto '=https' --tlsv1.3 --globoff \
+              --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases" \
+              --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+              --header 'Accept: application/vnd.github.v3+json' \
+              --header 'Content-Type: application/json' \
+              --data "$(jq -rn --arg tag "${GITHUB_REF_NAME:?}" '{"name": $tag, "tag_name": $tag, "generate_release_notes": true}')" | jq -r '.id')"
+            for asset in ./*; do
+              [ -f "${asset:?}" ] || continue
+              encodedAssetName="$(jq -rn --arg v "$(basename "${asset:?}")" '$v|@uri')"
+              curl -fsS --proto '=https' --tlsv1.3 --globoff \
+                --url "https://uploads.github.com/repos/${GITHUB_REPOSITORY:?}/releases/${RELEASE_ID:?}/assets?name=${encodedAssetName:?})" \
+                --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+                --header 'Accept: application/vnd.github.v3+json' \
+                --header 'Content-Type: application/octet-stream' \
+                --data-binary "@${asset:?}" --output /dev/null
+            done
+          fi
