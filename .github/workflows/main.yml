@@ -17,16 +17,15 @@ jobs:
     runs-on: 'ubuntu-latest'
     permissions:
       contents: 'read'
-    strategy:
-      matrix:
-        node_version: ['lts/*']
+    env:
+      NODE_VERSION: 'lts/*'
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@v3'
-      - name: 'Use Node.js ${{ matrix.node_version }}'
+      - name: 'Use Node.js ${{ env.NODE_VERSION }}'
         uses: 'actions/setup-node@v3'
         with:
-          node-version: '${{ matrix.node_version }}'
+          node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
       - name: 'Install'
         run: 'npm ci'
@@ -62,16 +61,15 @@ jobs:
     runs-on: 'ubuntu-latest'
     permissions:
       contents: 'read'
-    strategy:
-      matrix:
-        node_version: ['lts/*']
+    env:
+      NODE_VERSION: 'lts/*'
     steps:
       - name: 'Checkout'
         uses: 'actions/checkout@v3'
-      - name: 'Use Node.js ${{ matrix.node_version }}'
+      - name: 'Use Node.js ${{ env.NODE_VERSION }}'
         uses: 'actions/setup-node@v3'
         with:
-          node-version: '${{ matrix.node_version }}'
+          node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
       - name: 'Install'
         run: 'npm ci'
@@ -132,9 +130,31 @@ jobs:
           labels: '${{ steps.meta.outputs.labels }}'
           push: "${{ github.event_name != 'pull_request' }}"
 
-  release:
-    name: 'Create release'
-    if: "startsWith(github.ref, 'refs/tags/')"
+  publish-npm:
+    name: 'Publish npm package'
+    if: "startsWith(github.ref, 'refs/tags/v')"
+    needs: ['build', 'build-push-docker']
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+    env:
+      NODE_VERSION: 'lts/*'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v3'
+      - name: 'Use Node.js ${{ env.NODE_VERSION }}'
+        uses: 'actions/setup-node@v3'
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          registry-url: 'https://registry.npmjs.org'
+      - name: 'Publish package'
+        env:
+          NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}'
+        run: 'npm publish'
+
+  release-github:
+    name: 'Create GitHub release'
+    if: "startsWith(github.ref, 'refs/tags/v')"
     needs: ['build', 'build-push-docker']
     runs-on: 'ubuntu-latest'
     permissions:
