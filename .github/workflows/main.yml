@@ -172,21 +172,21 @@ jobs:
             --header 'Accept: application/vnd.github.v3+json' \
             --header 'Content-Type: application/json' \
             --write-out '%{http_code}' --output /dev/null ||:)"
-          if [ "${RELEASE_STATUS:?}" != '200' ]; then
-            RELEASE_ID="$(curl -fsS --proto '=https' --tlsv1.3 --globoff \
-              --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases" \
+          if [ "${RELEASE_STATUS:?}" = '200' ]; then exit 0; fi
+          RELEASE_ID="$(curl -fsS --proto '=https' --tlsv1.3 --globoff \
+            --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases" \
+            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            --header 'Accept: application/vnd.github.v3+json' \
+            --header 'Content-Type: application/json' \
+            --data "$(jq -rn --arg tag "${GITHUB_REF_NAME:?}" '{"name": $tag, "tag_name": $tag, "generate_release_notes": true}')" | jq -r '.id')"
+          if [ -z "${RELEASE_ID-}" ] || [ "${RELEASE_ID:?}" = 'null' ]; then exit 1; fi
+          for asset in ./*; do
+            [ -f "${asset:?}" ] || continue
+            encodedAssetName="$(jq -rn --arg v "$(basename "${asset:?}")" '$v|@uri')"
+            curl -fsS --proto '=https' --tlsv1.3 --globoff \
+              --url "https://uploads.github.com/repos/${GITHUB_REPOSITORY:?}/releases/${RELEASE_ID:?}/assets?name=${encodedAssetName:?})" \
               --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
               --header 'Accept: application/vnd.github.v3+json' \
-              --header 'Content-Type: application/json' \
-              --data "$(jq -rn --arg tag "${GITHUB_REF_NAME:?}" '{"name": $tag, "tag_name": $tag, "generate_release_notes": true}')" | jq -r '.id')"
-            for asset in ./*; do
-              [ -f "${asset:?}" ] || continue
-              encodedAssetName="$(jq -rn --arg v "$(basename "${asset:?}")" '$v|@uri')"
-              curl -fsS --proto '=https' --tlsv1.3 --globoff \
-                --url "https://uploads.github.com/repos/${GITHUB_REPOSITORY:?}/releases/${RELEASE_ID:?}/assets?name=${encodedAssetName:?})" \
-                --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-                --header 'Accept: application/vnd.github.v3+json' \
-                --header 'Content-Type: application/octet-stream' \
-                --data-binary "@${asset:?}" --output /dev/null
-            done
-          fi
+              --header 'Content-Type: application/octet-stream' \
+              --data-binary "@${asset:?}" --output /dev/null
+          done
