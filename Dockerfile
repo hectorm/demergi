@@ -2,12 +2,11 @@
 ## "base-rootfs" stage
 ##################################################
 
-FROM registry.access.redhat.com/ubi8/ubi:latest AS base-rootfs
+FROM registry.access.redhat.com/ubi9/ubi:latest AS base-rootfs
 
 RUN mkdir /mnt/rootfs/ \
 	&& install -D /etc/yum.repos.d/ubi.repo /mnt/rootfs/etc/yum.repos.d/ubi.repo \
-	&& dnf --installroot /mnt/rootfs/ install -y --releasever 8 --setopt install_weak_deps=false --nodocs coreutils-single glibc-minimal-langpack \
-	&& dnf --installroot /mnt/rootfs/ module reset -y nodejs && dnf --installroot /mnt/rootfs/ module enable -y nodejs:16 \
+	&& dnf --installroot /mnt/rootfs/ install -y --releasever 9 --setopt install_weak_deps=false --nodocs coreutils-single glibc-minimal-langpack \
 	&& mkdir /mnt/rootfs/opt/app/ && chown 1001:0 /mnt/rootfs/opt/app/ && chmod 775 /mnt/rootfs/opt/app/ \
 	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
 
@@ -17,7 +16,7 @@ RUN mkdir /mnt/rootfs/ \
 
 FROM base-rootfs AS build-rootfs
 
-RUN dnf --installroot /mnt/rootfs/ module install -y --setopt install_weak_deps=true --nodocs nodejs/development \
+RUN dnf --installroot /mnt/rootfs/ install -y --setopt install_weak_deps=true --nodocs nodejs npm \
 	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
 
 ##################################################
@@ -26,7 +25,7 @@ RUN dnf --installroot /mnt/rootfs/ module install -y --setopt install_weak_deps=
 
 FROM base-rootfs AS main-rootfs
 
-RUN dnf --installroot /mnt/rootfs/ module install -y --setopt install_weak_deps=false --nodocs nodejs/minimal \
+RUN dnf --installroot /mnt/rootfs/ install -y --setopt install_weak_deps=false --nodocs nodejs \
 	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
 
 ##################################################
