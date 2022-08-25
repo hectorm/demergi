@@ -37,7 +37,7 @@ jobs:
   test:
     name: 'Test on Node.js ${{ matrix.node_version }} and ${{ matrix.os }}'
     needs: ['lint']
-    runs-on: '${{matrix.os}}'
+    runs-on: '${{ matrix.os }}'
     permissions:
       contents: 'read'
     strategy:
