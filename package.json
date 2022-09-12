@@ -33,7 +33,7 @@
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
-    "@babel/core": "~7.18.13",
+    "@babel/core": "~7.19.0",
     "@babel/eslint-parser": "~7.18.9",
     "@babel/eslint-plugin": "~7.18.10",
     "@babel/preset-env": "~7.18.10",
