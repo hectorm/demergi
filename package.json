@@ -39,7 +39,7 @@
     "@babel/preset-env": "~7.19.1",
     "babel-jest": "~29.0.0",
     "esbuild": "~0.15.8",
-    "eslint": "~8.23.1",
+    "eslint": "~8.24.0",
     "eslint-config-prettier": "~8.5.0",
     "eslint-plugin-jest": "~27.0.4",
     "eslint-plugin-prettier": "~4.2.1",
