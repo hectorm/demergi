@@ -109,7 +109,7 @@ describe("Resolver", () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "1.0.0.1",
-      dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
+      dotTlsPin: "onnVq0MDPWFcKstTIAvgi362AXRNu/b/cHiWW3gozNk=",
     });
 
     const addr = await resolver.resolve("example.com");
@@ -121,7 +121,7 @@ describe("Resolver", () => {
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
-      dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
+      dotTlsPin: "onnVq0MDPWFcKstTIAvgi362AXRNu/b/cHiWW3gozNk=",
     });
 
     const addr = await resolver.resolve("example.com");
@@ -194,7 +194,7 @@ describe("Resolver", () => {
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
-      dotTlsPin: "XdhSFdS2Zao99m31qAd/19S0SDzT2D52btXyYWqnJn4=",
+      dotTlsPin: "onnVq0MDPWFcKstTIAvgi362AXRNu/b/cHiWW3gozNk=",
     });
 
     await expect(resolver.resolve("example.com")).rejects.toThrow();
