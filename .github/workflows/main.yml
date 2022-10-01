@@ -76,12 +76,18 @@ jobs:
       - name: 'Install'
         run: 'npm ci'
       - name: 'Build'
-        run: 'npm run build'
+        run: |
+          npm run build && npm run build-binary
+          for f in ./dist/*-linuxstatic-*; do gzip -n "${f:?}"; done
+          for f in ./dist/*-win-*.exe; do zip -mj "${f:?}.zip" "${f:?}"; done
       - name: 'Upload artifacts'
         uses: 'actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8'
         with:
           name: 'dist'
-          path: './dist/*.js'
+          path: |
+            ./dist/*.js
+            ./dist/*.gz
+            ./dist/*.zip
           retention-days: 1
 
   build-push-docker:
