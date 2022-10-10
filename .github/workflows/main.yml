@@ -23,7 +23,7 @@ jobs:
       NODE_VERSION: 'lts/*'
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b'
+        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8'
       - name: 'Use Node.js ${{ env.NODE_VERSION }}'
         uses: 'actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b'
         with:
@@ -46,7 +46,7 @@ jobs:
         node_version: ['14', '16', '18']
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b'
+        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8'
       - name: 'Use Node.js ${{ matrix.node_version }}'
         uses: 'actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b'
         with:
@@ -67,7 +67,7 @@ jobs:
       NODE_VERSION: 'lts/*'
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b'
+        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8'
       - name: 'Use Node.js ${{ env.NODE_VERSION }}'
         uses: 'actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b'
         with:
@@ -99,7 +99,7 @@ jobs:
       packages: 'write'
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b'
+        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8'
       - name: 'Set up QEMU'
         uses: 'docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8'
       - name: 'Set up Docker Buildx'
@@ -150,7 +150,7 @@ jobs:
       NODE_VERSION: 'lts/*'
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b'
+        uses: 'actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8'
       - name: 'Use Node.js ${{ env.NODE_VERSION }}'
         uses: 'actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b'
         with:
