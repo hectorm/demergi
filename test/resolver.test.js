@@ -83,22 +83,22 @@ describe("Resolver", () => {
     expect(net.isIPv6(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv4 address in DoT mode using Quad9 DNS with a valid server name", async () => {
+  test("Must resolve example.com to an IPv4 address in DoT mode using AdGuard DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
-      dotTlsServername: "dns.quad9.net",
+      dotHost: "dns.adguard.com",
+      dotTlsServername: "dns.adguard.com",
     });
 
     const addr = await resolver.resolve("example.com");
     expect(net.isIPv4(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv6 address in DoT mode using Quad9 DNS with a valid server name", async () => {
+  test("Must resolve example.com to an IPv6 address in DoT mode using AdGuard DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
-      dotTlsServername: "dns.quad9.net",
+      dotHost: "dns.adguard.com",
+      dotTlsServername: "dns.adguard.com",
     });
 
     const addr = await resolver.resolve("example.com", 6);
@@ -148,11 +148,11 @@ describe("Resolver", () => {
     await expect(resolver.resolve("example.invalid")).rejects.toThrow();
   });
 
-  test("Must throw an exception in DoT mode using Quad9 DNS with a valid server name for a request to an invalid domain", async () => {
+  test("Must throw an exception in DoT mode using AdGuard DNS with a valid server name for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
-      dotTlsServername: "dns.quad9.net",
+      dotHost: "dns.adguard.com",
+      dotTlsServername: "dns.adguard.com",
     });
 
     await expect(resolver.resolve("example.invalid")).rejects.toThrow();
