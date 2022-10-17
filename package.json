@@ -22,7 +22,7 @@
     "src/"
   ],
   "scripts": {
-    "lint": "eslint --ext .js --ext .cjs ./",
+    "lint": "eslint --ext .js --ext .mjs --ext .cjs ./",
     "test": "jest",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
