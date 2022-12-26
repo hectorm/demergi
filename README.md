@@ -1,5 +1,5 @@
 [![Last version](https://img.shields.io/github/v/release/hectorm/demergi?label=version)](https://github.com/hectorm/demergi/releases)
-[![CI status](https://img.shields.io/github/workflow/status/hectorm/demergi/CI?label=build)](https://github.com/hectorm/demergi/actions/workflows/ci.yml)
+[![CI status](https://img.shields.io/github/actions/workflow/status/hectorm/demergi/main.yml?branch=master)](https://github.com/hectorm/demergi/actions/workflows/main.yml)
 [![Docker image size](https://img.shields.io/docker/image-size/hectorm/demergi/latest?label=docker%20image%20size)](https://hub.docker.com/r/hectorm/demergi/tags)
 
 ***
