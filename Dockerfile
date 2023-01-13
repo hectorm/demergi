@@ -7,6 +7,7 @@ FROM registry.access.redhat.com/ubi9/ubi:latest AS base-rootfs
 RUN mkdir /mnt/rootfs/ \
 	&& install -D /etc/yum.repos.d/ubi.repo /mnt/rootfs/etc/yum.repos.d/ubi.repo \
 	&& dnf --installroot /mnt/rootfs/ install -y --releasever 9 --setopt install_weak_deps=false --nodocs coreutils-single glibc-minimal-langpack \
+	&& dnf --installroot /mnt/rootfs/ module reset -y nodejs && dnf --installroot /mnt/rootfs/ module enable -y nodejs:18 \
 	&& mkdir /mnt/rootfs/opt/app/ && chown 1001:0 /mnt/rootfs/opt/app/ && chmod 775 /mnt/rootfs/opt/app/ \
 	&& rm -rf /mnt/rootfs/var/cache/* /mnt/rootfs/var/log/* /mnt/rootfs/tmp/*
 
