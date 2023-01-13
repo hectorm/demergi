@@ -49,6 +49,7 @@ WORKDIR ${HOME}
 FROM base AS build
 
 COPY --from=build-rootfs /mnt/rootfs/ /
+RUN npm install -g npm@latest
 
 COPY --chown=1001:0 ./package*.json ./
 RUN npm ci
