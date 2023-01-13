@@ -29,6 +29,8 @@ jobs:
         with:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
+      - name: 'Upgrade npm'
+        run: 'npm install -g npm@latest'
       - name: 'Install'
         run: 'npm ci'
       - name: 'Lint'
@@ -52,6 +54,8 @@ jobs:
         with:
           node-version: '${{ matrix.node_version }}'
           cache: 'npm'
+      - name: 'Upgrade npm'
+        run: 'npm install -g npm@latest'
       - name: 'Install'
         run: 'npm ci'
       - name: 'Test'
@@ -73,6 +77,8 @@ jobs:
         with:
           node-version: '${{ env.NODE_VERSION }}'
           cache: 'npm'
+      - name: 'Upgrade npm'
+        run: 'npm install -g npm@latest'
       - name: 'Install'
         run: 'npm ci'
       - name: 'Build'
@@ -156,6 +162,8 @@ jobs:
         with:
           node-version: '${{ env.NODE_VERSION }}'
           registry-url: 'https://registry.npmjs.org'
+      - name: 'Upgrade npm'
+        run: 'npm install -g npm@latest'
       - name: 'Publish package'
         env:
           NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}'
