@@ -20,16 +20,18 @@ export class DemergiResolver {
     this.dotTlsPin = dotTlsPin;
   }
 
-  async resolve(hostname, family = 4) {
+  async resolve(hostname) {
     let addr = this.dnsCache.get(hostname);
     if (addr === undefined) {
       let response;
       switch (this.dnsMode) {
         case "plain":
-          response = await this.#dnsResolve(hostname, family);
+          response = await this.#dnsResolve(hostname, 4);
+          if (!response.addr) response = await this.#dnsResolve(hostname, 6);
           break;
         case "dot":
-          response = await this.#dotResolve(hostname, family);
+          response = await this.#dotResolve(hostname, 4);
+          if (!response.addr) response = await this.#dotResolve(hostname, 6);
           break;
         default:
           throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
@@ -44,10 +46,10 @@ export class DemergiResolver {
   }
 
   #dnsResolve(hostname, family) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const resolver = family === 6 ? dns.resolve6 : dns.resolve4;
       resolver(hostname, { ttl: true }, (error, addrs) => {
-        if (error) reject(error);
+        if (error || addrs.length === 0) resolve({ addr: null, ttl: 0 });
         else resolve({ addr: addrs[0].address, ttl: addrs[0].ttl });
       });
     });
@@ -296,7 +298,7 @@ export class DemergiResolver {
 
           // Handle SOA type record.
           if (atype === 6) {
-            resolve({ addr: "", ttl });
+            resolve({ addr: null, ttl });
             return;
           }
         }

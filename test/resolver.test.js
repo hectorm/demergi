@@ -13,21 +13,21 @@ describe("Resolver", () => {
     expect(defaults.dotTlsPin).toBeUndefined();
   });
 
-  test("Must resolve example.com to an IPv4 address in plain DNS mode", async () => {
+  test("Must resolve ipv4.google.com to an IPv4 address in plain DNS mode", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "plain",
     });
 
-    const addr = await resolver.resolve("example.com");
+    const addr = await resolver.resolve("ipv4.google.com");
     expect(net.isIPv4(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv6 address in plain DNS mode", async () => {
+  test("Must resolve ipv6.google.com to an IPv6 address in plain DNS mode", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "plain",
     });
 
-    const addr = await resolver.resolve("example.com", 6);
+    const addr = await resolver.resolve("ipv6.google.com");
     expect(net.isIPv6(addr)).toBe(true);
   });
 
@@ -39,69 +39,69 @@ describe("Resolver", () => {
     await expect(resolver.resolve("example.invalid")).rejects.toThrow();
   });
 
-  test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
+  test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
-    const addr = await resolver.resolve("example.com");
+    const addr = await resolver.resolve("ipv4.google.com");
     expect(net.isIPv4(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv6 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
+  test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
-    const addr = await resolver.resolve("example.com", 6);
+    const addr = await resolver.resolve("ipv6.google.com");
     expect(net.isIPv6(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv4 address in DoT mode using Google DNS with a valid server name", async () => {
+  test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Google DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "8.8.8.8",
       dotTlsServername: "dns.google",
     });
 
-    const addr = await resolver.resolve("example.com");
+    const addr = await resolver.resolve("ipv4.google.com");
     expect(net.isIPv4(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv6 address in DoT mode using Google DNS with a valid server name", async () => {
+  test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Google DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "8.8.8.8",
       dotTlsServername: "dns.google",
     });
 
-    const addr = await resolver.resolve("example.com", 6);
+    const addr = await resolver.resolve("ipv6.google.com");
     expect(net.isIPv6(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv4 address in DoT mode using AdGuard DNS with a valid server name", async () => {
+  test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using AdGuard DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "dns.adguard.com",
       dotTlsServername: "dns.adguard.com",
     });
 
-    const addr = await resolver.resolve("example.com");
+    const addr = await resolver.resolve("ipv4.google.com");
     expect(net.isIPv4(addr)).toBe(true);
   });
 
-  test("Must resolve example.com to an IPv6 address in DoT mode using AdGuard DNS with a valid server name", async () => {
+  test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using AdGuard DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "dns.adguard.com",
       dotTlsServername: "dns.adguard.com",
     });
 
-    const addr = await resolver.resolve("example.com", 6);
+    const addr = await resolver.resolve("ipv6.google.com");
     expect(net.isIPv6(addr)).toBe(true);
   });
 
