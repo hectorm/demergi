@@ -1,6 +1,6 @@
-import crypto from "crypto";
-import dns from "dns";
-import tls from "tls";
+import crypto from "node:crypto";
+import dns from "node:dns";
+import tls from "node:tls";
 import { LRU } from "./lru.js";
 
 export class DemergiResolver {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import cluster from "cluster";
+import cluster from "node:cluster";
 import { getEnv, toStr, toInt, toBool, toList } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import { DemergiResolver } from "../src/resolver.js";

@@ -1,4 +1,4 @@
-import net from "net";
+import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
 
 describe("Resolver", () => {
