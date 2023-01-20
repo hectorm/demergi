@@ -143,6 +143,8 @@ export class DemergiProxy {
                   if (options?.all) {
                     callback(null, response);
                   } else {
+                    // If Node.js doesn't implement the Happy Eyeballs
+                    // algorithm, fall back to prefer IPv4.
                     const { address, family } =
                       response.find(({ family }) => family === 4) ??
                       response.find(({ family }) => family === 6);

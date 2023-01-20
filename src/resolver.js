@@ -58,8 +58,13 @@ export class DemergiResolver {
 
   #resolvePlain(hostname, family) {
     return new Promise((resolve) => {
-      dns.lookup(hostname, { family }, (_, address) => {
-        resolve({ address: address || null, ttl: 0 });
+      const resolveDns = family === 6 ? dns.resolve6 : dns.resolve4;
+      resolveDns(hostname, { ttl: true }, (error, addresses) => {
+        if (error || addresses.length === 0) {
+          resolve({ address: null, ttl: 0 });
+        } else {
+          resolve({ address: addresses[0].address, ttl: addresses[0].ttl });
+        }
       });
     });
   }
