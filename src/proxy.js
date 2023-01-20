@@ -380,7 +380,12 @@ export class DemergiProxy {
 
   #closeSocket(socket, reason) {
     if (socket && !socket.destroyed) {
-      socket.destroy(reason ? new Error(reason) : undefined);
+      const error = reason ? new Error(reason) : undefined;
+      if (socket.connecting) {
+        socket.once("connect", () => socket.destroy(error));
+      } else {
+        socket.destroy(error);
+      }
     }
   }
 }
