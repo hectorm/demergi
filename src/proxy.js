@@ -59,6 +59,13 @@ export class DemergiProxy {
       const upstreamSocket = new net.Socket();
       this.sockets.add(upstreamSocket);
 
+      clientSocket.setTimeout(60000);
+      upstreamSocket.setTimeout(clientSocket.timeout);
+
+      upstreamSocket.on("timeout", () => {
+        this.#closeSocket(upstreamSocket);
+      });
+
       upstreamSocket.on("close", () => {
         this.sockets.delete(upstreamSocket);
         this.#closeSocket(clientSocket);
@@ -68,6 +75,10 @@ export class DemergiProxy {
         if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
           console.error(error.message);
         }
+      });
+
+      clientSocket.on("timeout", () => {
+        this.#closeSocket(clientSocket);
       });
 
       clientSocket.on("close", () => {
