@@ -18,8 +18,9 @@ describe("Resolver", () => {
       dnsMode: "plain",
     });
 
-    const addr = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv4.google.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must resolve ipv6.google.com to an IPv6 address in plain DNS mode", async () => {
@@ -27,8 +28,9 @@ describe("Resolver", () => {
       dnsMode: "plain",
     });
 
-    const addr = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv6.google.com");
+    expect(net.isIPv6(address)).toBe(true);
+    expect(family).toBe(6);
   });
 
   test("Must throw an exception in plain DNS mode for a request to an invalid domain", async () => {
@@ -46,8 +48,9 @@ describe("Resolver", () => {
       dotTlsServername: "cloudflare-dns.com",
     });
 
-    const addr = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv4.google.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
@@ -57,8 +60,9 @@ describe("Resolver", () => {
       dotTlsServername: "cloudflare-dns.com",
     });
 
-    const addr = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv6.google.com");
+    expect(net.isIPv6(address)).toBe(true);
+    expect(family).toBe(6);
   });
 
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Google DNS with a valid server name", async () => {
@@ -68,8 +72,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.google",
     });
 
-    const addr = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv4.google.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Google DNS with a valid server name", async () => {
@@ -79,8 +84,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.google",
     });
 
-    const addr = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv6.google.com");
+    expect(net.isIPv6(address)).toBe(true);
+    expect(family).toBe(6);
   });
 
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using AdGuard DNS with a valid server name", async () => {
@@ -90,8 +96,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.adguard.com",
     });
 
-    const addr = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv4.google.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using AdGuard DNS with a valid server name", async () => {
@@ -101,8 +108,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.adguard.com",
     });
 
-    const addr = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("ipv6.google.com");
+    expect(net.isIPv6(address)).toBe(true);
+    expect(family).toBe(6);
   });
 
   test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate", async () => {
@@ -112,8 +120,9 @@ describe("Resolver", () => {
       dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
     });
 
-    const addr = await resolver.resolve("example.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("example.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must resolve example.com to an IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate", async () => {
@@ -124,8 +133,9 @@ describe("Resolver", () => {
       dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
     });
 
-    const addr = await resolver.resolve("example.com");
-    expect(net.isIPv4(addr)).toBe(true);
+    const [{ address, family }] = await resolver.resolve("example.com");
+    expect(net.isIPv4(address)).toBe(true);
+    expect(family).toBe(4);
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name for a request to an invalid domain", async () => {

@@ -132,28 +132,26 @@ export class DemergiProxy {
 
         const isConnect = clientMethod === "CONNECT";
 
-        const upstreamHost = upstreamOrigin.host;
-        const upstreamPort = upstreamOrigin.port || (isConnect ? 443 : 80);
-
-        let upstreamAddr;
-        try {
-          upstreamAddr =
-            net.isIP(upstreamHost) === 0
-              ? await this.resolver.resolve(upstreamHost)
-              : upstreamHost;
-        } catch (error) {
-          this.#closeSocket(
-            clientSocket,
-            `Exception occurred while resolving target for client ${clientSocket.remoteAddress}: ${error.message}`
-          );
-          return;
-        }
-
         try {
           upstreamSocket.connect({
-            host: upstreamAddr,
-            port: upstreamPort,
-            lookup: (_, __, cb) => cb(),
+            host: upstreamOrigin.host,
+            port: upstreamOrigin.port || (isConnect ? 443 : 80),
+            autoSelectFamily: true,
+            lookup: (hostname, options, callback) => {
+              this.resolver.resolve(hostname).then(
+                (response) => {
+                  if (options?.all) {
+                    callback(null, response);
+                  } else {
+                    const { address, family } =
+                      response.find(({ family }) => family === 4) ??
+                      response.find(({ family }) => family === 6);
+                    callback(null, address, family);
+                  }
+                },
+                (error) => callback(error)
+              );
+            },
           });
         } catch (error) {
           this.#closeSocket(
@@ -163,7 +161,10 @@ export class DemergiProxy {
           return;
         }
 
-        if (this.hostList.size === 0 || this.hostList.has(upstreamHost)) {
+        if (
+          this.hostList.size === 0 ||
+          this.hostList.has(upstreamOrigin.host)
+        ) {
           if (isConnect) {
             clientSocket.once("data", (clientConnData) => {
               upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);

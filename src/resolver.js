@@ -21,41 +21,50 @@ export class DemergiResolver {
   }
 
   async resolve(hostname) {
-    let addr = this.dnsCache.get(hostname);
-    if (addr === undefined) {
-      let response;
-      switch (this.dnsMode) {
-        case "plain":
-          response = await this.#dnsResolve(hostname, 4);
-          if (!response.addr) response = await this.#dnsResolve(hostname, 6);
-          break;
-        case "dot":
-          response = await this.#dotResolve(hostname, 4);
-          if (!response.addr) response = await this.#dotResolve(hostname, 6);
-          break;
-        default:
-          throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
-      }
-      this.dnsCache.set(hostname, response.addr, response.ttl);
-      addr = response.addr;
+    // Request IPv4 and IPv6 addresses in parallel.
+    let addresses = await Promise.all(
+      [4, 6].map(async (family) => {
+        const cacheKey = `${hostname},${family}`;
+        let address = this.dnsCache.get(cacheKey);
+        if (address === undefined) {
+          const response = await this.#resolve(hostname, family);
+          this.dnsCache.set(cacheKey, response.address, response.ttl);
+          address = response.address;
+        }
+        return { address, family };
+      })
+    );
+
+    // There may be cached requests to non-existent domains, in which case the address is null.
+    addresses = addresses.filter(({ address }) => address !== null);
+
+    if (addresses.length === 0) {
+      throw new Error(`No address found for ${hostname}`);
     }
-    if (!addr) {
-      throw new Error("No address found");
-    }
-    return addr;
+
+    return addresses;
   }
 
-  #dnsResolve(hostname, family) {
+  #resolve(...args) {
+    switch (this.dnsMode) {
+      case "plain":
+        return this.#resolvePlain(...args);
+      case "dot":
+        return this.#resolveDot(...args);
+      default:
+        throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
+    }
+  }
+
+  #resolvePlain(hostname, family) {
     return new Promise((resolve) => {
-      const resolver = family === 6 ? dns.resolve6 : dns.resolve4;
-      resolver(hostname, { ttl: true }, (error, addrs) => {
-        if (error || addrs.length === 0) resolve({ addr: null, ttl: 0 });
-        else resolve({ addr: addrs[0].address, ttl: addrs[0].ttl });
+      dns.lookup(hostname, { family }, (_, address) => {
+        resolve({ address: address || null, ttl: 0 });
       });
     });
   }
 
-  #dotResolve(hostname, family) {
+  #resolveDot(hostname, family) {
     return new Promise((resolve, reject) => {
       let socket;
       try {
@@ -261,13 +270,13 @@ export class DemergiResolver {
               return;
             }
 
-            let addr = "";
+            let address = "";
             for (let i = 0; i < 4; i++) {
-              if (i !== 0) addr += ".";
-              addr += rdata[i].toString(10);
+              if (i !== 0) address += ".";
+              address += rdata[i].toString(10);
             }
 
-            resolve({ addr, ttl });
+            resolve({ address, ttl });
             return;
           }
 
@@ -286,19 +295,19 @@ export class DemergiResolver {
               return;
             }
 
-            let addr = "";
+            let address = "";
             for (let i = 0; i < 16; i += 2) {
-              if (i !== 0) addr += ":";
-              addr += ((rdata[i] << 8) | rdata[i + 1]).toString(16);
+              if (i !== 0) address += ":";
+              address += ((rdata[i] << 8) | rdata[i + 1]).toString(16);
             }
 
-            resolve({ addr, ttl });
+            resolve({ address, ttl });
             return;
           }
 
           // Handle SOA type record.
           if (atype === 6) {
-            resolve({ addr: null, ttl });
+            resolve({ address: null, ttl });
             return;
           }
         }
