@@ -72,8 +72,12 @@ export class DemergiProxy {
       });
 
       upstreamSocket.on("error", (error) => {
-        if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
-          console.error(error.message);
+        if (
+          error.code !== "ECONNRESET" &&
+          error.code !== "EPIPE" &&
+          error.message
+        ) {
+          console.error(error);
         }
       });
 
@@ -87,8 +91,12 @@ export class DemergiProxy {
       });
 
       clientSocket.on("error", (error) => {
-        if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
-          console.error(error.message);
+        if (
+          error.code !== "ECONNRESET" &&
+          error.code !== "EPIPE" &&
+          error.message
+        ) {
+          console.error(error);
         }
       });
 
