@@ -23,7 +23,7 @@ export class DemergiResolver {
   async resolve(hostname) {
     // Request IPv4 and IPv6 addresses in parallel.
     let addresses = await Promise.all(
-      [4, 6].map(async (family) => {
+      [6, 4].map(async (family) => {
         const cacheKey = `${hostname},${family}`;
         let address = this.dnsCache.get(cacheKey);
         if (address === undefined) {
