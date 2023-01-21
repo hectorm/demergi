@@ -10,6 +10,9 @@ const options = {
   port: toInt(getEnv("DEMERGI_PORT")),
   hostList: toList(getEnv("DEMERGI_HOST_LIST")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
+  inactivityTimeout: toInt(getEnv("DEMERGI_INACTIVITY_TIMEOUT")),
+  happyEyeballs: toBool(getEnv("DEMERGI_HAPPY_EYEBALLS")),
+  happyEyeballsTimeout: toInt(getEnv("DEMERGI_HAPPY_EYEBALLS_TIMEOUT")),
   dnsMode: toStr(getEnv("DEMERGI_DNS_MODE")),
   dnsCacheSize: toInt(getEnv("DEMERGI_DNS_CACHE_SIZE")),
   dotHost: toStr(getEnv("DEMERGI_DOT_HOST")),
@@ -43,6 +46,15 @@ getopts: for (let i = 0; i < argv.length; i++) {
     case "-W":
     case "--workers":
       options.workers = toInt(argv[++i]);
+      break;
+    case "--inactivity-timeout":
+      options.inactivityTimeout = toInt(argv[++i]);
+      break;
+    case "--happy-eyeballs":
+      options.happyEyeballs = toBool(argv[++i]);
+      break;
+    case "--happy-eyeballs-timeout":
+      options.happyEyeballsTimeout = toInt(argv[++i]);
       break;
     case "--dns-mode":
       options.dnsMode = toStr(argv[++i]);
@@ -109,6 +121,16 @@ getopts: for (let i = 0; i < argv.length; i++) {
           ``,
           `  -W, --workers NUM, $DEMERGI_WORKERS`,
           `  The number of workers (0 by default).`,
+          ``,
+          `  --inactivity-timeout NUM, $DEMERGI_INACTIVITY_TIMEOUT`,
+          `  Maximum time in ms before the connection is closed due to inactivity`,
+          `  (60000 by default).`,
+          ``,
+          `  --happy-eyeballs BOOL, $DEMERGI_HAPPY_EYEBALLS`,
+          `  Enable Happy Eyeballs algorithm (RFC 8305) (true by default).`,
+          ``,
+          `  --happy-eyeballs-timeout NUM, $DEMERGI_HAPPY_EYEBALLS_TIMEOUT`,
+          `  Maximum time in ms for IPv6 before trying IPv4 (250 by default).`,
           ``,
           `Resolver:`,
           `  --dns-mode STR, $DEMERGI_DNS_MODE`,
@@ -200,6 +222,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
       addr: options.addr,
       port: options.port,
       hostList: options.hostList,
+      inactivityTimeout: options.inactivityTimeout,
+      happyEyeballs: options.happyEyeballs,
+      happyEyeballsTimeout: options.happyEyeballsTimeout,
       httpsClientHelloSize: options.httpsClientHelloSize,
       httpsClientHelloTLSv: options.httpsClientHelloTLSv,
       httpNewlineSeparator: options.httpNewlineSeparator,

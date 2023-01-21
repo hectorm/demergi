@@ -37,6 +37,9 @@ export class DemergiProxy {
     addr = "::",
     port = 8080,
     hostList = [],
+    inactivityTimeout = 60000,
+    happyEyeballs = true,
+    happyEyeballsTimeout = 250,
     httpsClientHelloSize = 40,
     httpsClientHelloTLSv = "1.3",
     httpNewlineSeparator = "\r\n",
@@ -53,6 +56,9 @@ export class DemergiProxy {
     this.addr = addr;
     this.port = port;
     this.hostList = new Set(hostList.map((e) => this.#parseOrigin(e).host));
+    this.inactivityTimeout = inactivityTimeout;
+    this.happyEyeballs = happyEyeballs;
+    this.happyEyeballsTimeout = happyEyeballsTimeout;
     this.httpsClientHelloSize = httpsClientHelloSize;
     this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
     this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
@@ -92,8 +98,8 @@ export class DemergiProxy {
     const upstreamSocket = new net.Socket();
     this.sockets.add(upstreamSocket);
 
-    clientSocket.setTimeout(60000);
-    upstreamSocket.setTimeout(clientSocket.timeout);
+    clientSocket.setTimeout(this.inactivityTimeout);
+    upstreamSocket.setTimeout(this.inactivityTimeout);
 
     upstreamSocket.on("timeout", () => {
       this.#closeSocket(upstreamSocket);
@@ -189,7 +195,8 @@ export class DemergiProxy {
         upstreamSocket.connect({
           host,
           port: port ?? (isHTTPS ? 443 : 80),
-          autoSelectFamily: true,
+          autoSelectFamily: this.happyEyeballs,
+          autoSelectFamilyAttemptTimeout: this.happyEyeballsTimeout,
           lookup: (hostname, options, callback) => {
             this.resolver.resolve(hostname).then(
               (response) => {
