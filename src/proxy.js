@@ -75,7 +75,12 @@ export class DemergiProxy {
     return new Promise((resolve, reject) => {
       this.server.listen(this.port, this.addr, (error) => {
         if (error) reject(error);
-        else resolve();
+        else {
+          const { address, port } = this.server.address();
+          this.addr = address;
+          this.port = port;
+          resolve();
+        }
       });
     });
   }

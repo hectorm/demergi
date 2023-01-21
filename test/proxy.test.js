@@ -6,7 +6,7 @@ global.console.error = jest.fn();
 
 const proxy = new DemergiProxy({
   addr: "127.0.0.1",
-  port: 58080,
+  port: 0,
 });
 
 const makeProxiedHttpsRequest = ({ proxyHost, proxyPort, host, port } = {}) => {
