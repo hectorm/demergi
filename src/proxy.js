@@ -1,5 +1,15 @@
 import net from "node:net";
 import { DemergiResolver } from "./resolver.js";
+import {
+  ProxyTLSVersionError,
+  ProxyRequestMalformedError,
+  ProxyRequestMethodError,
+  ProxyRequestTargetError,
+  ProxyRequestHTTPVersionError,
+  ProxyUpstreamConnectError,
+  ProxyUpstreamDataError,
+  ProxyClientDataError,
+} from "./errors.js";
 
 export class DemergiProxy {
   #httpVersions = new Set(["HTTP/1.0", "HTTP/1.1"]);
@@ -50,7 +60,7 @@ export class DemergiProxy {
     this.sockets = new Set();
 
     if (this.httpsClientHelloTLSv === undefined) {
-      throw new Error(`Unsupported TLS version ${httpsClientHelloTLSv}`);
+      throw new ProxyTLSVersionError(httpsClientHelloTLSv);
     }
 
     this.server = net.createServer((clientSocket) => {
@@ -107,7 +117,7 @@ export class DemergiProxy {
         if (requestLine.data === undefined) {
           this.#closeSocket(
             clientSocket,
-            `Received an empty request line from client ${clientSocket.remoteAddress}`
+            new ProxyRequestMalformedError(clientSocket)
           );
           return;
         }
@@ -116,7 +126,7 @@ export class DemergiProxy {
         if (requestTokens.length !== 3) {
           this.#closeSocket(
             clientSocket,
-            `Received an invalid request line from client ${clientSocket.remoteAddress}`
+            new ProxyRequestMalformedError(clientSocket)
           );
           return;
         }
@@ -125,7 +135,7 @@ export class DemergiProxy {
         if (!this.#httpMethods.has(clientMethod)) {
           this.#closeSocket(
             clientSocket,
-            `Received an unsupported method from client ${clientSocket.remoteAddress}`
+            new ProxyRequestMethodError(clientSocket)
           );
           return;
         }
@@ -135,7 +145,7 @@ export class DemergiProxy {
         if (upstreamOrigin.host === undefined) {
           this.#closeSocket(
             clientSocket,
-            `Received an invalid target from client ${clientSocket.remoteAddress}`
+            new ProxyRequestTargetError(clientSocket)
           );
           return;
         }
@@ -144,7 +154,7 @@ export class DemergiProxy {
         if (!this.#httpVersions.has(clientHttpVersion)) {
           this.#closeSocket(
             clientSocket,
-            `Received an unsupported HTTP version from client ${clientSocket.remoteAddress}`
+            new ProxyRequestHTTPVersionError(clientSocket)
           );
           return;
         }
@@ -177,7 +187,7 @@ export class DemergiProxy {
         } catch (error) {
           this.#closeSocket(
             clientSocket,
-            `Exception occurred while creating upstream socket for client ${clientSocket.remoteAddress}: ${error.message}`
+            new ProxyUpstreamConnectError(upstreamSocket, error)
           );
           return;
         }
@@ -208,7 +218,7 @@ export class DemergiProxy {
               } catch (error) {
                 this.#closeSocket(
                   upstreamSocket,
-                  `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
+                  new ProxyUpstreamDataError(upstreamSocket, error)
                 );
                 return;
               }
@@ -219,7 +229,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#closeSocket(
                 clientSocket,
-                `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
+                new ProxyClientDataError(clientSocket, error)
               );
               return;
             }
@@ -269,7 +279,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#closeSocket(
                 upstreamSocket,
-                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
+                new ProxyUpstreamDataError(upstreamSocket, error)
               );
               return;
             }
@@ -283,7 +293,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#closeSocket(
                 clientSocket,
-                `Exception occurred while sending data to client ${clientSocket.remoteAddress}: ${error.message}`
+                new ProxyClientDataError(clientSocket, error)
               );
               return;
             }
@@ -295,7 +305,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#closeSocket(
                 upstreamSocket,
-                `Exception occurred while sending data to upstream ${upstreamSocket.remoteAddress}: ${error.message}`
+                new ProxyUpstreamDataError(upstreamSocket, error)
               );
               return;
             }
@@ -397,9 +407,8 @@ export class DemergiProxy {
       .replace(/\\v/g, "\v");
   }
 
-  #closeSocket(socket, reason) {
+  #closeSocket(socket, error) {
     if (socket && !socket.destroyed) {
-      const error = reason ? new Error(reason) : undefined;
       if (socket.connecting) {
         socket.once("connect", () => socket.destroy(error));
       } else {

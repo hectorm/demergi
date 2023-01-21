@@ -2,6 +2,20 @@ import crypto from "node:crypto";
 import dns from "node:dns";
 import tls from "node:tls";
 import { LRU } from "./lru.js";
+import {
+  ResolverNoAddressError,
+  ResolverDNSModeError,
+  ResolverDOTCertificatePINError,
+  ResolverDOTResponseLengthError,
+  ResolverDOTResponseIDError,
+  ResolverDOTResponseFlagValueError,
+  ResolverDOTResponseRCODEError,
+  ResolverDOTResponseEntryCountError,
+  ResolverDOTResponseQuestionError,
+  ResolverDOTResponseRDLENGTHError,
+  ResolverDOTResponseAnswerError,
+  ResolverDOTNoResponseError,
+} from "./errors.js";
 
 export class DemergiResolver {
   constructor({
@@ -39,7 +53,7 @@ export class DemergiResolver {
     addresses = addresses.filter(({ address }) => address !== null);
 
     if (addresses.length === 0) {
-      throw new Error(`No address found for ${hostname}`);
+      throw new ResolverNoAddressError(hostname);
     }
 
     return addresses;
@@ -52,7 +66,7 @@ export class DemergiResolver {
       case "dot":
         return this.#resolveDot(...args);
       default:
-        throw new Error(`Unknown DNS mode "${this.dnsMode}"`);
+        throw new ResolverDNSModeError(this.dnsMode);
     }
   }
 
@@ -127,13 +141,7 @@ export class DemergiResolver {
             answered = true;
             socket.destroy();
             reject(
-              new Error(
-                [
-                  "Certificate validation error, the public key does not match the pinned one",
-                  `Expected: ${this.dotTlsPin}`,
-                  `Received: ${pubkey256}`,
-                ].join("\n")
-              )
+              new ResolverDOTCertificatePINError(this.dotTlsPin, pubkey256)
             );
             return;
           }
@@ -148,15 +156,7 @@ export class DemergiResolver {
 
         const length = answer.readUInt16BE(0);
         if (length !== answer.byteLength - 2) {
-          reject(
-            new Error(
-              [
-                "Unexpected response length",
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseLengthError(query, answer));
           return;
         }
         // Strip length from answer.
@@ -167,15 +167,7 @@ export class DemergiResolver {
         const queryId = query.readUInt16BE(2);
         const answerId = answer.readUInt16BE(offset);
         if (answerId !== queryId) {
-          reject(
-            new Error(
-              [
-                "Received a different response ID",
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseIDError(query, answer));
           return;
         }
 
@@ -190,28 +182,12 @@ export class DemergiResolver {
         // const ad = (flags >> 5) & 0x01;
         // const cd = (flags >> 4) & 0x01;
         if (qr !== 1 || opcode !== 0 || tc !== 0) {
-          reject(
-            new Error(
-              [
-                "Unexpected flag value in header section",
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseFlagValueError(query, answer));
           return;
         }
         const rcode = flags & 0x0f;
         if (rcode !== 0 && rcode !== 3) {
-          reject(
-            new Error(
-              [
-                `${rcode} RCODE response`,
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseRCODEError(rcode, query, answer));
           return;
         }
 
@@ -220,15 +196,7 @@ export class DemergiResolver {
         const nscount = answer.readUInt16BE((offset += 2));
         const arcount = answer.readUInt16BE((offset += 2));
         if (qdcount !== 1 || ancount < 0 || nscount < 0 || arcount < 0) {
-          reject(
-            new Error(
-              [
-                "Unexpected entry count in header section",
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseEntryCountError(query, answer));
           return;
         }
 
@@ -236,15 +204,7 @@ export class DemergiResolver {
         const qtype = answer.readUInt16BE((offset += qname.bytesLength));
         const qclass = answer.readUInt16BE((offset += 2));
         if ((qtype !== 1 && qtype !== 28) || qclass !== 1) {
-          reject(
-            new Error(
-              [
-                "Unexpected response in question section",
-                `Encoded query: ${query.toString("base64")}`,
-                `Encoded response: ${answer.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTResponseQuestionError(query, answer));
           return;
         }
 
@@ -264,13 +224,7 @@ export class DemergiResolver {
           if (atype === 1 && family === 4) {
             if (rdlength !== 4) {
               reject(
-                new Error(
-                  [
-                    `Unexpected RDLENGTH ${rdlength} for IPv4 address`,
-                    `Encoded query: ${query.toString("base64")}`,
-                    `Encoded response: ${answer.toString("base64")}`,
-                  ].join("\n")
-                )
+                new ResolverDOTResponseRDLENGTHError(rdlength, query, answer)
               );
               return;
             }
@@ -289,13 +243,7 @@ export class DemergiResolver {
           if (atype === 28 && family === 6) {
             if (rdlength !== 16) {
               reject(
-                new Error(
-                  [
-                    `Unexpected RDLENGTH ${rdlength} for IPv6 address`,
-                    `Encoded query: ${query.toString("base64")}`,
-                    `Encoded response: ${answer.toString("base64")}`,
-                  ].join("\n")
-                )
+                new ResolverDOTResponseRDLENGTHError(rdlength, query, answer)
               );
               return;
             }
@@ -317,27 +265,12 @@ export class DemergiResolver {
           }
         }
 
-        reject(
-          new Error(
-            [
-              "No valid answer found",
-              `Encoded query: ${query.toString("base64")}`,
-              `Encoded response: ${answer.toString("base64")}`,
-            ].join("\n")
-          )
-        );
+        reject(new ResolverDOTResponseAnswerError(query, answer));
       });
 
       socket.on("close", () => {
         if (!answered) {
-          reject(
-            new Error(
-              [
-                "Connection closed without response",
-                `Encoded query: ${query.toString("base64")}`,
-              ].join("\n")
-            )
-          );
+          reject(new ResolverDOTNoResponseError(query));
         }
       });
 
