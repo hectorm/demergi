@@ -320,6 +320,36 @@ export class DemergiProxy {
     });
   };
 
+  #socketDestroy(socket, error) {
+    if (socket && !socket.destroyed) {
+      if (socket.connecting) {
+        socket.once("connect", () => socket.destroy(error));
+      } else {
+        socket.destroy(error);
+      }
+    }
+  }
+
+  #socketTimeoutHandler(socket) {
+    this.#socketDestroy(socket);
+  }
+
+  #socketCloseHandler(socket, relatedSocket) {
+    this.sockets.delete(socket);
+    this.#socketDestroy(relatedSocket);
+  }
+
+  #socketErrorHandler(error) {
+    if (
+      !(error instanceof ResolverNoAddressError) &&
+      error.code !== "ECONNRESET" &&
+      error.code !== "EPIPE" &&
+      error.message?.length > 0
+    ) {
+      console.error(error);
+    }
+  }
+
   #readLine(buf, offset = 0) {
     let data;
     let size;
@@ -389,35 +419,5 @@ export class DemergiProxy {
       .replace(/\\r/g, "\r")
       .replace(/\\t/g, "\t")
       .replace(/\\v/g, "\v");
-  }
-
-  #socketDestroy(socket, error) {
-    if (socket && !socket.destroyed) {
-      if (socket.connecting) {
-        socket.once("connect", () => socket.destroy(error));
-      } else {
-        socket.destroy(error);
-      }
-    }
-  }
-
-  #socketTimeoutHandler(socket) {
-    this.#socketDestroy(socket);
-  }
-
-  #socketCloseHandler(socket, relatedSocket) {
-    this.sockets.delete(socket);
-    this.#socketDestroy(relatedSocket);
-  }
-
-  #socketErrorHandler(error) {
-    if (
-      !(error instanceof ResolverNoAddressError) &&
-      error.code !== "ECONNRESET" &&
-      error.code !== "EPIPE" &&
-      error.message?.length > 0
-    ) {
-      console.error(error);
-    }
   }
 }
