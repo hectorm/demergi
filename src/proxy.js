@@ -9,6 +9,7 @@ import {
   ProxyUpstreamConnectError,
   ProxyUpstreamDataError,
   ProxyClientDataError,
+  ResolverNoAddressError,
 } from "./errors.js";
 
 export class DemergiProxy {
@@ -411,6 +412,7 @@ export class DemergiProxy {
 
   #socketErrorHandler(error) {
     if (
+      !(error instanceof ResolverNoAddressError) &&
       error.code !== "ECONNRESET" &&
       error.code !== "EPIPE" &&
       error.message?.length > 0
