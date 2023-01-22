@@ -127,7 +127,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  (60000 by default).`,
           ``,
           `  --happy-eyeballs BOOL, $DEMERGI_HAPPY_EYEBALLS`,
-          `  Enable Happy Eyeballs algorithm (RFC 8305) (true by default).`,
+          `  Enable Happy Eyeballs algorithm (RFC 8305) (EXPERIMENTAL) (false by default).`,
           ``,
           `  --happy-eyeballs-timeout NUM, $DEMERGI_HAPPY_EYEBALLS_TIMEOUT`,
           `  Maximum time in ms for IPv6 before trying IPv4 (250 by default).`,

@@ -39,7 +39,7 @@ export class DemergiProxy {
     port = 8080,
     hostList = [],
     inactivityTimeout = 60000,
-    happyEyeballs = true,
+    happyEyeballs = false,
     happyEyeballsTimeout = 250,
     httpsClientHelloSize = 40,
     httpsClientHelloTLSv = "1.3",
@@ -192,8 +192,7 @@ export class DemergiProxy {
                 if (options?.all) {
                   callback(null, response);
                 } else {
-                  // If Node.js doesn't implement the Happy Eyeballs
-                  // algorithm, fall back to prefer IPv4.
+                  // If Happy Eyeballs is disabled, prefer IPv4.
                   const { address, family } =
                     response.find(({ family }) => family === 4) ??
                     response.find(({ family }) => family === 6);

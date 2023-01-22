@@ -71,7 +71,7 @@ describe("Proxy", () => {
 
     expect(defaults.addr).toBe("::");
     expect(defaults.port).toBe(8080);
-    expect(defaults.happyEyeballs).toBe(true);
+    expect(defaults.happyEyeballs).toBe(false);
     expect(defaults.resolver).toBeDefined();
   });
 
