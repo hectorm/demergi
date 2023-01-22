@@ -38,7 +38,7 @@ export class ProxyUpstreamConnectError extends Error {
   }
 }
 
-export class ProxyUpstreamDataError extends Error {
+export class ProxyUpstreamWriteError extends Error {
   constructor(socket, error) {
     super(
       `Exception occurred while sending data to upstream ${socket.remoteAddress}: ${error.message}`
@@ -46,7 +46,7 @@ export class ProxyUpstreamDataError extends Error {
   }
 }
 
-export class ProxyClientDataError extends Error {
+export class ProxyClientWriteError extends Error {
   constructor(socket, error) {
     super(
       `Exception occurred while sending data to client ${socket.remoteAddress}: ${error.message}`

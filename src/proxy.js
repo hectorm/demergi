@@ -7,8 +7,8 @@ import {
   ProxyRequestTargetError,
   ProxyRequestHTTPVersionError,
   ProxyUpstreamConnectError,
-  ProxyUpstreamDataError,
-  ProxyClientDataError,
+  ProxyUpstreamWriteError,
+  ProxyClientWriteError,
   ResolverNoAddressError,
 } from "./errors.js";
 
@@ -235,7 +235,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#socketDestroy(
                 upstreamSocket,
-                new ProxyUpstreamDataError(upstreamSocket, error)
+                new ProxyUpstreamWriteError(upstreamSocket, error)
               );
               return;
             }
@@ -249,7 +249,7 @@ export class DemergiProxy {
         } catch (error) {
           this.#socketDestroy(
             clientSocket,
-            new ProxyClientDataError(clientSocket, error)
+            new ProxyClientWriteError(clientSocket, error)
           );
           return;
         }
@@ -299,7 +299,7 @@ export class DemergiProxy {
           } catch (error) {
             this.#socketDestroy(
               upstreamSocket,
-              new ProxyUpstreamDataError(upstreamSocket, error)
+              new ProxyUpstreamWriteError(upstreamSocket, error)
             );
             return;
           }
@@ -310,7 +310,7 @@ export class DemergiProxy {
         } catch (error) {
           this.#socketDestroy(
             upstreamSocket,
-            new ProxyUpstreamDataError(upstreamSocket, error)
+            new ProxyUpstreamWriteError(upstreamSocket, error)
           );
           return;
         }
