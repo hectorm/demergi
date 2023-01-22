@@ -108,10 +108,10 @@ export class DemergiProxy {
     upstreamSocket.setTimeout(this.inactivityTimeout);
 
     clientSocket.on("timeout", () => {
-      this.#socketTimeoutHandler(clientSocket);
+      this.#socketTimeoutHandler(clientSocket, upstreamSocket);
     });
     upstreamSocket.on("timeout", () => {
-      this.#socketTimeoutHandler(upstreamSocket);
+      this.#socketTimeoutHandler(upstreamSocket, clientSocket);
     });
 
     clientSocket.on("close", () => {
@@ -329,8 +329,8 @@ export class DemergiProxy {
     }
   }
 
-  #socketTimeoutHandler(socket) {
-    this.#socketDestroy(socket);
+  #socketTimeoutHandler(...args) {
+    this.#socketCloseHandler(...args);
   }
 
   #socketCloseHandler(socket, relatedSocket) {
