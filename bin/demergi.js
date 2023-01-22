@@ -97,7 +97,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
       break;
     case "-v":
     case "--version":
-      console.log(`Demergi 1.3.0`);
+      console.log(`Demergi 1.3.1`);
       process.exit(0);
       break;
     case "-h":
