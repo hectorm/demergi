@@ -41,9 +41,18 @@ export class DemergiResolver {
         const cacheKey = `${hostname},${family}`;
         let address = this.dnsCache.get(cacheKey);
         if (address === undefined) {
-          const response = await this.#resolve(hostname, family);
-          this.dnsCache.set(cacheKey, response.address, response.ttl);
-          address = response.address;
+          try {
+            const response = await this.#resolve(hostname, family);
+            this.dnsCache.set(cacheKey, response.address, response.ttl);
+            address = response.address;
+          } catch (error) {
+            if (error instanceof ResolverDOTResponseAnswerError) {
+              console.error(error);
+              address = null;
+            } else {
+              throw error;
+            }
+          }
         }
         return { address, family };
       })

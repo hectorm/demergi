@@ -1,6 +1,8 @@
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
 
+global.console.error = jest.fn();
+
 describe("Resolver", () => {
   test("Must have specific defaults", () => {
     const defaults = new DemergiResolver();
