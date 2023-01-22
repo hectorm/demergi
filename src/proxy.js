@@ -98,50 +98,33 @@ export class DemergiProxy {
   }
 
   #connectionListener = (clientSocket) => {
-    this.sockets.add(clientSocket);
-
     const upstreamSocket = new net.Socket();
+
+    this.sockets.add(clientSocket);
     this.sockets.add(upstreamSocket);
 
     clientSocket.setTimeout(this.inactivityTimeout);
     upstreamSocket.setTimeout(this.inactivityTimeout);
 
-    upstreamSocket.on("timeout", () => {
-      this.#closeSocket(upstreamSocket);
-    });
-
-    upstreamSocket.on("close", () => {
-      this.sockets.delete(upstreamSocket);
-      this.#closeSocket(clientSocket);
-    });
-
-    upstreamSocket.on("error", (error) => {
-      if (
-        error.code !== "ECONNRESET" &&
-        error.code !== "EPIPE" &&
-        error.message
-      ) {
-        console.error(error);
-      }
-    });
-
     clientSocket.on("timeout", () => {
-      this.#closeSocket(clientSocket);
+      this.#socketTimeoutHandler(clientSocket);
+    });
+    upstreamSocket.on("timeout", () => {
+      this.#socketTimeoutHandler(upstreamSocket);
     });
 
     clientSocket.on("close", () => {
-      this.sockets.delete(clientSocket);
-      this.#closeSocket(upstreamSocket);
+      this.#socketCloseHandler(clientSocket, upstreamSocket);
+    });
+    upstreamSocket.on("close", () => {
+      this.#socketCloseHandler(upstreamSocket, clientSocket);
     });
 
     clientSocket.on("error", (error) => {
-      if (
-        error.code !== "ECONNRESET" &&
-        error.code !== "EPIPE" &&
-        error.message
-      ) {
-        console.error(error);
-      }
+      this.#socketErrorHandler(error);
+    });
+    upstreamSocket.on("error", (error) => {
+      this.#socketErrorHandler(error);
     });
 
     clientSocket.once("data", (firstData) => {
@@ -149,7 +132,7 @@ export class DemergiProxy {
 
       const requestLine = this.#readLine(firstData, 0);
       if (requestLine.data === undefined) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyRequestMalformedError(clientSocket)
         );
@@ -158,7 +141,7 @@ export class DemergiProxy {
 
       const requestTokens = this.#tokenize(requestLine.data, [0x09, 0x20], 3);
       if (requestTokens.length !== 3) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyRequestMalformedError(clientSocket)
         );
@@ -167,7 +150,7 @@ export class DemergiProxy {
 
       const httpMethod = requestTokens[0].toString("utf8");
       if (!this.#httpMethods.has(httpMethod)) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyRequestMethodError(clientSocket)
         );
@@ -177,7 +160,7 @@ export class DemergiProxy {
       const target = requestTokens[1].toString("utf8");
       const { host, port } = this.#parseOrigin(target);
       if (host === undefined) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyRequestTargetError(clientSocket)
         );
@@ -186,7 +169,7 @@ export class DemergiProxy {
 
       const httpVersion = requestTokens[2].toString("utf8");
       if (!this.#httpVersions.has(httpVersion)) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyRequestHTTPVersionError(clientSocket)
         );
@@ -221,7 +204,7 @@ export class DemergiProxy {
           },
         });
       } catch (error) {
-        this.#closeSocket(
+        this.#socketDestroy(
           clientSocket,
           new ProxyUpstreamConnectError(upstreamSocket, error)
         );
@@ -249,7 +232,7 @@ export class DemergiProxy {
                 upstreamSocket.write(connData);
               }
             } catch (error) {
-              this.#closeSocket(
+              this.#socketDestroy(
                 upstreamSocket,
                 new ProxyUpstreamDataError(upstreamSocket, error)
               );
@@ -263,7 +246,7 @@ export class DemergiProxy {
         try {
           clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
         } catch (error) {
-          this.#closeSocket(
+          this.#socketDestroy(
             clientSocket,
             new ProxyClientDataError(clientSocket, error)
           );
@@ -313,7 +296,7 @@ export class DemergiProxy {
           try {
             upstreamSocket.write(headerData);
           } catch (error) {
-            this.#closeSocket(
+            this.#socketDestroy(
               upstreamSocket,
               new ProxyUpstreamDataError(upstreamSocket, error)
             );
@@ -324,7 +307,7 @@ export class DemergiProxy {
         try {
           upstreamSocket.write(firstData.subarray(firstDataOffset));
         } catch (error) {
-          this.#closeSocket(
+          this.#socketDestroy(
             upstreamSocket,
             new ProxyUpstreamDataError(upstreamSocket, error)
           );
@@ -407,13 +390,32 @@ export class DemergiProxy {
       .replace(/\\v/g, "\v");
   }
 
-  #closeSocket(socket, error) {
+  #socketDestroy(socket, error) {
     if (socket && !socket.destroyed) {
       if (socket.connecting) {
         socket.once("connect", () => socket.destroy(error));
       } else {
         socket.destroy(error);
       }
+    }
+  }
+
+  #socketTimeoutHandler(socket) {
+    this.#socketDestroy(socket);
+  }
+
+  #socketCloseHandler(socket, relatedSocket) {
+    this.sockets.delete(socket);
+    this.#socketDestroy(relatedSocket);
+  }
+
+  #socketErrorHandler(error) {
+    if (
+      error.code !== "ECONNRESET" &&
+      error.code !== "EPIPE" &&
+      error.message?.length > 0
+    ) {
+      console.error(error);
     }
   }
 }
