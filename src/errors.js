@@ -94,49 +94,49 @@ export class ResolverDOTResponseLengthError extends ResolverDOTResponseError {
   }
 }
 
-export class ResolverDOTResponseIDError extends Error {
+export class ResolverDOTResponseIDError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Received a different response ID", query, response);
   }
 }
 
-export class ResolverDOTResponseFlagValueError extends Error {
+export class ResolverDOTResponseFlagValueError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Unexpected flag value in header section", query, response);
   }
 }
 
-export class ResolverDOTResponseRCODEError extends Error {
+export class ResolverDOTResponseRCODEError extends ResolverDOTResponseError {
   constructor(rcode, query, response) {
     super(`Unexpected ${rcode} RCODE`, query, response);
   }
 }
 
-export class ResolverDOTResponseEntryCountError extends Error {
+export class ResolverDOTResponseEntryCountError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Unexpected entry count in header section", query, response);
   }
 }
 
-export class ResolverDOTResponseQuestionError extends Error {
+export class ResolverDOTResponseQuestionError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Unexpected response in question section", query, response);
   }
 }
 
-export class ResolverDOTResponseRDLENGTHError extends Error {
+export class ResolverDOTResponseRDLENGTHError extends ResolverDOTResponseError {
   constructor(rdlength, query, response) {
     super(`Unexpected RDLENGTH ${rdlength}`, query, response);
   }
 }
 
-export class ResolverDOTResponseAnswerError extends Error {
+export class ResolverDOTResponseAnswerError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("No valid answer found", query, response);
   }
 }
 
-export class ResolverDOTNoResponseError extends Error {
+export class ResolverDOTNoResponseError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Connection closed without response", query, response);
   }
