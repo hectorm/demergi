@@ -200,7 +200,7 @@ export class DemergiResolver {
           return;
         }
 
-        const [, qnameLen] = this.#readName(answer, (offset += 2));
+        const [, qnameLen] = this.#decodeName(answer, (offset += 2));
         const qtype = answer.readUInt16BE((offset += qnameLen));
         const qclass = answer.readUInt16BE((offset += 2));
         if ((qtype !== 1 && qtype !== 28) || qclass !== 1) {
@@ -210,7 +210,7 @@ export class DemergiResolver {
 
         offset += 2;
         for (let i = 0; i < ancount + nscount; i++) {
-          const [, anameLen] = this.#readName(answer, offset);
+          const [, anameLen] = this.#decodeName(answer, offset);
           const atype = answer.readUInt16BE((offset += anameLen));
           const aclass = answer.readUInt16BE((offset += 2));
           const ttl = answer.readUInt32BE((offset += 2));
@@ -293,7 +293,7 @@ export class DemergiResolver {
     return Buffer.from(arr);
   }
 
-  #readName(buf, offset = 0) {
+  #decodeName(buf, offset = 0) {
     const labels = [];
     let bytesLen = 0;
     let len = buf.readUInt8(offset);
@@ -302,13 +302,13 @@ export class DemergiResolver {
       return [name, 1];
     }
     if (len >= 0xc0) {
-      const [name] = this.#readName(buf, buf.readUInt16BE(offset) - 0xc000);
+      const [name] = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
       return [name, 2];
     }
     while (len > 0) {
       if (len >= 0xc0) {
-        const [label] = this.#readName(buf, buf.readUInt16BE(offset) - 0xc000);
-        labels.push(label);
+        const [lbl] = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
+        labels.push(lbl);
         const name = labels.join(".");
         bytesLen += 2;
         return [name, bytesLen];
