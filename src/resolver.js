@@ -41,18 +41,9 @@ export class DemergiResolver {
         const cacheKey = `${hostname},${family}`;
         let address = this.dnsCache.get(cacheKey);
         if (address === undefined) {
-          try {
-            const response = await this.#resolve(hostname, family);
-            this.dnsCache.set(cacheKey, response.address, response.ttl);
-            address = response.address;
-          } catch (error) {
-            if (error instanceof ResolverDOTResponseAnswerError) {
-              console.error(error);
-              address = null;
-            } else {
-              throw error;
-            }
-          }
+          const response = await this.#resolve(hostname, family);
+          this.dnsCache.set(cacheKey, response.address, response.ttl);
+          address = response.address;
         }
         return { address, family };
       })
@@ -209,8 +200,8 @@ export class DemergiResolver {
           return;
         }
 
-        const qname = this.#decodeName(answer, (offset += 2));
-        const qtype = answer.readUInt16BE((offset += qname.bytesLength));
+        const [, qnameLen] = this.#readName(answer, (offset += 2));
+        const qtype = answer.readUInt16BE((offset += qnameLen));
         const qclass = answer.readUInt16BE((offset += 2));
         if ((qtype !== 1 && qtype !== 28) || qclass !== 1) {
           reject(new ResolverDOTResponseQuestionError(query, answer));
@@ -219,8 +210,8 @@ export class DemergiResolver {
 
         offset += 2;
         for (let i = 0; i < ancount + nscount; i++) {
-          const aname = this.#decodeName(answer, offset);
-          const atype = answer.readUInt16BE((offset += aname.bytesLength));
+          const [, anameLen] = this.#readName(answer, offset);
+          const atype = answer.readUInt16BE((offset += anameLen));
           const aclass = answer.readUInt16BE((offset += 2));
           const ttl = answer.readUInt32BE((offset += 2));
           const rdlength = answer.readUInt16BE((offset += 4));
@@ -302,35 +293,33 @@ export class DemergiResolver {
     return Buffer.from(arr);
   }
 
-  #decodeName(buf, offset = 0) {
+  #readName(buf, offset = 0) {
     const labels = [];
-    let bytesLength = 0;
+    let bytesLen = 0;
     let len = buf.readUInt8(offset);
     if (len === 0) {
-      const name = new String(".");
-      name.bytesLength = 1;
-      return name;
+      const name = ".";
+      return [name, 1];
     }
     if (len >= 0xc0) {
-      const name = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
-      name.bytesLength = 2;
-      return name;
+      const [name] = this.#readName(buf, buf.readUInt16BE(offset) - 0xc000);
+      return [name, 2];
     }
     while (len > 0) {
       if (len >= 0xc0) {
-        const label = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
+        const [label] = this.#readName(buf, buf.readUInt16BE(offset) - 0xc000);
         labels.push(label);
-        const name = new String(labels.join("."));
-        name.bytesLength = bytesLength;
-        return name;
+        const name = labels.join(".");
+        bytesLen += 2;
+        return [name, bytesLen];
       }
       labels.push(buf.toString("utf8", ++offset, offset + len));
-      bytesLength += len + 1;
+      bytesLen += len + 1;
       len = buf.readUInt8((offset += len));
     }
-    const name = new String(labels.join("."));
-    name.bytesLength = bytesLength + 1;
-    return name;
+    const name = labels.join(".");
+    bytesLen += 1;
+    return [name, bytesLen];
   }
 
   #sha256(data) {
