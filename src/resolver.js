@@ -107,9 +107,10 @@ export class DemergiResolver {
         0x00,
         // ID
         ...crypto.randomBytes(2),
-        // Flags
-        0x01,
-        0x00,
+        // QR    | OPCODE   | AA       | TC       | RD
+        (0 << 7) | (0 << 3) | (0 << 2) | (0 << 1) | 1,
+        // RA    | Z        | AD       | CD       | RCODE
+        (0 << 7) | (0 << 6) | (0 << 5) | (0 << 4) | 0,
         // QDCOUNT
         0x00,
         0x01,
@@ -125,8 +126,8 @@ export class DemergiResolver {
         // QNAME
         ...this.#encodeName(hostname),
         // QTYPE
-        ...(family === 4 ? [0x00, 0x01] : []),
-        ...(family === 6 ? [0x00, 0x1c] : []),
+        0x00,
+        family === 6 ? 0x1c : 0x01,
         // QCLASS
         0x00,
         0x01,
