@@ -108,7 +108,7 @@ export class ResolverDOTResponseFlagValueError extends ResolverDOTResponseError 
 
 export class ResolverDOTResponseRCODEError extends ResolverDOTResponseError {
   constructor(rcode, query, response) {
-    super(`Unexpected ${rcode} RCODE`, query, response);
+    super(`Unexpected RCODE ${rcode}`, query, response);
   }
 }
 
