@@ -13,7 +13,6 @@ import {
   ResolverDOTResponseEntryCountError,
   ResolverDOTResponseQuestionError,
   ResolverDOTResponseRDLENGTHError,
-  ResolverDOTResponseAnswerError,
   ResolverDOTNoResponseError,
 } from "./errors.js";
 
@@ -265,7 +264,7 @@ export class DemergiResolver {
           }
         }
 
-        reject(new ResolverDOTResponseAnswerError(query, answer));
+        resolve({ address: null, ttl: 0 });
       });
 
       socket.on("close", () => {

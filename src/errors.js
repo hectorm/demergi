@@ -130,12 +130,6 @@ export class ResolverDOTResponseRDLENGTHError extends ResolverDOTResponseError {
   }
 }
 
-export class ResolverDOTResponseAnswerError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("No valid answer found", query, response);
-  }
-}
-
 export class ResolverDOTNoResponseError extends ResolverDOTResponseError {
   constructor(query, response) {
     super("Connection closed without response", query, response);
