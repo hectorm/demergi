@@ -17,6 +17,8 @@ import {
 } from "./errors.js";
 
 export class DemergiResolver {
+  #ttlMin = 30;
+
   constructor({
     dnsMode = "dot",
     dnsCacheSize = 100000,
@@ -74,7 +76,7 @@ export class DemergiResolver {
       const resolveDns = family === 6 ? dns.resolve6 : dns.resolve4;
       resolveDns(hostname, { ttl: true }, (error, addresses) => {
         if (error || addresses.length === 0) {
-          resolve({ address: null, ttl: 0 });
+          resolve({ address: null, ttl: this.#ttlMin });
         } else {
           resolve({ address: addresses[0].address, ttl: addresses[0].ttl });
         }
@@ -264,7 +266,7 @@ export class DemergiResolver {
           }
         }
 
-        resolve({ address: null, ttl: 0 });
+        resolve({ address: null, ttl: this.#ttlMin });
       });
 
       socket.on("close", () => {
