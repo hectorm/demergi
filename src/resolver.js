@@ -197,7 +197,7 @@ export class DemergiResolver {
         const ancount = answer.readUInt16BE((offset += 2));
         const nscount = answer.readUInt16BE((offset += 2));
         const arcount = answer.readUInt16BE((offset += 2));
-        if (qdcount !== 1 || ancount < 0 || nscount < 0 || arcount < 0) {
+        if (qdcount !== 1) {
           reject(new ResolverDOTResponseEntryCountError(query, answer));
           return;
         }
@@ -211,7 +211,7 @@ export class DemergiResolver {
         }
 
         offset += 2;
-        for (let i = 0; i < ancount + nscount; i++) {
+        for (let i = 0; i < ancount + nscount + arcount; i++) {
           const [, anameLen] = this.#decodeName(answer, offset);
           const atype = answer.readUInt16BE((offset += anameLen));
           const aclass = answer.readUInt16BE((offset += 2));
