@@ -188,7 +188,7 @@ export class DemergiResolver {
           return;
         }
         const rcode = flags & 0x0f;
-        if (rcode !== 0 && rcode !== 3) {
+        if (rcode > 15) {
           reject(new ResolverDOTResponseRCODEError(rcode, query, answer));
           return;
         }
