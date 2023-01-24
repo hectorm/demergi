@@ -137,6 +137,46 @@ describe("Resolver", () => {
     expect(ipB).toBeUndefined();
   });
 
+  test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Quad9 DNS with a valid server name", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotHost: "9.9.9.9",
+      dotTlsServername: "dns.quad9.net",
+    });
+
+    const [ipA, ipB] = await resolver.resolve("google.com");
+    expect(net.isIPv6(ipA.address)).toBe(true);
+    expect(ipA.family).toBe(6);
+    expect(net.isIPv4(ipB.address)).toBe(true);
+    expect(ipB.family).toBe(4);
+  });
+
+  test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Quad9 DNS with a valid server name", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotHost: "9.9.9.9",
+      dotTlsServername: "dns.quad9.net",
+    });
+
+    const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
+    expect(net.isIPv6(ipA.address)).toBe(true);
+    expect(ipA.family).toBe(6);
+    expect(ipB).toBeUndefined();
+  });
+
+  test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Quad9 DNS with a valid server name", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotHost: "9.9.9.9",
+      dotTlsServername: "dns.quad9.net",
+    });
+
+    const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
+    expect(net.isIPv4(ipA.address)).toBe(true);
+    expect(ipA.family).toBe(4);
+    expect(ipB).toBeUndefined();
+  });
+
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using AdGuard DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
@@ -221,6 +261,16 @@ describe("Resolver", () => {
       dnsMode: "dot",
       dotHost: "8.8.8.8",
       dotTlsServername: "dns.google",
+    });
+
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+  });
+
+  test("Must throw an exception in DoT mode using Quad9 DNS with a valid server name for a request to an invalid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotHost: "9.9.9.9",
+      dotTlsServername: "dns.quad9.net",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow();
