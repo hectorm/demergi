@@ -1,5 +1,9 @@
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
+import {
+  ResolverNoAddressError,
+  ResolverDOTCertificatePINError,
+} from "../src/errors.js";
 
 global.console.error = jest.fn();
 
@@ -54,7 +58,9 @@ describe("Resolver", () => {
       dnsMode: "plain",
     });
 
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
+      ResolverNoAddressError
+    );
   });
 
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
@@ -253,7 +259,9 @@ describe("Resolver", () => {
       dotTlsServername: "cloudflare-dns.com",
     });
 
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
+      ResolverNoAddressError
+    );
   });
 
   test("Must throw an exception in DoT mode using Google DNS with a valid server name for a request to an invalid domain", async () => {
@@ -263,7 +271,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.google",
     });
 
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
+      ResolverNoAddressError
+    );
   });
 
   test("Must throw an exception in DoT mode using Quad9 DNS with a valid server name for a request to an invalid domain", async () => {
@@ -273,7 +283,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.quad9.net",
     });
 
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
+      ResolverNoAddressError
+    );
   });
 
   test("Must throw an exception in DoT mode using AdGuard DNS with a valid server name for a request to an invalid domain", async () => {
@@ -283,7 +295,9 @@ describe("Resolver", () => {
       dotTlsServername: "dns.adguard.com",
     });
 
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow();
+    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
+      ResolverNoAddressError
+    );
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name", async () => {
@@ -293,7 +307,10 @@ describe("Resolver", () => {
       dotTlsServername: "cloudflare-dns.invalid",
     });
 
-    await expect(resolver.resolve("google.com")).rejects.toThrow();
+    await expect(resolver.resolve("google.com")).rejects.toMatchObject({
+      code: "ERR_TLS_CERT_ALTNAME_INVALID",
+      host: "cloudflare-dns.invalid",
+    });
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate", async () => {
@@ -303,7 +320,9 @@ describe("Resolver", () => {
       dotTlsPin: "aHVudGVyMg==",
     });
 
-    await expect(resolver.resolve("google.com")).rejects.toThrow();
+    await expect(resolver.resolve("google.com")).rejects.toThrow(
+      ResolverDOTCertificatePINError
+    );
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate", async () => {
@@ -314,7 +333,9 @@ describe("Resolver", () => {
       dotTlsPin: "aHVudGVyMg==",
     });
 
-    await expect(resolver.resolve("google.com")).rejects.toThrow();
+    await expect(resolver.resolve("google.com")).rejects.toThrow(
+      ResolverDOTCertificatePINError
+    );
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate", async () => {
@@ -325,7 +346,10 @@ describe("Resolver", () => {
       dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
     });
 
-    await expect(resolver.resolve("google.com")).rejects.toThrow();
+    await expect(resolver.resolve("google.com")).rejects.toMatchObject({
+      code: "ERR_TLS_CERT_ALTNAME_INVALID",
+      host: "cloudflare-dns.invalid",
+    });
   });
 
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate", async () => {
@@ -336,6 +360,9 @@ describe("Resolver", () => {
       dotTlsPin: "aHVudGVyMg==",
     });
 
-    await expect(resolver.resolve("google.com")).rejects.toThrow();
+    await expect(resolver.resolve("google.com")).rejects.toMatchObject({
+      code: "ERR_TLS_CERT_ALTNAME_INVALID",
+      host: "cloudflare-dns.invalid",
+    });
   });
 });

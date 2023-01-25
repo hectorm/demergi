@@ -1,6 +1,7 @@
 import http from "node:http";
 import https from "node:https";
 import { DemergiProxy } from "../src/proxy.js";
+import { DemergiResolver } from "../src/resolver.js";
 
 global.console.error = jest.fn();
 
@@ -18,7 +19,7 @@ const makeProxiedHttpsRequest = ({ proxyHost, proxyPort, host, port } = {}) => {
         method: "CONNECT",
         path: port ? `${host}:${port}` : host,
       })
-      .on("connect", (proxyRes, socket) => {
+      .on("connect", (_, socket) => {
         https
           .request({
             host,
@@ -72,7 +73,7 @@ describe("Proxy", () => {
     expect(defaults.addr).toBe("::");
     expect(defaults.port).toBe(8080);
     expect(defaults.happyEyeballs).toBe(false);
-    expect(defaults.resolver).toBeDefined();
+    expect(defaults.resolver).toBeInstanceOf(DemergiResolver);
   });
 
   test("Must be listening on the expected port", () => {
@@ -190,7 +191,9 @@ describe("Proxy", () => {
         proxyPort: proxy.port,
         host: "example.invalid",
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTPS request to an invalid domain and port", async () => {
@@ -201,7 +204,9 @@ describe("Proxy", () => {
         host: "example.invalid",
         port: 443,
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTPS request to an invalid IP address", async () => {
@@ -211,7 +216,9 @@ describe("Proxy", () => {
         proxyPort: proxy.port,
         host: "300.300.300.300",
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTPS request to an invalid IP address and port", async () => {
@@ -222,7 +229,9 @@ describe("Proxy", () => {
         host: "300.300.300.300",
         port: 443,
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTP request to an invalid domain", async () => {
@@ -232,7 +241,9 @@ describe("Proxy", () => {
         proxyPort: proxy.port,
         host: "example.invalid",
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTP request to an invalid domain and port", async () => {
@@ -243,7 +254,9 @@ describe("Proxy", () => {
         host: "example.invalid",
         port: 80,
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTP request to an invalid IP address", async () => {
@@ -253,7 +266,9 @@ describe("Proxy", () => {
         proxyPort: proxy.port,
         host: "300.300.300.300",
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 
   test("Must throw an exception for an HTTP request to an invalid IP address and port", async () => {
@@ -264,6 +279,8 @@ describe("Proxy", () => {
         host: "300.300.300.300",
         port: 80,
       })
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      code: "ECONNRESET",
+    });
   });
 });
