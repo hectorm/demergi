@@ -133,19 +133,13 @@ export class DemergiProxy {
 
       const requestLine = this.#readLine(firstData, 0);
       if (requestLine.data === undefined) {
-        this.#socketDestroy(
-          clientSocket,
-          new ProxyRequestError(clientSocket)
-        );
+        this.#socketDestroy(clientSocket, new ProxyRequestError(clientSocket));
         return;
       }
 
       const requestTokens = this.#tokenize(requestLine.data, [0x09, 0x20], 3);
       if (requestTokens.length !== 3) {
-        this.#socketDestroy(
-          clientSocket,
-          new ProxyRequestError(clientSocket)
-        );
+        this.#socketDestroy(clientSocket, new ProxyRequestError(clientSocket));
         return;
       }
 
