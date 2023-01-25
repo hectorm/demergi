@@ -1,18 +1,18 @@
 export class ProxyTLSVersionError extends Error {
   constructor(version) {
-    super(`Unsupported TLS version ${version}`);
+    super(`Unknown TLS version ${version}`);
   }
 }
 
-export class ProxyRequestMalformedError extends Error {
+export class ProxyRequestError extends Error {
   constructor(socket) {
-    super(`Received a malformed request from client ${socket.remoteAddress}`);
+    super(`Received an invalid request from client ${socket.remoteAddress}`);
   }
 }
 
 export class ProxyRequestMethodError extends Error {
   constructor(socket) {
-    super(`Received an unsupported method from client ${socket.remoteAddress}`);
+    super(`Received an unknown method from client ${socket.remoteAddress}`);
   }
 }
 
@@ -25,7 +25,7 @@ export class ProxyRequestTargetError extends Error {
 export class ProxyRequestHTTPVersionError extends Error {
   constructor(socket) {
     super(
-      `Received an unsupported HTTP version from client ${socket.remoteAddress}`
+      `Received an unknown HTTP version from client ${socket.remoteAddress}`
     );
   }
 }
@@ -54,19 +54,19 @@ export class ProxyClientWriteError extends Error {
   }
 }
 
-export class ResolverNoAddressError extends Error {
-  constructor(hostname) {
-    super(`No address found for ${hostname}`);
-  }
-}
-
 export class ResolverDNSModeError extends Error {
   constructor(mode) {
     super(`Unknown DNS mode ${mode}`);
   }
 }
 
-export class ResolverDOTCertificatePINError extends Error {
+export class ResolverNoAddressError extends Error {
+  constructor(hostname) {
+    super(`No address found for ${hostname}`);
+  }
+}
+
+export class ResolverCertificatePINError extends Error {
   constructor(expected, received) {
     super(
       "Certificate validation error, the public key does not match the pinned one" +
@@ -76,62 +76,56 @@ export class ResolverDOTCertificatePINError extends Error {
   }
 }
 
-export class ResolverDOTResponseError extends Error {
-  constructor(message, query, response) {
-    if (query) {
-      message += `\nEncoded query: ${query.toString("base64")}`;
+export class ResolverAnswerError extends Error {
+  constructor(message, question, answer) {
+    if (question) {
+      message += `\nEncoded question: ${question.toString("base64")}`;
     }
-    if (response) {
-      message += `\nEncoded response: ${response.toString("base64")}`;
+    if (answer) {
+      message += `\nEncoded answer: ${answer.toString("base64")}`;
     }
     super(message);
   }
 }
 
-export class ResolverDOTResponseLengthError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Unexpected response length", query, response);
+export class ResolverAnswerTimeoutError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Answer timeout", question, answer);
   }
 }
 
-export class ResolverDOTResponseIDError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Received a different response ID", query, response);
+export class ResolverAnswerLengthError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer length", question, answer);
   }
 }
 
-export class ResolverDOTResponseFlagValueError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Unexpected flag value in header section", query, response);
+export class ResolverAnswerIDError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer ID", question, answer);
   }
 }
 
-export class ResolverDOTResponseRCODEError extends ResolverDOTResponseError {
-  constructor(rcode, query, response) {
-    super(`Unexpected RCODE ${rcode}`, query, response);
+export class ResolverAnswerFlagError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer flag", question, answer);
   }
 }
 
-export class ResolverDOTResponseEntryCountError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Unexpected entry count in header section", query, response);
+export class ResolverAnswerCountError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer count", question, answer);
   }
 }
 
-export class ResolverDOTResponseQuestionError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Unexpected response in question section", query, response);
+export class ResolverAnswerQuestionError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer question", question, answer);
   }
 }
 
-export class ResolverDOTResponseRDLENGTHError extends ResolverDOTResponseError {
-  constructor(rdlength, query, response) {
-    super(`Unexpected RDLENGTH ${rdlength}`, query, response);
-  }
-}
-
-export class ResolverDOTNoResponseError extends ResolverDOTResponseError {
-  constructor(query, response) {
-    super("Connection closed without response", query, response);
+export class ResolverAnswerResourceDataLengthError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("Unexpected answer resource data length", question, answer);
   }
 }

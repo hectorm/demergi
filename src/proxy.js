@@ -1,14 +1,14 @@
 import net from "node:net";
 import { DemergiResolver } from "./resolver.js";
 import {
-  ProxyTLSVersionError,
-  ProxyRequestMalformedError,
+  ProxyClientWriteError,
+  ProxyRequestHTTPVersionError,
+  ProxyRequestError,
   ProxyRequestMethodError,
   ProxyRequestTargetError,
-  ProxyRequestHTTPVersionError,
+  ProxyTLSVersionError,
   ProxyUpstreamConnectError,
   ProxyUpstreamWriteError,
-  ProxyClientWriteError,
   ResolverNoAddressError,
 } from "./errors.js";
 
@@ -135,7 +135,7 @@ export class DemergiProxy {
       if (requestLine.data === undefined) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyRequestMalformedError(clientSocket)
+          new ProxyRequestError(clientSocket)
         );
         return;
       }
@@ -144,7 +144,7 @@ export class DemergiProxy {
       if (requestTokens.length !== 3) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyRequestMalformedError(clientSocket)
+          new ProxyRequestError(clientSocket)
         );
         return;
       }
@@ -188,14 +188,14 @@ export class DemergiProxy {
           autoSelectFamilyAttemptTimeout: this.happyEyeballsTimeout,
           lookup: (hostname, options, callback) => {
             this.resolver.resolve(hostname).then(
-              (response) => {
+              (answer) => {
                 if (options?.all) {
-                  callback(null, response);
+                  callback(null, answer);
                 } else {
                   // If Happy Eyeballs is disabled, prefer IPv4.
                   const { address, family } =
-                    response.find(({ family }) => family === 4) ??
-                    response.find(({ family }) => family === 6);
+                    answer.find(({ family }) => family === 4) ??
+                    answer.find(({ family }) => family === 6);
                   callback(null, address, family);
                 }
               },

@@ -1,8 +1,8 @@
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
 import {
+  ResolverCertificatePINError,
   ResolverNoAddressError,
-  ResolverDOTCertificatePINError,
 } from "../src/errors.js";
 
 global.console.error = jest.fn();
@@ -321,7 +321,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverDOTCertificatePINError
+      ResolverCertificatePINError
     );
   });
 
@@ -334,7 +334,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverDOTCertificatePINError
+      ResolverCertificatePINError
     );
   });
 

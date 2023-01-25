@@ -3,22 +3,21 @@ import dns from "node:dns";
 import tls from "node:tls";
 import { LRU } from "./lru.js";
 import {
+  ResolverAnswerCountError,
+  ResolverAnswerFlagError,
+  ResolverAnswerIDError,
+  ResolverAnswerLengthError,
+  ResolverAnswerQuestionError,
+  ResolverAnswerResourceDataLengthError,
+  ResolverAnswerTimeoutError,
+  ResolverCertificatePINError,
   ResolverNoAddressError,
   ResolverDNSModeError,
-  ResolverDOTCertificatePINError,
-  ResolverDOTResponseLengthError,
-  ResolverDOTResponseIDError,
-  ResolverDOTResponseFlagValueError,
-  ResolverDOTResponseRCODEError,
-  ResolverDOTResponseEntryCountError,
-  ResolverDOTResponseQuestionError,
-  ResolverDOTResponseRDLENGTHError,
-  ResolverDOTNoResponseError,
 } from "./errors.js";
 
 export class DemergiResolver {
   #ttlMin = 30;
-  #queryTimeout = 5000;
+  #answerTimeout = 5000;
 
   constructor({
     dnsMode = "dot",
@@ -43,9 +42,9 @@ export class DemergiResolver {
         const cacheKey = `${hostname},${family}`;
         let address = this.dnsCache.get(cacheKey);
         if (address === undefined) {
-          const response = await this.#resolve(hostname, family);
-          this.dnsCache.set(cacheKey, response.address, response.ttl);
-          address = response.address;
+          const answer = await this.#resolve(hostname, family);
+          this.dnsCache.set(cacheKey, answer.address, answer.ttl);
+          address = answer.address;
         }
         return { address, family };
       })
@@ -87,6 +86,8 @@ export class DemergiResolver {
 
   #resolveDot(hostname, family) {
     return new Promise((resolve, reject) => {
+      const question = this.#encodeQuestion(hostname, family);
+
       let socket;
       try {
         socket = tls.connect({
@@ -102,43 +103,10 @@ export class DemergiResolver {
         return;
       }
 
-      const query = Buffer.from([
-        // Length
-        0x00,
-        0x00,
-        // ID
-        ...crypto.randomBytes(2),
-        // QR    | OPCODE   | AA       | TC       | RD
-        (0 << 7) | (0 << 3) | (0 << 2) | (0 << 1) | 1,
-        // RA    | Z        | AD       | CD       | RCODE
-        (0 << 7) | (0 << 6) | (0 << 5) | (0 << 4) | 0,
-        // QDCOUNT
-        0x00,
-        0x01,
-        // ANCOUNT
-        0x00,
-        0x00,
-        // NSCOUNT
-        0x00,
-        0x00,
-        // ARCOUNT
-        0x00,
-        0x00,
-        // QNAME
-        ...this.#encodeName(hostname),
-        // QTYPE
-        0x00,
-        family === 6 ? 0x1c : 0x01,
-        // QCLASS
-        0x00,
-        0x01,
-      ]);
-      query.writeUInt16BE(query.byteLength - 2, 0);
-
-      socket.setTimeout(this.#queryTimeout);
+      socket.setTimeout(this.#answerTimeout);
 
       socket.once("timeout", () => {
-        socket.destroy(new ResolverDOTNoResponseError(query));
+        socket.destroy(new ResolverAnswerTimeoutError(question));
       });
 
       socket.once("secureConnect", () => {
@@ -146,13 +114,13 @@ export class DemergiResolver {
           const pubkey256 = this.#sha256(socket.getPeerCertificate().pubkey);
           if (this.dotTlsPin !== pubkey256) {
             socket.destroy(
-              new ResolverDOTCertificatePINError(this.dotTlsPin, pubkey256)
+              new ResolverCertificatePINError(this.dotTlsPin, pubkey256)
             );
             return;
           }
         }
 
-        socket.write(query);
+        socket.write(question);
       });
 
       socket.once("error", (error) => {
@@ -162,120 +130,149 @@ export class DemergiResolver {
       socket.once("data", (answer) => {
         socket.destroy();
 
-        const length = answer.readUInt16BE(0);
-        if (length !== answer.byteLength - 2) {
-          reject(new ResolverDOTResponseLengthError(query, answer));
-          return;
+        try {
+          resolve(this.#decodeAnswer(question, answer));
+        } catch (error) {
+          reject(error);
         }
-        // Strip length from answer.
-        answer = answer.subarray(2);
-
-        let offset = 0;
-
-        const queryId = query.readUInt16BE(2);
-        const answerId = answer.readUInt16BE(offset);
-        if (answerId !== queryId) {
-          reject(new ResolverDOTResponseIDError(query, answer));
-          return;
-        }
-
-        const flags = answer.readUInt16BE((offset += 2));
-        const qr = (flags >> 15) & 0x01;
-        const opcode = (flags >> 11) & 0x0f;
-        // const aa = (flags >> 10) & 0x01;
-        const tc = (flags >> 9) & 0x01;
-        // const rd = (flags >> 8) & 0x01;
-        // const ra = (flags >> 7) & 0x01;
-        // const z = (flags >> 6) & 0x01;
-        // const ad = (flags >> 5) & 0x01;
-        // const cd = (flags >> 4) & 0x01;
-        if (qr !== 1 || opcode !== 0 || tc !== 0) {
-          reject(new ResolverDOTResponseFlagValueError(query, answer));
-          return;
-        }
-        const rcode = flags & 0x0f;
-        if (rcode > 15) {
-          reject(new ResolverDOTResponseRCODEError(rcode, query, answer));
-          return;
-        }
-
-        const qdcount = answer.readUInt16BE((offset += 2));
-        const ancount = answer.readUInt16BE((offset += 2));
-        const nscount = answer.readUInt16BE((offset += 2));
-        const arcount = answer.readUInt16BE((offset += 2));
-        if (qdcount !== 1) {
-          reject(new ResolverDOTResponseEntryCountError(query, answer));
-          return;
-        }
-
-        const [, qnameLen] = this.#decodeName(answer, (offset += 2));
-        const qtype = answer.readUInt16BE((offset += qnameLen));
-        const qclass = answer.readUInt16BE((offset += 2));
-        if ((qtype !== 1 && qtype !== 28) || qclass !== 1) {
-          reject(new ResolverDOTResponseQuestionError(query, answer));
-          return;
-        }
-
-        offset += 2;
-        for (let i = 0; i < ancount + nscount + arcount; i++) {
-          const [, anameLen] = this.#decodeName(answer, offset);
-          const atype = answer.readUInt16BE((offset += anameLen));
-          const aclass = answer.readUInt16BE((offset += 2));
-          const ttl = answer.readUInt32BE((offset += 2));
-          const rdlength = answer.readUInt16BE((offset += 4));
-          const rdata = answer.slice((offset += 2), (offset += rdlength));
-
-          // Skip any non IN class record.
-          if (aclass !== 1) continue;
-
-          // Handle A type record.
-          if (atype === 1 && family === 4) {
-            if (rdlength !== 4) {
-              reject(
-                new ResolverDOTResponseRDLENGTHError(rdlength, query, answer)
-              );
-              return;
-            }
-
-            let address = "";
-            for (let i = 0; i < 4; i++) {
-              if (i !== 0) address += ".";
-              address += rdata[i].toString(10);
-            }
-
-            resolve({ address, ttl });
-            return;
-          }
-
-          // Handle AAAA type record.
-          if (atype === 28 && family === 6) {
-            if (rdlength !== 16) {
-              reject(
-                new ResolverDOTResponseRDLENGTHError(rdlength, query, answer)
-              );
-              return;
-            }
-
-            let address = "";
-            for (let i = 0; i < 16; i += 2) {
-              if (i !== 0) address += ":";
-              address += ((rdata[i] << 8) | rdata[i + 1]).toString(16);
-            }
-
-            resolve({ address, ttl });
-            return;
-          }
-
-          // Handle SOA type record.
-          if (atype === 6) {
-            resolve({ address: null, ttl });
-            return;
-          }
-        }
-
-        resolve({ address: null, ttl: this.#ttlMin });
       });
     });
+  }
+
+  #encodeQuestion(hostname, family) {
+    const question = Buffer.from([
+      // Length
+      0x00,
+      0x00,
+      // ID
+      ...crypto.randomBytes(2),
+      // QR    | OPCODE   | AA       | TC       | RD
+      (0 << 7) | (0 << 3) | (0 << 2) | (0 << 1) | 1,
+      // RA    | Z        | AD       | CD       | RCODE
+      (0 << 7) | (0 << 6) | (0 << 5) | (0 << 4) | 0,
+      // QDCOUNT
+      0x00,
+      0x01,
+      // ANCOUNT
+      0x00,
+      0x00,
+      // NSCOUNT
+      0x00,
+      0x00,
+      // ARCOUNT
+      0x00,
+      0x00,
+      // QNAME
+      ...this.#encodeName(hostname),
+      // QTYPE
+      0x00,
+      family === 6 ? 0x1c : 0x01,
+      // QCLASS
+      0x00,
+      0x01,
+    ]);
+
+    // Update length.
+    question.writeUInt16BE(question.byteLength - 2, 0);
+
+    return question;
+  }
+
+  #decodeAnswer(question, answer) {
+    let offset = 0;
+
+    const length = answer.readUInt16BE(offset);
+    if (length !== answer.byteLength - 2) {
+      throw new ResolverAnswerLengthError(question, answer);
+    }
+    // Strip length from answer.
+    answer = answer.subarray(2);
+
+    const questionId = question.readUInt16BE(2);
+    const answerId = answer.readUInt16BE(offset);
+    if (answerId !== questionId) {
+      throw new ResolverAnswerIDError(question, answer);
+    }
+
+    const flags = answer.readUInt16BE((offset += 2));
+    const qr = (flags >> 15) & 0x01;
+    const opcode = (flags >> 11) & 0x0f;
+    // const aa = (flags >> 10) & 0x01;
+    const tc = (flags >> 9) & 0x01;
+    // const rd = (flags >> 8) & 0x01;
+    // const ra = (flags >> 7) & 0x01;
+    // const z = (flags >> 6) & 0x01;
+    // const ad = (flags >> 5) & 0x01;
+    // const cd = (flags >> 4) & 0x01;
+    const rcode = flags & 0x0f;
+    if (qr !== 1 || opcode !== 0 || tc !== 0 || rcode > 15) {
+      throw new ResolverAnswerFlagError(question, answer);
+    }
+
+    const qdcount = answer.readUInt16BE((offset += 2));
+    const ancount = answer.readUInt16BE((offset += 2));
+    const nscount = answer.readUInt16BE((offset += 2));
+    const arcount = answer.readUInt16BE((offset += 2));
+    if (qdcount !== 1) {
+      throw new ResolverAnswerCountError(question, answer);
+    }
+
+    const [, qnameLen] = this.#decodeName(answer, (offset += 2));
+    const qtype = answer.readUInt16BE((offset += qnameLen));
+    const qclass = answer.readUInt16BE((offset += 2));
+    if ((qtype !== 1 && qtype !== 28) || qclass !== 1) {
+      throw new ResolverAnswerQuestionError(question, answer);
+    }
+
+    offset += 2;
+    for (let i = 0; i < ancount + nscount + arcount; i++) {
+      const [, anameLen] = this.#decodeName(answer, offset);
+      const atype = answer.readUInt16BE((offset += anameLen));
+      const aclass = answer.readUInt16BE((offset += 2));
+      const ttl = answer.readUInt32BE((offset += 2));
+      const rdlength = answer.readUInt16BE((offset += 4));
+      const rdata = answer.slice((offset += 2), (offset += rdlength));
+
+      // Skip any non IN class record.
+      if (aclass !== 1) continue;
+
+      // Handle A type record.
+      if (atype === 1 && atype === qtype) {
+        if (rdlength !== 4) {
+          throw new ResolverAnswerResourceDataLengthError(question, answer);
+        }
+
+        let address = "";
+        for (let i = 0; i < 4; i++) {
+          if (i !== 0) address += ".";
+          address += rdata[i].toString(10);
+        }
+
+        return { address, ttl };
+      }
+
+      // Handle AAAA type record.
+      if (atype === 28 && atype === qtype) {
+        if (rdlength !== 16) {
+          throw new ResolverAnswerResourceDataLengthError(question, answer);
+        }
+
+        let address = "";
+        for (let i = 0; i < 16; i += 2) {
+          if (i !== 0) address += ":";
+          address += ((rdata[i] << 8) | rdata[i + 1]).toString(16);
+        }
+
+        return { address, ttl };
+      }
+
+      // Handle SOA type record.
+      if (atype === 6) {
+        return { address: null, ttl };
+      }
+    }
+
+    return { address: null, ttl: this.#ttlMin };
   }
 
   #encodeName(name) {
