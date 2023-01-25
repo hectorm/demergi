@@ -107,24 +107,24 @@ export class DemergiProxy {
     clientSocket.setTimeout(this.inactivityTimeout);
     upstreamSocket.setTimeout(this.inactivityTimeout);
 
-    clientSocket.on("timeout", () => {
+    clientSocket.once("timeout", () => {
       this.#socketTimeoutHandler(clientSocket, upstreamSocket);
     });
-    upstreamSocket.on("timeout", () => {
+    upstreamSocket.once("timeout", () => {
       this.#socketTimeoutHandler(upstreamSocket, clientSocket);
     });
 
-    clientSocket.on("close", () => {
+    clientSocket.once("close", () => {
       this.#socketCloseHandler(clientSocket, upstreamSocket);
     });
-    upstreamSocket.on("close", () => {
+    upstreamSocket.once("close", () => {
       this.#socketCloseHandler(upstreamSocket, clientSocket);
     });
 
-    clientSocket.on("error", (error) => {
+    clientSocket.once("error", (error) => {
       this.#socketErrorHandler(error);
     });
-    upstreamSocket.on("error", (error) => {
+    upstreamSocket.once("error", (error) => {
       this.#socketErrorHandler(error);
     });
 
