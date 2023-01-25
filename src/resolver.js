@@ -18,6 +18,7 @@ import {
 
 export class DemergiResolver {
   #ttlMin = 30;
+  #queryTimeout = 5000;
 
   constructor({
     dnsMode = "dot",
@@ -134,15 +135,17 @@ export class DemergiResolver {
       ]);
       query.writeUInt16BE(query.byteLength - 2, 0);
 
-      let answered = false;
+      socket.setTimeout(this.#queryTimeout);
+
+      socket.once("timeout", () => {
+        socket.destroy(new ResolverDOTNoResponseError(query));
+      });
 
       socket.once("secureConnect", () => {
         if (typeof this.dotTlsPin === "string") {
           const pubkey256 = this.#sha256(socket.getPeerCertificate().pubkey);
           if (this.dotTlsPin !== pubkey256) {
-            answered = true;
-            socket.destroy();
-            reject(
+            socket.destroy(
               new ResolverDOTCertificatePINError(this.dotTlsPin, pubkey256)
             );
             return;
@@ -152,8 +155,11 @@ export class DemergiResolver {
         socket.write(query);
       });
 
+      socket.once("error", (error) => {
+        reject(error);
+      });
+
       socket.once("data", (answer) => {
-        answered = true;
         socket.destroy();
 
         const length = answer.readUInt16BE(0);
@@ -268,16 +274,6 @@ export class DemergiResolver {
         }
 
         resolve({ address: null, ttl: this.#ttlMin });
-      });
-
-      socket.on("close", () => {
-        if (!answered) {
-          reject(new ResolverDOTNoResponseError(query));
-        }
-      });
-
-      socket.on("error", (error) => {
-        reject(error);
       });
     });
   }
