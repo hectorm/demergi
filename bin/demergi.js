@@ -262,7 +262,7 @@ if (options.workers > 0 && cluster.isPrimary) {
     for (const event of ["SIGINT", "SIGTERM"]) {
       process.on(event, async () => {
         await proxy.stop();
-        Logger.info(`Exiting`);
+        Logger.info("Exiting");
         process.exit(0);
       });
     }

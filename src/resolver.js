@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import dns from "node:dns";
 import tls from "node:tls";
 import { LRU } from "./lru.js";
+import { Logger } from "./logger.js";
 import {
   ResolverAnswerCountError,
   ResolverAnswerFlagError,
@@ -57,6 +58,7 @@ export class DemergiResolver {
       throw new ResolverNoAddressError(hostname);
     }
 
+    Logger.debug(`Resolved ${hostname} to`, addresses);
     return addresses;
   }
 

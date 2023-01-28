@@ -178,7 +178,7 @@ export class DemergiProxy {
       }
 
       try {
-        Logger.debug(`Connecting to ${host}:${port}`);
+        Logger.debug(`Connecting to upstream ${host}:${port}`);
         upstreamSocket.connect({
           host,
           port,
@@ -337,13 +337,14 @@ export class DemergiProxy {
   }
 
   #socketErrorHandler(error) {
-    if (
-      !(error instanceof ResolverNoAddressError) &&
-      error.code !== "ECONNRESET" &&
-      error.code !== "EPIPE" &&
-      error.message?.length > 0
-    ) {
-      Logger.error(error);
+    if (error instanceof ResolverNoAddressError) {
+      Logger.debug(error.message);
+    } else if (error.message?.length > 0) {
+      if (error.code === "ENETUNREACH") {
+        Logger.error(error.message);
+      } else if (error.code !== "ECONNRESET" && error.code !== "EPIPE") {
+        Logger.error(error);
+      }
     }
   }
 
