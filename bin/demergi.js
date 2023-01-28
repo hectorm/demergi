@@ -214,56 +214,57 @@ getopts: for (let i = 0; i < argv.length; i++) {
   }
 }
 
-(async () => {
-  if (options.logLevel?.length > 0) {
-    Logger.level = options.logLevel;
+if (options.logLevel?.length > 0) {
+  Logger.level = options.logLevel;
+}
+
+if (options.workers > 0 && cluster.isPrimary) {
+  cluster.on("online", (worker) => {
+    Logger.debug(`Worker ${worker.process.pid} started`);
+  });
+
+  cluster.on("exit", (worker, code, signal) => {
+    Logger.debug(`Worker ${worker.process.pid} died (${signal || code})`);
+  });
+
+  for (let i = 0; i < options.workers; i++) {
+    cluster.fork();
   }
+} else {
+  const proxy = new DemergiProxy({
+    addr: options.addr,
+    port: options.port,
+    hostList: options.hostList,
+    inactivityTimeout: options.inactivityTimeout,
+    happyEyeballs: options.happyEyeballs,
+    happyEyeballsTimeout: options.happyEyeballsTimeout,
+    httpsClientHelloSize: options.httpsClientHelloSize,
+    httpsClientHelloTLSv: options.httpsClientHelloTLSv,
+    httpNewlineSeparator: options.httpNewlineSeparator,
+    httpMethodSeparator: options.httpMethodSeparator,
+    httpTargetSeparator: options.httpTargetSeparator,
+    httpHostHeaderSeparator: options.httpHostHeaderSeparator,
+    httpMixHostHeaderCase: options.httpMixHostHeaderCase,
+    resolver: new DemergiResolver({
+      dnsMode: options.dnsMode,
+      dnsCacheSize: options.dnsCacheSize,
+      dotHost: options.dotHost,
+      dotPort: options.dotPort,
+      dotTlsServername: options.dotTlsServername,
+      dotTlsPin: options.dotTlsPin,
+    }),
+  });
 
-  if (options.workers > 0 && cluster.isPrimary) {
-    cluster.on("online", (worker) => {
-      Logger.debug(`Worker ${worker.process.pid} started`);
-    });
-
-    cluster.on("exit", (worker, code, signal) => {
-      Logger.debug(`Worker ${worker.process.pid} died (${signal || code})`);
-    });
-
-    for (let i = 0; i < options.workers; i++) {
-      cluster.fork();
-    }
-  } else {
-    const proxy = new DemergiProxy({
-      addr: options.addr,
-      port: options.port,
-      hostList: options.hostList,
-      inactivityTimeout: options.inactivityTimeout,
-      happyEyeballs: options.happyEyeballs,
-      happyEyeballsTimeout: options.happyEyeballsTimeout,
-      httpsClientHelloSize: options.httpsClientHelloSize,
-      httpsClientHelloTLSv: options.httpsClientHelloTLSv,
-      httpNewlineSeparator: options.httpNewlineSeparator,
-      httpMethodSeparator: options.httpMethodSeparator,
-      httpTargetSeparator: options.httpTargetSeparator,
-      httpHostHeaderSeparator: options.httpHostHeaderSeparator,
-      httpMixHostHeaderCase: options.httpMixHostHeaderCase,
-      resolver: new DemergiResolver({
-        dnsMode: options.dnsMode,
-        dnsCacheSize: options.dnsCacheSize,
-        dotHost: options.dotHost,
-        dotPort: options.dotPort,
-        dotTlsServername: options.dotTlsServername,
-        dotTlsPin: options.dotTlsPin,
-      }),
-    });
-
+  (async () => {
     await proxy.start();
     Logger.info(`Listening on ${proxy.addr}:${proxy.port}`);
 
     for (const event of ["SIGINT", "SIGTERM"]) {
       process.on(event, async () => {
         await proxy.stop();
+        Logger.info(`Exiting`);
         process.exit(0);
       });
     }
-  }
-})();
+  })();
+}
