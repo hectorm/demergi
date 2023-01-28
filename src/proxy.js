@@ -1,5 +1,6 @@
 import net from "node:net";
 import { DemergiResolver } from "./resolver.js";
+import { Logger } from "./logger.js";
 import {
   ProxyClientWriteError,
   ProxyRequestHTTPVersionError,
@@ -151,9 +152,10 @@ export class DemergiProxy {
         );
         return;
       }
+      const https = httpMethod === "CONNECT";
 
       const target = requestTokens[1].toString("utf8");
-      const { host, port } = this.#parseOrigin(target);
+      let { host, port } = this.#parseOrigin(target);
       if (host === undefined) {
         this.#socketDestroy(
           clientSocket,
@@ -161,6 +163,10 @@ export class DemergiProxy {
         );
         return;
       }
+      if (port === undefined) {
+        port = https ? 443 : 80;
+      }
+      const obfuscate = this.hostList.size === 0 || this.hostList.has(host);
 
       const httpVersion = requestTokens[2].toString("utf8");
       if (!this.#httpVersions.has(httpVersion)) {
@@ -171,13 +177,11 @@ export class DemergiProxy {
         return;
       }
 
-      const isHTTPS = httpMethod === "CONNECT";
-      const obfuscate = this.hostList.size === 0 || this.hostList.has(host);
-
       try {
+        Logger.debug(`Connecting to ${host}:${port}`);
         upstreamSocket.connect({
           host,
-          port: port ?? (isHTTPS ? 443 : 80),
+          port,
           autoSelectFamily: this.happyEyeballs,
           autoSelectFamilyAttemptTimeout: this.happyEyeballsTimeout,
           lookup: (hostname, options, callback) => {
@@ -205,7 +209,7 @@ export class DemergiProxy {
         return;
       }
 
-      if (isHTTPS) {
+      if (https) {
         if (obfuscate) {
           clientSocket.once("data", (connData) => {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
@@ -339,7 +343,7 @@ export class DemergiProxy {
       error.code !== "EPIPE" &&
       error.message?.length > 0
     ) {
-      console.error(error);
+      Logger.error(error);
     }
   }
 

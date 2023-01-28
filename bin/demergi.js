@@ -4,6 +4,7 @@ import cluster from "node:cluster";
 import { getEnv, toStr, toInt, toBool, toList } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import { DemergiResolver } from "../src/resolver.js";
+import { Logger } from "../src/logger.js";
 
 const options = {
   addr: toStr(getEnv("DEMERGI_ADDR")),
@@ -26,6 +27,7 @@ const options = {
   httpTargetSeparator: toStr(getEnv("DEMERGI_HTTP_TARGET_SEPARATOR")),
   httpHostHeaderSeparator: toStr(getEnv("DEMERGI_HTTP_HOST_HEADER_SEPARATOR")),
   httpMixHostHeaderCase: toBool(getEnv("DEMERGI_HTTP_MIX_HOST_HEADER_CASE")),
+  logLevel: toStr(getEnv("DEMERGI_LOG_LEVEL")),
 };
 
 const argv = process.argv.slice(2);
@@ -94,6 +96,10 @@ getopts: for (let i = 0; i < argv.length; i++) {
       break;
     case "--http-mix-host-header-case":
       options.httpMixHostHeaderCase = toBool(argv[++i]);
+      break;
+    case "-l":
+    case "--log-level":
+      options.logLevel = toStr(argv[++i]);
       break;
     case "-v":
     case "--version":
@@ -182,6 +188,10 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  Alternate upper and lower case in the host header (true by default).`,
           ``,
           `Info:`,
+          `  -l, --log-level STR, $DEMERGI_LOG_LEVEL`,
+          `  The log level, valid values are "debug", "info", "warn", "error" and "none"`,
+          `  ("info" by default).`,
+          ``,
           `  -v, --version`,
           `  Show version and quit.`,
           ``,
@@ -205,13 +215,17 @@ getopts: for (let i = 0; i < argv.length; i++) {
 }
 
 (async () => {
+  if (options.logLevel?.length > 0) {
+    Logger.level = options.logLevel;
+  }
+
   if (options.workers > 0 && cluster.isPrimary) {
     cluster.on("online", (worker) => {
-      console.log(`Worker ${worker.process.pid} started`);
+      Logger.debug(`Worker ${worker.process.pid} started`);
     });
 
     cluster.on("exit", (worker, code, signal) => {
-      console.log(`Worker ${worker.process.pid} died (${signal || code})`);
+      Logger.debug(`Worker ${worker.process.pid} died (${signal || code})`);
     });
 
     for (let i = 0; i < options.workers; i++) {
@@ -243,7 +257,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
     });
 
     await proxy.start();
-    console.log(`Listening on ${proxy.addr}:${proxy.port}`);
+    Logger.info(`Listening on ${proxy.addr}:${proxy.port}`);
 
     for (const event of ["SIGINT", "SIGTERM"]) {
       process.on(event, async () => {

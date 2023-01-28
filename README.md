@@ -37,6 +37,16 @@ Proxy:
   -W, --workers NUM, $DEMERGI_WORKERS
   The number of workers (0 by default).
 
+  --inactivity-timeout NUM, $DEMERGI_INACTIVITY_TIMEOUT
+  Maximum time in ms before the connection is closed due to inactivity
+  (60000 by default).
+
+  --happy-eyeballs BOOL, $DEMERGI_HAPPY_EYEBALLS
+  Enable Happy Eyeballs algorithm (RFC 8305) (EXPERIMENTAL) (false by default).
+
+  --happy-eyeballs-timeout NUM, $DEMERGI_HAPPY_EYEBALLS_TIMEOUT
+  Maximum time in ms for IPv6 before trying IPv4 (250 by default).
+
 Resolver:
   --dns-mode STR, $DEMERGI_DNS_MODE
   The DNS resolver mode, valid values are "plain" and "dot" ("dot" by default).
@@ -87,6 +97,10 @@ HTTP:
   Alternate upper and lower case in the host header (true by default).
 
 Info:
+  -l, --log-level STR, $DEMERGI_LOG_LEVEL
+  The log level, valid values are "debug", "info", "warn", "error" and "none"
+  ("info" by default).
+
   -v, --version
   Show version and quit.
 
