@@ -16,6 +16,9 @@ const options = {
   happyEyeballsTimeout: toInt(getEnv("DEMERGI_HAPPY_EYEBALLS_TIMEOUT")),
   dnsMode: toStr(getEnv("DEMERGI_DNS_MODE")),
   dnsCacheSize: toInt(getEnv("DEMERGI_DNS_CACHE_SIZE")),
+  dohUrl: toStr(getEnv("DEMERGI_DOH_URL")),
+  dohTlsServername: toStr(getEnv("DEMERGI_DOH_TLS_SERVERNAME")),
+  dohTlsPin: toStr(getEnv("DEMERGI_DOH_TLS_PIN")),
   dotHost: toStr(getEnv("DEMERGI_DOT_HOST")),
   dotPort: toInt(getEnv("DEMERGI_DOT_PORT")),
   dotTlsServername: toStr(getEnv("DEMERGI_DOT_TLS_SERVERNAME")),
@@ -63,6 +66,15 @@ getopts: for (let i = 0; i < argv.length; i++) {
       break;
     case "--dns-cache-size":
       options.dnsCacheSize = toInt(argv[++i]);
+      break;
+    case "--doh-url":
+      options.dohUrl = toStr(argv[++i]);
+      break;
+    case "--doh-tls-servername":
+      options.dohTlsServername = toStr(argv[++i]);
+      break;
+    case "--doh-tls-pin":
+      options.dohTlsPin = toStr(argv[++i]);
       break;
     case "--dot-host":
       options.dotHost = toStr(argv[++i]);
@@ -140,10 +152,22 @@ getopts: for (let i = 0; i < argv.length; i++) {
           ``,
           `Resolver:`,
           `  --dns-mode STR, $DEMERGI_DNS_MODE`,
-          `  The DNS resolver mode, valid values are "plain" and "dot" ("dot" by default).`,
+          `  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("dot" by`,
+          `  default).`,
           ``,
           `  --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE`,
           `  The maximum number of entries in the DNS cache (100000 by default).`,
+          ``,
+          `  --doh-url STR, $DEMERGI_DOH_URL`,
+          `  The DoH URL ("https://1.0.0.1/dns-query" by default).`,
+          ``,
+          `  --doh-tls-servername STR, $DEMERGI_DOH_TLS_SERVERNAME`,
+          `  The server name to check in the DoH server certificate (unspecified by`,
+          `  default).`,
+          ``,
+          `  --doh-tls-pin STR, $DEMERGI_DOH_TLS_PIN`,
+          `  The pin to check in the DoH server certificate. The pin must be a base64`,
+          `  encoded SHA256 hash of the public key (unspecified by default).`,
           ``,
           `  --dot-host STR, $DEMERGI_DOT_HOST`,
           `  The DoT server host ("1.0.0.1" by default).`,
@@ -248,6 +272,9 @@ if (options.workers > 0 && cluster.isPrimary) {
     resolver: new DemergiResolver({
       dnsMode: options.dnsMode,
       dnsCacheSize: options.dnsCacheSize,
+      dohUrl: options.dohUrl,
+      dohTlsServername: options.dohTlsServername,
+      dohTlsPin: options.dohTlsPin,
       dotHost: options.dotHost,
       dotPort: options.dotPort,
       dotTlsServername: options.dotTlsServername,

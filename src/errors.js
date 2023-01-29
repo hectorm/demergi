@@ -94,6 +94,12 @@ export class ResolverAnswerTimeoutError extends ResolverAnswerError {
   }
 }
 
+export class ResolverAnswerStatusError extends ResolverAnswerError {
+  constructor(status, question, answer) {
+    super(`Answer status ${status}`, question, answer);
+  }
+}
+
 export class ResolverAnswerLengthError extends ResolverAnswerError {
   constructor(question, answer) {
     super("Unexpected answer length", question, answer);

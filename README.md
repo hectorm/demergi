@@ -49,10 +49,21 @@ Proxy:
 
 Resolver:
   --dns-mode STR, $DEMERGI_DNS_MODE
-  The DNS resolver mode, valid values are "plain" and "dot" ("dot" by default).
+  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("dot" by default).
 
   --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE
   The maximum number of entries in the DNS cache (100000 by default).
+
+  --doh-url STR, $DEMERGI_DOH_URL
+  The DoH URL ("https://1.0.0.1/dns-query" by default).
+
+  --doh-tls-servername STR, $DEMERGI_DOH_TLS_SERVERNAME
+  The server name to check in the DoH server certificate (unspecified by
+  default).
+
+  --doh-tls-pin STR, $DEMERGI_DOH_TLS_PIN
+  The pin to check in the DoH server certificate. The pin must be a base64
+  encoded SHA256 hash of the public key (unspecified by default).
 
   --dot-host STR, $DEMERGI_DOT_HOST
   The DoT server host ("1.0.0.1" by default).

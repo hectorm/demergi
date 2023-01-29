@@ -1,6 +1,9 @@
 import crypto from "node:crypto";
 import dns from "node:dns";
+import http2 from "node:http2";
+import net from "node:net";
 import tls from "node:tls";
+import { URL } from "node:url";
 import { LRU } from "./lru.js";
 import { Logger } from "./logger.js";
 import {
@@ -10,19 +13,35 @@ import {
   ResolverAnswerLengthError,
   ResolverAnswerQuestionError,
   ResolverAnswerResourceDataLengthError,
+  ResolverAnswerStatusError,
   ResolverAnswerTimeoutError,
   ResolverCertificatePINError,
-  ResolverNoAddressError,
   ResolverDNSModeError,
+  ResolverNoAddressError,
 } from "./errors.js";
+
+const {
+  HTTP2_HEADER_ACCEPT,
+  HTTP2_HEADER_CONTENT_LENGTH,
+  HTTP2_HEADER_CONTENT_TYPE,
+  HTTP2_HEADER_METHOD,
+  HTTP2_HEADER_PATH,
+  HTTP2_HEADER_SCHEME,
+  HTTP2_HEADER_STATUS,
+  NGHTTP2_REFUSED_STREAM,
+} = http2.constants;
 
 export class DemergiResolver {
   #ttlMin = 30;
   #answerTimeout = 5000;
+  #dohClient;
 
   constructor({
     dnsMode = "dot",
     dnsCacheSize = 100000,
+    dohUrl = "https://1.0.0.1/dns-query",
+    dohTlsServername,
+    dohTlsPin,
     dotHost = "1.0.0.1",
     dotPort = 853,
     dotTlsServername,
@@ -30,9 +49,20 @@ export class DemergiResolver {
   } = {}) {
     this.dnsMode = dnsMode;
     this.dnsCache = new LRU(dnsCacheSize);
+    this.dohUrl = new URL(dohUrl);
+    if (dohTlsServername) {
+      this.dohTlsServername = dohTlsServername;
+    } else if (net.isIP(this.dohUrl.hostname) === 0) {
+      this.dohTlsServername = this.dohUrl.hostname;
+    }
+    this.dohTlsPin = dohTlsPin;
     this.dotHost = dotHost;
     this.dotPort = dotPort;
-    this.dotTlsServername = dotTlsServername;
+    if (dotTlsServername) {
+      this.dotTlsServername = dotTlsServername;
+    } else if (net.isIP(this.dotHost) === 0) {
+      this.dotTlsServername = this.dotHost;
+    }
     this.dotTlsPin = dotTlsPin;
   }
 
@@ -67,6 +97,8 @@ export class DemergiResolver {
     switch (this.dnsMode) {
       case "plain":
         return this.#resolvePlain(...args);
+      case "doh":
+        return this.#resolveDoh(...args);
       case "dot":
         return this.#resolveDot(...args);
       default:
@@ -84,6 +116,116 @@ export class DemergiResolver {
           resolve({ address: addresses[0].address, ttl: addresses[0].ttl });
         }
       });
+    });
+  }
+
+  #resolveDoh(hostname, family, retry = 0) {
+    return new Promise((resolve, reject) => {
+      const question = this.#encodeQuestion(hostname, family);
+
+      if (
+        this.#dohClient === undefined ||
+        this.#dohClient.destroyed ||
+        this.#dohClient.closed
+      ) {
+        Logger.debug(`Connecting to DoH server ${this.dohUrl.host}`);
+        this.#dohClient = http2.connect(this.dohUrl.origin, {
+          servername: this.dohTlsServername,
+          createConnection: () => {
+            let socket;
+            try {
+              socket = tls.connect({
+                host: this.dohUrl.hostname,
+                port: this.dohUrl.port || 443,
+                ALPNProtocols: ["h2"],
+                servername: this.dohTlsServername,
+                rejectUnauthorized:
+                  typeof this.dohTlsServername === "string" ||
+                  typeof this.dohTlsPin !== "string",
+              });
+            } catch (error) {
+              this.#dohClient.destroy(error);
+              return;
+            }
+
+            socket.once("error", (error) => {
+              this.#dohClient.destroy(error);
+            });
+
+            socket.once("secureConnect", () => {
+              if (typeof this.dohTlsPin === "string") {
+                const cert = socket.getPeerCertificate();
+                const pin = this.#sha256(cert.pubkey);
+                if (this.dohTlsPin !== pin) {
+                  this.#dohClient.destroy(
+                    new ResolverCertificatePINError(this.dohTlsPin, pin)
+                  );
+                }
+              }
+            });
+
+            return socket;
+          },
+        });
+
+        this.#dohClient.once("error", (error) => {
+          reject(error);
+        });
+
+        this.#dohClient.unref();
+      }
+
+      const request = this.#dohClient.request({
+        [HTTP2_HEADER_METHOD]: "POST",
+        [HTTP2_HEADER_SCHEME]: "https",
+        [HTTP2_HEADER_PATH]: this.dohUrl.pathname,
+        [HTTP2_HEADER_ACCEPT]: "application/dns-message",
+        [HTTP2_HEADER_CONTENT_TYPE]: "application/dns-message",
+        [HTTP2_HEADER_CONTENT_LENGTH]: question.length,
+      });
+
+      request.setTimeout(this.#answerTimeout);
+
+      request.once("timeout", () => {
+        request.destroy(new ResolverAnswerTimeoutError(question));
+      });
+
+      request.once("error", (error) => {
+        if (request.rstCode === NGHTTP2_REFUSED_STREAM && retry < 5) {
+          // Retry with exponential backoff if the server refuses the stream.
+          resolve(
+            new Promise((r) => {
+              retry++;
+              const d = (2 ** (retry + Math.random()) * 20) | 0;
+              Logger.debug(`REFUSED_STREAM received, retrying in ${d}ms`);
+              setTimeout(() => r(this.#resolveDoh(hostname, family, retry)), d);
+            })
+          );
+        } else {
+          reject(error.cause ?? error);
+        }
+      });
+
+      request.once("response", (headers) => {
+        const status = headers[HTTP2_HEADER_STATUS];
+        if (status !== 200) {
+          request.destroy(new ResolverAnswerStatusError(status, question));
+        }
+      });
+
+      const answer = [];
+      request.on("data", (chunk) => answer.push(chunk));
+      request.once("end", () => {
+        if (answer.length > 0) {
+          try {
+            resolve(this.#decodeAnswer(question, Buffer.concat(answer)));
+          } catch (error) {
+            reject(error);
+          }
+        }
+      });
+
+      request.end(question);
     });
   }
 
@@ -112,29 +254,38 @@ export class DemergiResolver {
         socket.destroy(new ResolverAnswerTimeoutError(question));
       });
 
+      socket.once("error", (error) => {
+        reject(error);
+      });
+
       socket.once("secureConnect", () => {
         if (typeof this.dotTlsPin === "string") {
-          const pubkey256 = this.#sha256(socket.getPeerCertificate().pubkey);
-          if (this.dotTlsPin !== pubkey256) {
+          const cert = socket.getPeerCertificate();
+          const pin = this.#sha256(cert.pubkey);
+          if (this.dotTlsPin !== pin) {
             socket.destroy(
-              new ResolverCertificatePINError(this.dotTlsPin, pubkey256)
+              new ResolverCertificatePINError(this.dotTlsPin, pin)
             );
             return;
           }
         }
 
-        socket.write(question);
-      });
+        const length = Buffer.alloc(2);
+        length.writeUInt16BE(question.byteLength, 0);
 
-      socket.once("error", (error) => {
-        reject(error);
+        socket.write(Buffer.concat([length, question]));
       });
 
       socket.once("data", (answer) => {
         socket.destroy();
 
         try {
-          resolve(this.#decodeAnswer(question, answer));
+          const length = answer.readUInt16BE(0);
+          if (length !== answer.byteLength - 2) {
+            throw new ResolverAnswerLengthError(question, answer);
+          }
+
+          resolve(this.#decodeAnswer(question, answer.subarray(2)));
         } catch (error) {
           reject(error);
         }
@@ -143,10 +294,7 @@ export class DemergiResolver {
   }
 
   #encodeQuestion(hostname, family) {
-    const question = Buffer.from([
-      // Length
-      0x00,
-      0x00,
+    return Buffer.from([
       // ID
       ...crypto.randomBytes(2),
       // QR    | OPCODE   | AA       | TC       | RD
@@ -174,24 +322,12 @@ export class DemergiResolver {
       0x00,
       0x01,
     ]);
-
-    // Update length.
-    question.writeUInt16BE(question.byteLength - 2, 0);
-
-    return question;
   }
 
   #decodeAnswer(question, answer) {
     let offset = 0;
 
-    const length = answer.readUInt16BE(offset);
-    if (length !== answer.byteLength - 2) {
-      throw new ResolverAnswerLengthError(question, answer);
-    }
-    // Strip length from answer.
-    answer = answer.subarray(2);
-
-    const questionId = question.readUInt16BE(2);
+    const questionId = question.readUInt16BE(0);
     const answerId = answer.readUInt16BE(offset);
     if (answerId !== questionId) {
       throw new ResolverAnswerIDError(question, answer);
