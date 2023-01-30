@@ -40,14 +40,14 @@ Proxy:
   (60000 by default).
 
   --happy-eyeballs BOOL, $DEMERGI_HAPPY_EYEBALLS
-  Enable Happy Eyeballs algorithm (RFC 8305) (EXPERIMENTAL) (false by default).
+  Enable Happy Eyeballs algorithm (RFC 8305) (true by default).
 
   --happy-eyeballs-timeout NUM, $DEMERGI_HAPPY_EYEBALLS_TIMEOUT
   Maximum time in ms for IPv6 before trying IPv4 (250 by default).
 
 Resolver:
   --dns-mode STR, $DEMERGI_DNS_MODE
-  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("dot" by
+  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("doh" by
   default).
 
   --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE

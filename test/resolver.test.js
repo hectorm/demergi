@@ -11,7 +11,7 @@ describe("Resolver", () => {
   test("Must have specific defaults", () => {
     const defaults = new DemergiResolver();
 
-    expect(defaults.dnsMode).toBe("dot");
+    expect(defaults.dnsMode).toBe("doh");
     expect(defaults.dnsCache.max).toBe(100000);
     expect(defaults.dohUrl.toString()).toBe("https://1.0.0.1/dns-query");
     expect(defaults.dohTlsServername).toBeUndefined();

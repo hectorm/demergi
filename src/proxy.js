@@ -39,7 +39,7 @@ export class DemergiProxy {
     addrs = ["[::]:8080"],
     hosts = [],
     inactivityTimeout = 60000,
-    happyEyeballs = false,
+    happyEyeballs = true,
     happyEyeballsTimeout = 250,
     httpsClientHelloSize = 40,
     httpsClientHelloTLSv = "1.3",

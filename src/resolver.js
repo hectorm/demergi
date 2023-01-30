@@ -37,7 +37,7 @@ export class DemergiResolver {
   #dohClient;
 
   constructor({
-    dnsMode = "dot",
+    dnsMode = "doh",
     dnsCacheSize = 100000,
     dohUrl = "https://1.0.0.1/dns-query",
     dohTlsServername,
