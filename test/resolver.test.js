@@ -125,7 +125,7 @@ describe("Resolver", () => {
     const resolver = new DemergiResolver({
       dnsMode: "doh",
       dohUrl: "https://1.0.0.1/dns-query",
-      dohTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dohTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -140,7 +140,7 @@ describe("Resolver", () => {
       dnsMode: "doh",
       dohUrl: "https://1.0.0.1/dns-query",
       dohTlsServername: "cloudflare-dns.com",
-      dohTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dohTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -204,7 +204,7 @@ describe("Resolver", () => {
       dnsMode: "doh",
       dohUrl: "https://1.0.0.1/dns-query",
       dohTlsServername: "cloudflare-dns.invalid",
-      dohTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dohTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     await expect(resolver.resolve("google.com")).rejects.toMatchObject({
@@ -434,7 +434,7 @@ describe("Resolver", () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotHost: "1.0.0.1",
-      dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -449,7 +449,7 @@ describe("Resolver", () => {
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
-      dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -513,7 +513,7 @@ describe("Resolver", () => {
       dnsMode: "dot",
       dotHost: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
-      dotTlsPin: "xY6kq3vGPX0WsUTfUuFGdxhPEiKw0+RsBYcbr3WLpLk=",
+      dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
     await expect(resolver.resolve("google.com")).rejects.toMatchObject({

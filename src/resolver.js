@@ -154,8 +154,8 @@ export class DemergiResolver {
 
             socket.once("secureConnect", () => {
               if (typeof this.dohTlsPin === "string") {
-                const cert = socket.getPeerCertificate();
-                const pin = this.#sha256(cert.pubkey);
+                const cert = socket.getPeerX509Certificate();
+                const pin = this.#pubKeyPin(cert);
                 if (this.dohTlsPin !== pin) {
                   this.#dohClient.destroy(
                     new ResolverCertificatePINError(this.dohTlsPin, pin)
@@ -260,8 +260,8 @@ export class DemergiResolver {
 
       socket.once("secureConnect", () => {
         if (typeof this.dotTlsPin === "string") {
-          const cert = socket.getPeerCertificate();
-          const pin = this.#sha256(cert.pubkey);
+          const cert = socket.getPeerX509Certificate();
+          const pin = this.#pubKeyPin(cert);
           if (this.dotTlsPin !== pin) {
             socket.destroy(
               new ResolverCertificatePINError(this.dotTlsPin, pin)
@@ -456,7 +456,10 @@ export class DemergiResolver {
     return [name, bytesLen];
   }
 
-  #sha256(data) {
-    return crypto.createHash("sha256").update(data).digest("base64");
+  #pubKeyPin(cert) {
+    // Out-of-Band Key-Pinned Privacy Profile
+    // https://www.rfc-editor.org/rfc/rfc7858.html#section-4.2
+    const pubKey = cert.publicKey.export({ type: "spki", format: "der" });
+    return crypto.createHash("sha256").update(pubKey).digest("base64");
   }
 }
