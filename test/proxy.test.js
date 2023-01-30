@@ -6,7 +6,7 @@ import { DemergiResolver } from "../src/resolver.js";
 global.console.error = jest.fn();
 
 const proxy = new DemergiProxy({
-  addrs: ["127.0.0.1:0", "127.0.0.2:0"],
+  addrs: ["localhost:0", "localhost:0", "localhost:0"],
 });
 
 const makeProxiedHttpsRequest = ({ proxy, host, port } = {}) => {
@@ -80,7 +80,7 @@ describe("Proxy", () => {
   });
 
   test("Must be listening on all addresses", () => {
-    expect(proxy.servers.size).toBe(2);
+    expect(proxy.servers.size).toBe(3);
     for (const server of proxy.servers) {
       expect(server.listening).toBe(true);
     }
