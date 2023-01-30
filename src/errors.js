@@ -1,3 +1,9 @@
+export class ProxyAddressError extends Error {
+  constructor(address) {
+    super(`Invalid address ${address}`);
+  }
+}
+
 export class ProxyTLSVersionError extends Error {
   constructor(version) {
     super(`Unknown TLS version ${version}`);

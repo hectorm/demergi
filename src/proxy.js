@@ -2,9 +2,10 @@ import net from "node:net";
 import { DemergiResolver } from "./resolver.js";
 import { Logger } from "./logger.js";
 import {
+  ProxyAddressError,
   ProxyClientWriteError,
-  ProxyRequestHTTPVersionError,
   ProxyRequestError,
+  ProxyRequestHTTPVersionError,
   ProxyRequestMethodError,
   ProxyRequestTargetError,
   ProxyTLSVersionError,
@@ -14,8 +15,8 @@ import {
 } from "./errors.js";
 
 export class DemergiProxy {
+  #addrs = [];
   #httpVersions = new Set(["HTTP/1.0", "HTTP/1.1"]);
-
   #httpMethods = new Set([
     "GET",
     "HEAD",
@@ -27,7 +28,6 @@ export class DemergiProxy {
     "TRACE",
     "PATCH",
   ]);
-
   #tlsVersions = new Map([
     ["1.0", 0x0301],
     ["1.1", 0x0302],
@@ -36,8 +36,7 @@ export class DemergiProxy {
   ]);
 
   constructor({
-    addr = "::",
-    port = 8080,
+    addrs = ["[::]:8080"],
     hostList = [],
     inactivityTimeout = 60000,
     happyEyeballs = false,
@@ -51,52 +50,72 @@ export class DemergiProxy {
     httpMixHostHeaderCase = true,
     resolver = new DemergiResolver(),
   } = {}) {
-    if (this.#tlsVersions.has(this.httpsClientHelloTLSv)) {
-      throw new ProxyTLSVersionError(httpsClientHelloTLSv);
-    }
+    this.#addrs = addrs.map((addr) => {
+      const { host, port } = this.#parseOrigin(addr);
+      if (host === undefined || port === undefined) {
+        throw new ProxyAddressError(addr);
+      }
+      return { host, port };
+    });
 
-    this.addr = addr;
-    this.port = port;
     this.hostList = new Set(hostList.map((e) => this.#parseOrigin(e).host));
+
     this.inactivityTimeout = inactivityTimeout;
     this.happyEyeballs = happyEyeballs;
     this.happyEyeballsTimeout = happyEyeballsTimeout;
+
     this.httpsClientHelloSize = httpsClientHelloSize;
-    this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
+    if (this.#tlsVersions.has(httpsClientHelloTLSv)) {
+      this.httpsClientHelloTLSv = this.#tlsVersions.get(httpsClientHelloTLSv);
+    } else {
+      throw new ProxyTLSVersionError(httpsClientHelloTLSv);
+    }
+
     this.httpNewlineSeparator = this.#unescape(httpNewlineSeparator);
     this.httpMethodSeparator = this.#unescape(httpMethodSeparator);
     this.httpTargetSeparator = this.#unescape(httpTargetSeparator);
     this.httpHostHeaderSeparator = this.#unescape(httpHostHeaderSeparator);
     this.httpMixHostHeaderCase = httpMixHostHeaderCase;
+
     this.resolver = resolver;
+
+    this.servers = new Set();
     this.sockets = new Set();
-    this.server = net.createServer(this.#connectionListener);
   }
 
-  start() {
-    return new Promise((resolve, reject) => {
-      this.server.listen(this.port, this.addr, (error) => {
-        if (error) reject(error);
-        else {
-          const { address, port } = this.server.address();
-          this.addr = address;
-          this.port = port;
-          resolve();
-        }
+  async start() {
+    for (const { host, port } of this.#addrs) {
+      const server = net.createServer(this.#connectionListener);
+
+      this.servers.add(server);
+      server.once("close", () => this.servers.delete(server));
+
+      await new Promise((resolve, reject) => {
+        server.listen(port, host, (error) => {
+          if (error) reject(error);
+          else resolve();
+        });
       });
-    });
+    }
+
+    return this.servers;
   }
 
-  stop() {
-    return new Promise((resolve, reject) => {
-      for (let socket of this.sockets) {
-        socket.destroy();
+  async stop() {
+    for (const socket of this.sockets) {
+      socket.destroy();
+    }
+
+    for (const server of this.servers) {
+      if (server.listening) {
+        await new Promise((resolve, reject) => {
+          server.close((error) => {
+            if (error) reject(error);
+            else resolve();
+          });
+        });
       }
-      this.server.close((error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
+    }
   }
 
   #connectionListener = (clientSocket) => {

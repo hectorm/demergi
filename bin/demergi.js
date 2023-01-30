@@ -7,8 +7,7 @@ import { DemergiResolver } from "../src/resolver.js";
 import { Logger } from "../src/logger.js";
 
 const options = {
-  addr: toStr(getEnv("DEMERGI_ADDR")),
-  port: toInt(getEnv("DEMERGI_PORT")),
+  addrs: toList(getEnv("DEMERGI_ADDRS")),
   hostList: toList(getEnv("DEMERGI_HOST_LIST")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
   inactivityTimeout: toInt(getEnv("DEMERGI_INACTIVITY_TIMEOUT")),
@@ -37,12 +36,8 @@ const argv = process.argv.slice(2);
 getopts: for (let i = 0; i < argv.length; i++) {
   switch (argv[i]) {
     case "-A":
-    case "--addr":
-      options.addr = toStr(argv[++i]);
-      break;
-    case "-P":
-    case "--port":
-      options.port = toInt(argv[++i]);
+    case "--addrs":
+      options.addrs = toList(argv[++i]);
       break;
     case "-H":
     case "--host-list":
@@ -127,11 +122,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `A proxy server that helps to bypass the DPI systems implemented by various ISPs.`,
           ``,
           `Proxy:`,
-          `  -A, --addr STR, $DEMERGI_ADDR`,
-          `  The address to bind the server to ("::" by default).`,
-          ``,
-          `  -P, --port NUM, $DEMERGI_PORT`,
-          `  The port to bind the server to (8080 by default).`,
+          `  -A, --addrs STR, $DEMERGI_ADDRS`,
+          `  The address list separated by commas or spaces to bind the server to`,
+          `   ("[::]:8080" by default)`,
           ``,
           `  -H, --host-list STR, $DEMERGI_HOST_LIST`,
           `  The host list separated by commas or spaces to apply the evasion techniques,`,
@@ -256,8 +249,7 @@ if (options.workers > 0 && cluster.isPrimary) {
   }
 } else {
   const proxy = new DemergiProxy({
-    addr: options.addr,
-    port: options.port,
+    addrs: options.addrs,
     hostList: options.hostList,
     inactivityTimeout: options.inactivityTimeout,
     happyEyeballs: options.happyEyeballs,
@@ -283,13 +275,16 @@ if (options.workers > 0 && cluster.isPrimary) {
   });
 
   (async () => {
-    await proxy.start();
-    Logger.info(`Listening on ${proxy.addr}:${proxy.port}`);
+    const servers = await proxy.start();
+    for (const server of servers) {
+      const { address, port } = server.address();
+      Logger.info(`Listening on ${address}:${port}`);
+    }
 
     for (const event of ["SIGINT", "SIGTERM"]) {
       process.on(event, async () => {
-        await proxy.stop();
         Logger.info("Exiting");
+        await proxy.stop();
         process.exit(0);
       });
     }

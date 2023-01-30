@@ -416,10 +416,10 @@ export class DemergiResolver {
 
   #encodeName(name) {
     const arr = [];
-    for (let label of name.split(".")) {
+    for (const label of name.split(".")) {
       if (label.length === 0) continue;
       arr.push(label.length);
-      for (let char of label) {
+      for (const char of label) {
         arr.push(char.charCodeAt(0));
       }
     }

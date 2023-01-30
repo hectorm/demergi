@@ -25,31 +25,31 @@ class InternalLogger {
     }
   }
 
-  get #ts() {
-    return new Date().toISOString();
+  get #prefix() {
+    return `[${new Date().toISOString()}] [${process.pid}]`;
   }
 
   error = (...msg) => {
     if (this.level >= this.levels.ERROR) {
-      console.error(`[${this.#ts}] [ERROR]:`, ...msg);
+      console.error(this.#prefix, "[ERROR]", ...msg);
     }
   };
 
   warn = (...msg) => {
     if (this.level >= this.levels.WARN) {
-      console.warn(`[${this.#ts}] [WARN]:`, ...msg);
+      console.warn(this.#prefix, "[WARN]", ...msg);
     }
   };
 
   info = (...msg) => {
     if (this.level >= this.levels.INFO) {
-      console.info(`[${this.#ts}] [INFO]:`, ...msg);
+      console.info(this.#prefix, "[INFO]", ...msg);
     }
   };
 
   debug = (...msg) => {
     if (this.level >= this.levels.DEBUG) {
-      console.debug(`[${this.#ts}] [DEBUG]:`, ...msg);
+      console.debug(this.#prefix, "[DEBUG]", ...msg);
     }
   };
 }
