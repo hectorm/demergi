@@ -37,7 +37,7 @@ export class DemergiProxy {
 
   constructor({
     addrs = ["[::]:8080"],
-    hostList = [],
+    hosts = [],
     inactivityTimeout = 60000,
     happyEyeballs = false,
     happyEyeballsTimeout = 250,
@@ -58,7 +58,7 @@ export class DemergiProxy {
       return { host, port };
     });
 
-    this.hostList = new Set(hostList.map((e) => this.#parseOrigin(e).host));
+    this.hosts = new Set(hosts);
 
     this.inactivityTimeout = inactivityTimeout;
     this.happyEyeballs = happyEyeballs;
@@ -185,7 +185,7 @@ export class DemergiProxy {
       if (port === undefined) {
         port = https ? 443 : 80;
       }
-      const obfuscate = this.hostList.size === 0 || this.hostList.has(host);
+      const obfuscate = this.hosts.size === 0 || this.hosts.has(host);
 
       const httpVersion = requestTokens[2].toString("utf8");
       if (!this.#httpVersions.has(httpVersion)) {

@@ -24,13 +24,11 @@ Usage: demergi [OPTION]...
 A proxy server that helps to bypass the DPI systems implemented by various ISPs.
 
 Proxy:
-  -A, --addr STR, $DEMERGI_ADDR
-  The address to bind the server to ("::" by default).
+  -A, --addrs STR, $DEMERGI_ADDRS
+  The address list separated by commas or spaces to bind the server to
+  ("[::]:8080" by default).
 
-  -P, --port NUM, $DEMERGI_PORT
-  The port to bind the server to (8080 by default).
-
-  -H, --host-list STR, $DEMERGI_HOST_LIST
+  -H, --hosts STR, $DEMERGI_HOSTS
   The host list separated by commas or spaces to apply the evasion techniques,
   will be applied to all hosts if unspecified (unspecified by default).
 
@@ -49,7 +47,8 @@ Proxy:
 
 Resolver:
   --dns-mode STR, $DEMERGI_DNS_MODE
-  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("dot" by default).
+  The DNS resolver mode, valid values are "plain", "doh" and "dot" ("dot" by
+  default).
 
   --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE
   The maximum number of entries in the DNS cache (100000 by default).

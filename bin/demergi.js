@@ -8,7 +8,7 @@ import { Logger } from "../src/logger.js";
 
 const options = {
   addrs: toList(getEnv("DEMERGI_ADDRS")),
-  hostList: toList(getEnv("DEMERGI_HOST_LIST")),
+  hosts: toList(getEnv("DEMERGI_HOSTS")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
   inactivityTimeout: toInt(getEnv("DEMERGI_INACTIVITY_TIMEOUT")),
   happyEyeballs: toBool(getEnv("DEMERGI_HAPPY_EYEBALLS")),
@@ -40,8 +40,8 @@ getopts: for (let i = 0; i < argv.length; i++) {
       options.addrs = toList(argv[++i]);
       break;
     case "-H":
-    case "--host-list":
-      options.hostList = toList(argv[++i]);
+    case "--hosts":
+      options.hosts = toList(argv[++i]);
       break;
     case "-W":
     case "--workers":
@@ -124,9 +124,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `Proxy:`,
           `  -A, --addrs STR, $DEMERGI_ADDRS`,
           `  The address list separated by commas or spaces to bind the server to`,
-          `   ("[::]:8080" by default)`,
+          `  ("[::]:8080" by default).`,
           ``,
-          `  -H, --host-list STR, $DEMERGI_HOST_LIST`,
+          `  -H, --hosts STR, $DEMERGI_HOSTS`,
           `  The host list separated by commas or spaces to apply the evasion techniques,`,
           `  will be applied to all hosts if unspecified (unspecified by default).`,
           ``,
@@ -250,7 +250,7 @@ if (options.workers > 0 && cluster.isPrimary) {
 } else {
   const proxy = new DemergiProxy({
     addrs: options.addrs,
-    hostList: options.hostList,
+    hosts: options.hosts,
     inactivityTimeout: options.inactivityTimeout,
     happyEyeballs: options.happyEyeballs,
     happyEyeballsTimeout: options.happyEyeballsTimeout,
