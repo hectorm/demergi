@@ -236,13 +236,22 @@ if (options.logLevel?.length > 0) {
 }
 
 if (options.workers > 0 && cluster.isPrimary) {
-  cluster.on("online", (worker) => {
+  cluster.once("online", (worker) => {
     Logger.debug(`Worker ${worker.process.pid} started`);
   });
 
-  cluster.on("exit", (worker, code, signal) => {
+  cluster.once("exit", (worker, code, signal) => {
     Logger.debug(`Worker ${worker.process.pid} died (${signal || code})`);
   });
+
+  for (const event of ["SIGINT", "SIGTERM"]) {
+    process.once(event, (signal) => {
+      Logger.info("Exiting");
+      for (const worker in Object.values(cluster.workers)) {
+        worker.process?.kill(signal);
+      }
+    });
+  }
 
   for (let i = 0; i < options.workers; i++) {
     cluster.fork();
@@ -277,12 +286,13 @@ if (options.workers > 0 && cluster.isPrimary) {
   (async () => {
     const servers = await proxy.start();
     for (const server of servers) {
-      const { address, port } = server.address();
+      let { address, family, port } = server.address();
+      if (family === "IPv6") address = `[${address}]`;
       Logger.info(`Listening on ${address}:${port}`);
     }
 
     for (const event of ["SIGINT", "SIGTERM"]) {
-      process.on(event, async () => {
+      process.once(event, async () => {
         Logger.info("Exiting");
         await proxy.stop();
         process.exit(0);
