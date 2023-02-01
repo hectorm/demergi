@@ -7,7 +7,7 @@ jest.setTimeout(30000);
 global.console.error = jest.fn();
 
 const proxy = new DemergiProxy({
-  addrs: ["localhost:0", "[::1]:0", "127.0.0.1:0"],
+  addrs: ["localhost:0", "127.0.0.1:0"],
 });
 
 const makeProxiedHttpsRequest = ({ proxy, host, port } = {}) => {
