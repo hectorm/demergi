@@ -81,7 +81,7 @@ describe("Proxy", () => {
   });
 
   test("Must be listening on all addresses", () => {
-    expect(proxy.servers.size).toBe(3);
+    expect(proxy.servers.size).toBe(2);
     for (const server of proxy.servers) {
       expect(server.listening).toBe(true);
     }
