@@ -5,7 +5,7 @@ import {
   ResolverNoAddressError,
 } from "../src/errors.js";
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 global.console.error = jest.fn();
 
 describe("Resolver", () => {

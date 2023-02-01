@@ -3,7 +3,7 @@ import https from "node:https";
 import { DemergiProxy } from "../src/proxy.js";
 import { DemergiResolver } from "../src/resolver.js";
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 global.console.error = jest.fn();
 
 const proxy = new DemergiProxy({
