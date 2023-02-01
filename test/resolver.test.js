@@ -17,8 +17,7 @@ describe("Resolver", () => {
     expect(defaults.dohUrl.toString()).toBe("https://1.0.0.1/dns-query");
     expect(defaults.dohTlsServername).toBeUndefined();
     expect(defaults.dohTlsPin).toBeUndefined();
-    expect(defaults.dotHost).toBe("1.0.0.1");
-    expect(defaults.dotPort).toBe(853);
+    expect(defaults.dotServer.toString()).toBe("tls://1.0.0.1");
     expect(defaults.dotTlsServername).toBeUndefined();
     expect(defaults.dotTlsPin).toBeUndefined();
   });
@@ -383,7 +382,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -396,7 +395,7 @@ describe("Resolver", () => {
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Cloudflare DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
@@ -408,7 +407,7 @@ describe("Resolver", () => {
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Cloudflare DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
@@ -420,7 +419,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
     });
 
@@ -434,7 +433,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
 
@@ -448,7 +447,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
       dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
@@ -463,7 +462,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
@@ -474,7 +473,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
     });
 
@@ -487,7 +486,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsPin: "aHVudGVyMg==",
     });
 
@@ -499,7 +498,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.com",
       dotTlsPin: "aHVudGVyMg==",
     });
@@ -512,7 +511,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
       dotTlsPin: "GP8Knf7qBae+aIfythytMbYnL+yowaWVeD6MoLHkVRg=",
     });
@@ -526,7 +525,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "1.0.0.1",
+      dotServer: "1.0.0.1",
       dotTlsServername: "cloudflare-dns.invalid",
       dotTlsPin: "aHVudGVyMg==",
     });
@@ -542,7 +541,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Google DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "8.8.8.8",
+      dotServer: "8.8.8.8",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -555,7 +554,7 @@ describe("Resolver", () => {
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Google DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "8.8.8.8",
+      dotServer: "8.8.8.8",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
@@ -567,7 +566,7 @@ describe("Resolver", () => {
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Google DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "8.8.8.8",
+      dotServer: "8.8.8.8",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
@@ -579,7 +578,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Google DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "8.8.8.8",
+      dotServer: "8.8.8.8",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
@@ -592,7 +591,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Quad9 DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
+      dotServer: "9.9.9.9",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -605,7 +604,7 @@ describe("Resolver", () => {
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Quad9 DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
+      dotServer: "9.9.9.9",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
@@ -617,7 +616,7 @@ describe("Resolver", () => {
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Quad9 DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
+      dotServer: "9.9.9.9",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
@@ -629,7 +628,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using Quad9 DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "9.9.9.9",
+      dotServer: "9.9.9.9",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
@@ -642,7 +641,7 @@ describe("Resolver", () => {
   test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using AdGuard DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "dns.adguard.com",
+      dotServer: "dns.adguard.com",
     });
 
     const [ipA, ipB] = await resolver.resolve("google.com");
@@ -655,7 +654,7 @@ describe("Resolver", () => {
   test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using AdGuard DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "dns.adguard.com",
+      dotServer: "dns.adguard.com",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
@@ -667,7 +666,7 @@ describe("Resolver", () => {
   test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using AdGuard DNS", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "dns.adguard.com",
+      dotServer: "dns.adguard.com",
     });
 
     const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
@@ -679,7 +678,7 @@ describe("Resolver", () => {
   test("Must throw an exception in DoT mode using AdGuard DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
-      dotHost: "dns.adguard.com",
+      dotServer: "dns.adguard.com",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(

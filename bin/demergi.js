@@ -18,8 +18,7 @@ const options = {
   dohUrl: toStr(getEnv("DEMERGI_DOH_URL")),
   dohTlsServername: toStr(getEnv("DEMERGI_DOH_TLS_SERVERNAME")),
   dohTlsPin: toStr(getEnv("DEMERGI_DOH_TLS_PIN")),
-  dotHost: toStr(getEnv("DEMERGI_DOT_HOST")),
-  dotPort: toInt(getEnv("DEMERGI_DOT_PORT")),
+  dotServer: toStr(getEnv("DEMERGI_DOT_SERVER")),
   dotTlsServername: toStr(getEnv("DEMERGI_DOT_TLS_SERVERNAME")),
   dotTlsPin: toStr(getEnv("DEMERGI_DOT_TLS_PIN")),
   httpsClientHelloSize: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_SIZE")),
@@ -71,11 +70,8 @@ getopts: for (let i = 0; i < argv.length; i++) {
     case "--doh-tls-pin":
       options.dohTlsPin = toStr(argv[++i]);
       break;
-    case "--dot-host":
-      options.dotHost = toStr(argv[++i]);
-      break;
-    case "--dot-port":
-      options.dotPort = toInt(argv[++i]);
+    case "--dot-server":
+      options.dotServer = toStr(argv[++i]);
       break;
     case "--dot-tls-servername":
       options.dotTlsServername = toStr(argv[++i]);
@@ -152,7 +148,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  The maximum number of entries in the DNS cache (100000 by default).`,
           ``,
           `  --doh-url STR, $DEMERGI_DOH_URL`,
-          `  The DoH URL ("https://1.0.0.1/dns-query" by default).`,
+          `  The DoH server URL ("https://1.0.0.1/dns-query" by default).`,
           ``,
           `  --doh-tls-servername STR, $DEMERGI_DOH_TLS_SERVERNAME`,
           `  The server name to check in the DoH server certificate (unspecified by`,
@@ -162,11 +158,8 @@ getopts: for (let i = 0; i < argv.length; i++) {
           `  The pin to check in the DoH server certificate. The pin must be a base64`,
           `  encoded SHA256 hash of the public key (unspecified by default).`,
           ``,
-          `  --dot-host STR, $DEMERGI_DOT_HOST`,
-          `  The DoT server host ("1.0.0.1" by default).`,
-          ``,
-          `  --dot-port NUM, $DEMERGI_DOT_PORT`,
-          `  The DoT server port (853 by default).`,
+          `  --dot-server STR, $DEMERGI_DOT_SERVER`,
+          `  The DoT server host and optionally port ("1.0.0.1" by default).`,
           ``,
           `  --dot-tls-servername STR, $DEMERGI_DOT_TLS_SERVERNAME`,
           `  The server name to check in the DoT server certificate (unspecified by`,
@@ -276,8 +269,7 @@ if (options.workers > 0 && cluster.isPrimary) {
       dohUrl: options.dohUrl,
       dohTlsServername: options.dohTlsServername,
       dohTlsPin: options.dohTlsPin,
-      dotHost: options.dotHost,
-      dotPort: options.dotPort,
+      dotServer: options.dotServer,
       dotTlsServername: options.dotTlsServername,
       dotTlsPin: options.dotTlsPin,
     }),

@@ -42,13 +42,13 @@ export class DemergiResolver {
     dohUrl = "https://1.0.0.1/dns-query",
     dohTlsServername,
     dohTlsPin,
-    dotHost = "1.0.0.1",
-    dotPort = 853,
+    dotServer = "1.0.0.1",
     dotTlsServername,
     dotTlsPin,
   } = {}) {
     this.dnsMode = dnsMode;
     this.dnsCache = new LRU(dnsCacheSize);
+
     this.dohUrl = new URL(dohUrl);
     if (dohTlsServername) {
       this.dohTlsServername = dohTlsServername;
@@ -56,12 +56,12 @@ export class DemergiResolver {
       this.dohTlsServername = this.dohUrl.hostname;
     }
     this.dohTlsPin = dohTlsPin;
-    this.dotHost = dotHost;
-    this.dotPort = dotPort;
+
+    this.dotServer = new URL(`tls://${dotServer}`);
     if (dotTlsServername) {
       this.dotTlsServername = dotTlsServername;
-    } else if (net.isIP(this.dotHost) === 0) {
-      this.dotTlsServername = this.dotHost;
+    } else if (net.isIP(this.dotServer.hostname) === 0) {
+      this.dotTlsServername = this.dotServer.hostname;
     }
     this.dotTlsPin = dotTlsPin;
   }
@@ -236,8 +236,8 @@ export class DemergiResolver {
       let socket;
       try {
         socket = tls.connect({
-          host: this.dotHost,
-          port: this.dotPort,
+          host: this.dotServer.hostname,
+          port: this.dotServer.port || 853,
           servername: this.dotTlsServername,
           rejectUnauthorized:
             typeof this.dotTlsServername === "string" ||

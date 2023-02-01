@@ -54,7 +54,7 @@ Resolver:
   The maximum number of entries in the DNS cache (100000 by default).
 
   --doh-url STR, $DEMERGI_DOH_URL
-  The DoH URL ("https://1.0.0.1/dns-query" by default).
+  The DoH server URL ("https://1.0.0.1/dns-query" by default).
 
   --doh-tls-servername STR, $DEMERGI_DOH_TLS_SERVERNAME
   The server name to check in the DoH server certificate (unspecified by
@@ -64,11 +64,8 @@ Resolver:
   The pin to check in the DoH server certificate. The pin must be a base64
   encoded SHA256 hash of the public key (unspecified by default).
 
-  --dot-host STR, $DEMERGI_DOT_HOST
-  The DoT server host ("1.0.0.1" by default).
-
-  --dot-port NUM, $DEMERGI_DOT_PORT
-  The DoT server port (853 by default).
+  --dot-server STR, $DEMERGI_DOT_SERVER
+  The DoT server host and optionally port ("1.0.0.1" by default).
 
   --dot-tls-servername STR, $DEMERGI_DOT_TLS_SERVERNAME
   The server name to check in the DoT server certificate (unspecified by
