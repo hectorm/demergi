@@ -53,8 +53,8 @@ ENV NPM_CONFIG_PREFIX=${HOME}/.npm/global
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV PATH=${HOME}/node_modules/.bin/:${NPM_CONFIG_PREFIX}/bin/:${PATH}
 
-USER app:0
 WORKDIR /opt/app/
+USER app:0
 
 ##################################################
 ## "build" stage
