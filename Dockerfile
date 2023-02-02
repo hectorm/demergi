@@ -1,12 +1,10 @@
 ARG NODE_VERSION=18
-ARG APP_UID=172761424 APP_GID=0
 
 ##################################################
 ## "base-rootfs" stage
 ##################################################
 
 FROM registry.access.redhat.com/ubi9/ubi:latest AS base-rootfs
-ARG APP_UID APP_GID
 
 RUN mkdir /mnt/rootfs/
 WORKDIR /mnt/rootfs/
@@ -18,9 +16,9 @@ RUN RELEASEVER=$(python3 -c 'import dnf; print(dnf.dnf.Base().conf.substitutions
 		glibc-minimal-langpack \
 	&& rm -rf ./var/cache/* ./var/log/* ./tmp/*
 
-RUN mkdir ./opt/app/
-RUN chmod 770 ./opt/app/
-RUN chown "${APP_UID:?}:${APP_GID:?}" ./opt/app/
+RUN printf '%s\n' 'app:x:172761424:0::/opt/app/:/bin/sh' >> ./etc/passwd
+RUN printf '%s\n' 'app:*:0:0:99999:7:::' >> ./etc/shadow
+RUN mkdir ./opt/app/ && chmod 770 ./opt/app/ && chown 172761424:0 ./opt/app/
 
 ##################################################
 ## "build-rootfs" stage
@@ -49,14 +47,13 @@ RUN dnf --installroot "${PWD:?}" module install -y --setopt install_weak_deps=fa
 ##################################################
 
 FROM scratch AS base
-ARG APP_UID APP_GID
 
-ENV HOME=/opt/app/
-ENV NPM_CONFIG_PREFIX=${HOME}/.npm/global/
+ENV HOME=/opt/app
+ENV NPM_CONFIG_PREFIX=${HOME}/.npm/global
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV PATH=${HOME}/node_modules/.bin/:${NPM_CONFIG_PREFIX}/bin/:${PATH}
 
-USER ${APP_UID}:${APP_GID}
+USER app:0
 WORKDIR /opt/app/
 
 ##################################################
@@ -64,16 +61,15 @@ WORKDIR /opt/app/
 ##################################################
 
 FROM base AS build
-ARG APP_UID APP_GID
 
 COPY --from=build-rootfs /mnt/rootfs/ /
 
 RUN npm install -g npm@latest
 
-COPY --chown=${APP_UID}:${APP_GID} ./package*.json ./
+COPY --chown=app:0 ./package*.json ./
 RUN npm ci
 
-COPY --chown=${APP_UID}:${APP_GID} ./ ./
+COPY --chown=app:0 ./ ./
 RUN npm run lint
 RUN npm run test
 RUN npm run build
