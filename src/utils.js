@@ -1,3 +1,5 @@
+import fs from "node:fs";
+
 export const getEnv = (name, defaultValue) => {
   return name in process.env ? process.env[name] : defaultValue;
 };
@@ -16,4 +18,8 @@ export const toBool = (value) => {
 
 export const toList = (value) => {
   return value !== undefined ? `${value}`.split(/[\s,]+/) : undefined;
+};
+
+export const readFile = (path) => {
+  return path !== undefined ? fs.readFileSync(path) : undefined;
 };

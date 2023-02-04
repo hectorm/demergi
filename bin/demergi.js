@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import cluster from "node:cluster";
-import { getEnv, toStr, toInt, toBool, toList } from "../src/utils.js";
+import {
+  getEnv,
+  toStr,
+  toInt,
+  toBool,
+  toList,
+  readFile,
+} from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import { DemergiResolver } from "../src/resolver.js";
 import { Logger } from "../src/logger.js";
@@ -10,6 +17,9 @@ const options = {
   addrs: toList(getEnv("DEMERGI_ADDRS")),
   hosts: toList(getEnv("DEMERGI_HOSTS")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
+  tlsCa: readFile(getEnv("DEMERGI_TLS_CA")),
+  tlsKey: readFile(getEnv("DEMERGI_TLS_KEY")),
+  tlsCert: readFile(getEnv("DEMERGI_TLS_CERT")),
   inactivityTimeout: toInt(getEnv("DEMERGI_INACTIVITY_TIMEOUT")),
   happyEyeballs: toBool(getEnv("DEMERGI_HAPPY_EYEBALLS")),
   happyEyeballsTimeout: toInt(getEnv("DEMERGI_HAPPY_EYEBALLS_TIMEOUT")),
@@ -22,7 +32,7 @@ const options = {
   dotTlsServername: toStr(getEnv("DEMERGI_DOT_TLS_SERVERNAME")),
   dotTlsPin: toStr(getEnv("DEMERGI_DOT_TLS_PIN")),
   httpsClientHelloSize: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_SIZE")),
-  httpsClientHelloTLSv: toInt(getEnv("DEMERGI_HTTPS_CLIENTHELLO_TLSV")),
+  httpsClientHelloTLSv: toStr(getEnv("DEMERGI_HTTPS_CLIENTHELLO_TLSV")),
   httpNewlineSeparator: toStr(getEnv("DEMERGI_HTTP_NEWLINE_SEPARATOR")),
   httpMethodSeparator: toStr(getEnv("DEMERGI_HTTP_METHOD_SEPARATOR")),
   httpTargetSeparator: toStr(getEnv("DEMERGI_HTTP_TARGET_SEPARATOR")),
@@ -45,6 +55,15 @@ getopts: for (let i = 0; i < argv.length; i++) {
     case "-W":
     case "--workers":
       options.workers = toInt(argv[++i]);
+      break;
+    case "--tls-ca":
+      options.tlsCa = readFile(argv[++i]);
+      break;
+    case "--tls-key":
+      options.tlsKey = readFile(argv[++i]);
+      break;
+    case "--tls-cert":
+      options.tlsCert = readFile(argv[++i]);
       break;
     case "--inactivity-timeout":
       options.inactivityTimeout = toInt(argv[++i]);
@@ -128,6 +147,16 @@ getopts: for (let i = 0; i < argv.length; i++) {
           ``,
           `  -W, --workers NUM, $DEMERGI_WORKERS`,
           `  The number of workers (0 by default).`,
+          ``,
+          `  --tls-ca STR, $DEMERGI_TLS_CA`,
+          `  Path to the TLS certificate bundle used to verify the client identity`,
+          `  (unspecified by default).`,
+          ``,
+          `  --tls-key STR, $DEMERGI_TLS_KEY`,
+          `  Path to the server TLS key (unspecified by default).`,
+          ``,
+          `  --tls-cert STR, $DEMERGI_TLS_CERT`,
+          `  Path to the server TLS certificate (unspecified by default).`,
           ``,
           `  --inactivity-timeout NUM, $DEMERGI_INACTIVITY_TIMEOUT`,
           `  Maximum time in ms before the connection is closed due to inactivity`,
@@ -253,6 +282,9 @@ if (options.workers > 0 && cluster.isPrimary) {
   const proxy = new DemergiProxy({
     addrs: options.addrs,
     hosts: options.hosts,
+    tlsCa: options.tlsCa,
+    tlsKey: options.tlsKey,
+    tlsCert: options.tlsCert,
     inactivityTimeout: options.inactivityTimeout,
     happyEyeballs: options.happyEyeballs,
     happyEyeballsTimeout: options.happyEyeballsTimeout,

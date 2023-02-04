@@ -35,6 +35,16 @@ Proxy:
   -W, --workers NUM, $DEMERGI_WORKERS
   The number of workers (0 by default).
 
+  --tls-ca STR, $DEMERGI_TLS_CA
+  Path to the TLS certificate bundle used to verify the client identity
+  (unspecified by default).
+
+  --tls-key STR, $DEMERGI_TLS_KEY
+  Path to the server TLS key (unspecified by default).
+
+  --tls-cert STR, $DEMERGI_TLS_CERT
+  Path to the server TLS certificate (unspecified by default).
+
   --inactivity-timeout NUM, $DEMERGI_INACTIVITY_TIMEOUT
   Maximum time in ms before the connection is closed due to inactivity
   (60000 by default).

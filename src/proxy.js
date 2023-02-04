@@ -1,8 +1,8 @@
 import net from "node:net";
+import tls from "node:tls";
 import { DemergiResolver } from "./resolver.js";
 import { Logger } from "./logger.js";
 import {
-  ProxyAddressError,
   ProxyClientWriteError,
   ProxyRequestError,
   ProxyRequestHTTPVersionError,
@@ -38,6 +38,9 @@ export class DemergiProxy {
   constructor({
     addrs = ["[::]:8080"],
     hosts = [],
+    tlsCa,
+    tlsKey,
+    tlsCert,
     inactivityTimeout = 60000,
     happyEyeballs = true,
     happyEyeballsTimeout = 250,
@@ -51,14 +54,16 @@ export class DemergiProxy {
     resolver = new DemergiResolver(),
   } = {}) {
     this.#addrs = addrs.map((addr) => {
-      const { host, port } = this.#parseOrigin(addr);
-      if (host === undefined || port === undefined) {
-        throw new ProxyAddressError(addr);
-      }
-      return { host, port };
+      return new URL(
+        /^[a-z0-9.+-]+:\/\//i.test(addr) ? addr : `http://${addr}`
+      );
     });
 
     this.hosts = new Set(hosts);
+
+    this.tlsCa = tlsCa;
+    this.tlsKey = tlsKey;
+    this.tlsCert = tlsCert;
 
     this.inactivityTimeout = inactivityTimeout;
     this.happyEyeballs = happyEyeballs;
@@ -84,8 +89,31 @@ export class DemergiProxy {
   }
 
   async start() {
-    for (const { host, port } of this.#addrs) {
-      const server = net.createServer(this.#connectionListener);
+    for (const addr of this.#addrs) {
+      const isHttps = addr.protocol === "https:";
+      const host = addr.hostname.match(/^\[(.+)\]$/)?.[1] ?? addr.hostname;
+      const port = addr.port || (isHttps ? 443 : 80);
+
+      let server;
+      if (isHttps) {
+        server = tls.createServer(
+          {
+            ca: this.tlsCa,
+            key: this.tlsKey,
+            cert: this.tlsCert,
+            ALPNProtocols: ["http/1.1"],
+            requestCert: this.tlsCa !== undefined,
+          },
+          this.#connectionListener
+        );
+
+        server.on("tlsClientError", (error, socket) => {
+          this.#socketErrorHandler(error);
+          socket.destroy();
+        });
+      } else {
+        server = net.createServer(this.#connectionListener);
+      }
 
       this.servers.add(server);
       server.once("close", () => this.servers.delete(server));
@@ -164,7 +192,7 @@ export class DemergiProxy {
         );
         return;
       }
-      const https = httpMethod === "CONNECT";
+      const isHttps = httpMethod === "CONNECT";
 
       const target = requestTokens[1].toString("utf8");
       let { host, port } = this.#parseOrigin(target);
@@ -176,9 +204,9 @@ export class DemergiProxy {
         return;
       }
       if (port === undefined) {
-        port = https ? 443 : 80;
+        port = isHttps ? 443 : 80;
       }
-      const obfuscate = this.hosts.size === 0 || this.hosts.has(host);
+      const mustObfuscate = this.hosts.size === 0 || this.hosts.has(host);
 
       const httpVersion = requestTokens[2].toString("utf8");
       if (!this.#httpVersions.has(httpVersion)) {
@@ -221,8 +249,8 @@ export class DemergiProxy {
         return;
       }
 
-      if (https) {
-        if (obfuscate) {
+      if (isHttps) {
+        if (mustObfuscate) {
           clientSocket.once("data", (connData) => {
             upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
 
@@ -267,7 +295,7 @@ export class DemergiProxy {
 
         let firstDataOffset = 0;
 
-        if (obfuscate) {
+        if (mustObfuscate) {
           let headerData =
             httpMethod +
             this.httpMethodSeparator +
