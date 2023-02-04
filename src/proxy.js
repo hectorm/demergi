@@ -42,7 +42,7 @@ export class DemergiProxy {
     tlsKey,
     tlsCert,
     inactivityTimeout = 60000,
-    happyEyeballs = true,
+    happyEyeballs = false,
     happyEyeballsTimeout = 250,
     httpsClientHelloSize = 40,
     httpsClientHelloTLSv = "1.3",

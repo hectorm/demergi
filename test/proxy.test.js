@@ -86,7 +86,7 @@ describe("Proxy", () => {
   test("Must have specific defaults", () => {
     const proxy = new DemergiProxy();
 
-    expect(proxy.happyEyeballs).toBe(true);
+    expect(proxy.happyEyeballs).toBe(false);
     expect(proxy.resolver).toBeInstanceOf(DemergiResolver);
   });
 
