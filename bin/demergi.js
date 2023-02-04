@@ -258,11 +258,11 @@ if (options.logLevel?.length > 0) {
 }
 
 if (options.workers > 0 && cluster.isPrimary) {
-  cluster.once("online", (worker) => {
+  cluster.on("online", (worker) => {
     Logger.debug(`Worker ${worker.process.pid} started`);
   });
 
-  cluster.once("exit", (worker, code, signal) => {
+  cluster.on("exit", (worker, code, signal) => {
     Logger.debug(`Worker ${worker.process.pid} died (${signal || code})`);
   });
 
