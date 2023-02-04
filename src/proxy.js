@@ -108,8 +108,8 @@ export class DemergiProxy {
         );
 
         server.on("tlsClientError", (error, socket) => {
+          this.#socketDestroy(socket);
           this.#socketErrorHandler(error);
-          socket.destroy();
         });
       } else {
         server = net.createServer(this.#connectionListener);
@@ -131,7 +131,7 @@ export class DemergiProxy {
 
   async stop() {
     for (const socket of this.sockets) {
-      socket.destroy();
+      this.#socketDestroy(socket);
     }
 
     for (const server of this.servers) {
