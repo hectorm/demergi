@@ -1,9 +1,15 @@
 [Unit]
 Description=Demergi
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
+EnvironmentFile=-/opt/demergi/demergi.conf
 ExecStart=/usr/bin/node /opt/demergi/demergi.js
+#ReadOnlyPaths=/opt/demergi/certs/ca/cert.pem
+#ReadOnlyPaths=/opt/demergi/certs/server/key.pem
+#ReadOnlyPaths=/opt/demergi/certs/server/cert.pem
 UMask=0077
 DynamicUser=yes
 ProtectSystem=strict
@@ -24,17 +30,9 @@ RestrictNamespaces=yes
 RestrictRealtime=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-SystemCallFilter=~@clock
-SystemCallFilter=~@cpu-emulation
-SystemCallFilter=~@debug
-SystemCallFilter=~@module
-SystemCallFilter=~@mount
-SystemCallFilter=~@obsolete
-SystemCallFilter=~@privileged
-SystemCallFilter=~@raw-io
-SystemCallFilter=~@reboot
-SystemCallFilter=~@resources
-SystemCallFilter=~@swap
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
 CapabilityBoundingSet=
 DevicePolicy=closed
