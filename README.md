@@ -1,21 +1,47 @@
 [![Last version](https://img.shields.io/github/v/release/hectorm/demergi?label=version)](https://github.com/hectorm/demergi/releases)
-[![CI status](https://img.shields.io/github/actions/workflow/status/hectorm/demergi/main.yml?branch=master)](https://github.com/hectorm/demergi/actions/workflows/main.yml)
 [![Docker image size](https://img.shields.io/docker/image-size/hectorm/demergi/latest?label=docker%20image%20size)](https://hub.docker.com/r/hectorm/demergi/tags)
+[![License](https://img.shields.io/github/license/hectorm/demergi?label=license)](./LICENSE.md)
 
 ***
 
 # Demergi
 
-A zero dependency proxy server that helps to bypass the DPI (Deep Packet Inspection) systems implemented by [various ISPs](./ISP.md).
+A zero dependency proxy server that helps to bypass the Deep Packet Inspection (DPI) systems implemented by [various ISPs](./ISP.md).
 
-## CLI
+## How does it work?
 
-You can install Demergi with [npm](https://www.npmjs.com/package/demergi):
+Although traffic over an HTTPS connection is encrypted, the client and server exchange some information during the initial TLS handshake to negotiate the encryption. In this initial handshake, the client sends the name of the server it is contacting in clear text (ClientHello packet) so that the server knows which certificate to provide. Deep Packet Inspection (DPI) systems can intercept this communication and block the connection. To avoid detection, Demergi fragments and modifies this initial packet.
+
+There are promising solutions to the problem of hiding as much information as possible in the initial handshake of a TLS connection, one being [Encrypted Client Hello (ECH)](https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni). However, until these solutions are fully deployed, tools such as Demergi can be useful as evasion mechanisms.
+
+To learn more about how a TLS connection works, I recommend these excellent resources:
+ * [The Illustrated TLS 1.2 Connection](https://tls12.xargs.org).
+ * [The Illustrated TLS 1.3 Connection](https://tls13.xargs.org).
+
+For HTTP traffic, Demergi also modifies the packet header to make interception more difficult, but as the traffic is not encrypted, this should be avoided where possible.
+
+> **Warning**  
+> Demergi **should not be used as a replacement for a VPN** if you are concerned about the consequences of your traffic being detected, as the techniques used are not infallible, but are good enough to access blocked content from your own network without the need for a VPN.
+
+## How is it used?
+
+Demergi is an HTTP/HTTPS proxy server designed to be deployed within the network where traffic is being blocked. Either on the device you wish to access the content from or on a network appliance.
+
+Simply deploy it and adjust the proxy settings of your browser or other software to connect through Demergi.
+
+### Command line
+
+You can install Demergi with npm:
 ```sh
 npm install -g demergi
 ```
 
-After installation you can run it with the `demergi` command.
+Or directly download the latest version from the releases section.
+
+> **Note**  
+> If you want to install it as a service, you can use [the following systemd unit](./systemd/demergi.service) as a reference.
+
+Once installed, you can run it with the `demergi` command.
 
 ```
 $ demergi --help
@@ -125,7 +151,9 @@ Info:
   Show this help and quit.
 ```
 
-## Docker
+### Docker/Podman
+
+Demergi is also distributed in container images. The default behaviour can be changed using environment variables or container arguments.
 
 #### [Docker Hub](https://hub.docker.com/r/hectorm/demergi/tags):
 ```sh
