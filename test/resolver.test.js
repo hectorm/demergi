@@ -277,56 +277,6 @@ describe("Resolver", () => {
     );
   });
 
-  // DoH - Quad9
-
-  test("Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "doh",
-      dohUrl: "https://9.9.9.9/dns-query",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("google.com");
-    expect(net.isIPv6(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(6);
-    expect(net.isIPv4(ipB.address)).toBe(true);
-    expect(ipB.family).toBe(4);
-  });
-
-  test("Must resolve ipv6.google.com to an IPv6 address in DoH mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "doh",
-      dohUrl: "https://9.9.9.9/dns-query",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(6);
-    expect(ipB).toBeUndefined();
-  });
-
-  test("Must resolve ipv4.google.com to an IPv4 address in DoH mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "doh",
-      dohUrl: "https://9.9.9.9/dns-query",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(4);
-    expect(ipB).toBeUndefined();
-  });
-
-  test("Must throw an exception in DoH mode using Quad9 DNS for a request to an invalid domain", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "doh",
-      dohUrl: "https://9.9.9.9/dns-query",
-    });
-
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
-    );
-  });
-
   // DoH - AdGuard
 
   test("Must resolve google.com to an IPv6 and IPv4 address in DoH mode using AdGuard DNS", async () => {
@@ -579,56 +529,6 @@ describe("Resolver", () => {
     const resolver = new DemergiResolver({
       dnsMode: "dot",
       dotServer: "8.8.8.8",
-    });
-
-    await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
-    );
-  });
-
-  // DoT - Quad9
-
-  test("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "dot",
-      dotServer: "9.9.9.9",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("google.com");
-    expect(net.isIPv6(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(6);
-    expect(net.isIPv4(ipB.address)).toBe(true);
-    expect(ipB.family).toBe(4);
-  });
-
-  test("Must resolve ipv6.google.com to an IPv6 address in DoT mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "dot",
-      dotServer: "9.9.9.9",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
-    expect(net.isIPv6(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(6);
-    expect(ipB).toBeUndefined();
-  });
-
-  test("Must resolve ipv4.google.com to an IPv4 address in DoT mode using Quad9 DNS", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "dot",
-      dotServer: "9.9.9.9",
-    });
-
-    const [ipA, ipB] = await resolver.resolve("ipv4.google.com");
-    expect(net.isIPv4(ipA.address)).toBe(true);
-    expect(ipA.family).toBe(4);
-    expect(ipB).toBeUndefined();
-  });
-
-  test("Must throw an exception in DoT mode using Quad9 DNS for a request to an invalid domain", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "dot",
-      dotServer: "9.9.9.9",
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
