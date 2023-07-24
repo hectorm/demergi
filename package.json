@@ -36,7 +36,7 @@
     "@babel/core": "~7.22.9",
     "@babel/eslint-parser": "~7.22.9",
     "@babel/eslint-plugin": "~7.22.5",
-    "@babel/preset-env": "~7.22.5",
+    "@babel/preset-env": "~7.22.9",
     "babel-jest": "~29.6.1",
     "esbuild": "~0.18.16",
     "eslint": "~8.45.0",
