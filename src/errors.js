@@ -25,7 +25,7 @@ export class ProxyRequestTargetError extends Error {
 export class ProxyRequestHTTPVersionError extends Error {
   constructor(socket) {
     super(
-      `Received an unknown HTTP version from client ${socket.remoteAddress}`
+      `Received an unknown HTTP version from client ${socket.remoteAddress}`,
     );
   }
 }
@@ -33,7 +33,7 @@ export class ProxyRequestHTTPVersionError extends Error {
 export class ProxyUpstreamConnectError extends Error {
   constructor(socket, error) {
     super(
-      `Exception occurred while connecting to upstream ${socket.remoteAddress}: ${error.message}`
+      `Exception occurred while connecting to upstream ${socket.remoteAddress}: ${error.message}`,
     );
   }
 }
@@ -41,7 +41,7 @@ export class ProxyUpstreamConnectError extends Error {
 export class ProxyUpstreamWriteError extends Error {
   constructor(socket, error) {
     super(
-      `Exception occurred while sending data to upstream ${socket.remoteAddress}: ${error.message}`
+      `Exception occurred while sending data to upstream ${socket.remoteAddress}: ${error.message}`,
     );
   }
 }
@@ -49,7 +49,7 @@ export class ProxyUpstreamWriteError extends Error {
 export class ProxyClientWriteError extends Error {
   constructor(socket, error) {
     super(
-      `Exception occurred while sending data to client ${socket.remoteAddress}: ${error.message}`
+      `Exception occurred while sending data to client ${socket.remoteAddress}: ${error.message}`,
     );
   }
 }
@@ -71,7 +71,7 @@ export class ResolverCertificatePINError extends Error {
     super(
       "Certificate validation error, the public key does not match the pinned one" +
         `\nExpected: ${expected}` +
-        `\nReceived: ${received}`
+        `\nReceived: ${received}`,
     );
   }
 }

@@ -80,7 +80,7 @@ export class DemergiResolver {
           address = answer.address;
         }
         return { address, family };
-      })
+      }),
     );
 
     // There may be cached requests to non-existent domains, in which case the address is null.
@@ -158,7 +158,7 @@ export class DemergiResolver {
                 const pin = this.#pubKeyPin(cert);
                 if (this.dohTlsPin !== pin) {
                   this.#dohClient.destroy(
-                    new ResolverCertificatePINError(this.dohTlsPin, pin)
+                    new ResolverCertificatePINError(this.dohTlsPin, pin),
                   );
                 }
               }
@@ -199,7 +199,7 @@ export class DemergiResolver {
               const d = (2 ** (retry + Math.random()) * 20) | 0;
               Logger.debug(`REFUSED_STREAM received, retrying in ${d}ms`);
               setTimeout(() => r(this.#resolveDoh(hostname, family, retry)), d);
-            })
+            }),
           );
         } else {
           reject(error.cause ?? error);
@@ -265,7 +265,7 @@ export class DemergiResolver {
           const pin = this.#pubKeyPin(cert);
           if (this.dotTlsPin !== pin) {
             socket.destroy(
-              new ResolverCertificatePINError(this.dotTlsPin, pin)
+              new ResolverCertificatePINError(this.dotTlsPin, pin),
             );
             return;
           }

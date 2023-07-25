@@ -64,7 +64,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -157,7 +157,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -182,7 +182,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverCertificatePINError
+      ResolverCertificatePINError,
     );
   });
 
@@ -195,7 +195,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverCertificatePINError
+      ResolverCertificatePINError,
     );
   });
 
@@ -273,7 +273,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -323,7 +323,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -416,7 +416,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -441,7 +441,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverCertificatePINError
+      ResolverCertificatePINError,
     );
   });
 
@@ -454,7 +454,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.com")).rejects.toThrow(
-      ResolverCertificatePINError
+      ResolverCertificatePINError,
     );
   });
 
@@ -532,7 +532,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 
@@ -582,7 +582,7 @@ describe("Resolver", () => {
     });
 
     await expect(resolver.resolve("google.invalid")).rejects.toThrow(
-      ResolverNoAddressError
+      ResolverNoAddressError,
     );
   });
 });

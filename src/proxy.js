@@ -55,7 +55,7 @@ export class DemergiProxy {
   } = {}) {
     this.#addrs = addrs.map((addr) => {
       return new URL(
-        /^[a-z0-9.+-]+:\/\//i.test(addr) ? addr : `http://${addr}`
+        /^[a-z0-9.+-]+:\/\//i.test(addr) ? addr : `http://${addr}`,
       );
     });
 
@@ -104,7 +104,7 @@ export class DemergiProxy {
             ALPNProtocols: ["http/1.1"],
             requestCert: this.tlsCa !== undefined,
           },
-          this.#connectionListener
+          this.#connectionListener,
         );
 
         server.on("tlsClientError", (error, socket) => {
@@ -188,7 +188,7 @@ export class DemergiProxy {
       if (!this.#httpMethods.has(httpMethod)) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyRequestMethodError(clientSocket)
+          new ProxyRequestMethodError(clientSocket),
         );
         return;
       }
@@ -199,7 +199,7 @@ export class DemergiProxy {
       if (host === undefined) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyRequestTargetError(clientSocket)
+          new ProxyRequestTargetError(clientSocket),
         );
         return;
       }
@@ -212,7 +212,7 @@ export class DemergiProxy {
       if (!this.#httpVersions.has(httpVersion)) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyRequestHTTPVersionError(clientSocket)
+          new ProxyRequestHTTPVersionError(clientSocket),
         );
         return;
       }
@@ -237,14 +237,14 @@ export class DemergiProxy {
                   callback(null, address, family);
                 }
               },
-              (error) => callback(error)
+              (error) => callback(error),
             );
           },
         });
       } catch (error) {
         this.#socketDestroy(
           clientSocket,
-          new ProxyUpstreamConnectError(upstreamSocket, error)
+          new ProxyUpstreamConnectError(upstreamSocket, error),
         );
         return;
       }
@@ -272,7 +272,7 @@ export class DemergiProxy {
             } catch (error) {
               this.#socketDestroy(
                 upstreamSocket,
-                new ProxyUpstreamWriteError(upstreamSocket, error)
+                new ProxyUpstreamWriteError(upstreamSocket, error),
               );
               return;
             }
@@ -286,7 +286,7 @@ export class DemergiProxy {
         } catch (error) {
           this.#socketDestroy(
             clientSocket,
-            new ProxyClientWriteError(clientSocket, error)
+            new ProxyClientWriteError(clientSocket, error),
           );
           return;
         }
@@ -336,7 +336,7 @@ export class DemergiProxy {
           } catch (error) {
             this.#socketDestroy(
               upstreamSocket,
-              new ProxyUpstreamWriteError(upstreamSocket, error)
+              new ProxyUpstreamWriteError(upstreamSocket, error),
             );
             return;
           }
@@ -347,7 +347,7 @@ export class DemergiProxy {
         } catch (error) {
           this.#socketDestroy(
             upstreamSocket,
-            new ProxyUpstreamWriteError(upstreamSocket, error)
+            new ProxyUpstreamWriteError(upstreamSocket, error),
           );
           return;
         }
@@ -431,7 +431,7 @@ export class DemergiProxy {
     const match = origin.match(
       // Extracts the hostname (also IPv4 or IPv6 address)
       // and port of a URL with or without protocol.
-      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]+?)\]?)(?::([0-9]+))?(?:\/.*)?$/i
+      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]+?)\]?)(?::([0-9]+))?(?:\/.*)?$/i,
     );
     if (match !== null) {
       if (match[1] !== undefined) host = match[1].toLowerCase();

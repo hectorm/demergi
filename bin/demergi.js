@@ -236,7 +236,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
           ``,
           `  -h, --help`,
           `  Show this help and quit.`,
-        ].join("\n")
+        ].join("\n"),
       );
       process.exit(0);
       break;
@@ -247,7 +247,7 @@ getopts: for (let i = 0; i < argv.length; i++) {
         [
           `Illegal option "${argv[i]}".`,
           `Try "--help" for usage information.`,
-        ].join("\n")
+        ].join("\n"),
       );
       process.exit(1);
   }

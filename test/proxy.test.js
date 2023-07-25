@@ -210,7 +210,7 @@ describe("Proxy", () => {
         proxy,
         protocol: "https:",
         host: "example.invalid",
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -231,7 +231,7 @@ describe("Proxy", () => {
         protocol: "https:",
         host: "example.invalid",
         port: 443,
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -251,7 +251,7 @@ describe("Proxy", () => {
         proxy,
         protocol: "https:",
         host: "300.300.300.300",
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -272,7 +272,7 @@ describe("Proxy", () => {
         protocol: "https:",
         host: "300.300.300.300",
         port: 443,
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -374,7 +374,7 @@ describe("Proxy", () => {
         proxy,
         protocol: "http:",
         host: "example.invalid",
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -395,7 +395,7 @@ describe("Proxy", () => {
         protocol: "http:",
         host: "example.invalid",
         port: 80,
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -415,7 +415,7 @@ describe("Proxy", () => {
         proxy,
         protocol: "http:",
         host: "300.300.300.300",
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -436,7 +436,7 @@ describe("Proxy", () => {
         protocol: "http:",
         host: "300.300.300.300",
         port: 80,
-      })
+      }),
     ).rejects.toMatchObject({
       code: "ECONNRESET",
     });
@@ -598,7 +598,7 @@ describe("Proxy", () => {
           key: TEST_TLS_CLIENT_KEY,
           cert: TEST_TLS_CLIENT_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
     });
@@ -621,7 +621,7 @@ describe("Proxy", () => {
         options: {
           ca: TEST_TLS_CA_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: "EPROTO",
     });
@@ -646,7 +646,7 @@ describe("Proxy", () => {
         options: {
           ca: TEST_TLS_CA_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: "CERT_HAS_EXPIRED",
     });
@@ -668,7 +668,7 @@ describe("Proxy", () => {
         proxy,
         protocol: "https:",
         host: "cloudflare-dns.com",
-      })
+      }),
     ).rejects.toMatchObject({
       code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
     });
@@ -694,7 +694,7 @@ describe("Proxy", () => {
         options: {
           ca: TEST_TLS_CA_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
     });
@@ -722,7 +722,7 @@ describe("Proxy", () => {
           key: TEST_TLS_CLIENT_KEY,
           cert: TEST_TLS_CLIENT_EXPIRED_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
     });
@@ -750,7 +750,7 @@ describe("Proxy", () => {
           key: TEST_TLS_CLIENT_KEY,
           cert: TEST_TLS_CLIENT_INVALID_CERT,
         },
-      })
+      }),
     ).rejects.toMatchObject({
       code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
     });
