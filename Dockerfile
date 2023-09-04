@@ -64,8 +64,6 @@ FROM base AS build
 
 COPY --from=build-rootfs /mnt/rootfs/ /
 
-RUN npm install -g npm@latest
-
 COPY --chown=app:0 ./package*.json ./
 RUN npm ci
 
