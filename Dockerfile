@@ -1,4 +1,4 @@
-ARG NODE_VERSION=18
+ARG NODE_VERSION=20
 
 ##################################################
 ## "base-rootfs" stage
