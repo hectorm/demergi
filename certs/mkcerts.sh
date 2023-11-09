@@ -15,7 +15,7 @@ export LC_ALL='C'
 	CA_CSR="${CERTS_DIR:?}"/ca/csr.pem
 	CA_SRL="${CERTS_DIR:?}"/ca/cert.srl
 	CA_CRT="${CERTS_DIR:?}"/ca/cert.pem
-	CA_CRT_CNF="${CERTS_DIR:?}/ca/openssl.cnf"
+	CA_CRT_CNF="${CERTS_DIR:?}"/ca/openssl.cnf
 	CA_CRT_SUBJ='/CN=Demergi CA'
 	CA_CRT_VALIDITY_DAYS='7300'
 	CA_CRT_RENOVATION_DAYS='30'
