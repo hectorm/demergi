@@ -1,3 +1,5 @@
+import process from "node:process";
+
 class InternalLogger {
   levels = {
     NONE: 0,

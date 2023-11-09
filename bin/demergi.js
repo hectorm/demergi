@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import cluster from "node:cluster";
+import process from "node:process";
 import {
   getEnv,
   toStr,

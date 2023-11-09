@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import process from "node:process";
 
 export const getEnv = (name, defaultValue) => {
   return name in process.env ? process.env[name] : defaultValue;
