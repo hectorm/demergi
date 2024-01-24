@@ -42,6 +42,7 @@ export class DemergiResolver {
     dohUrl = "https://1.0.0.1/dns-query",
     dohTlsServername,
     dohTlsPin,
+    dohPersistent = true,
     dotServer = "1.0.0.1",
     dotTlsServername,
     dotTlsPin,
@@ -56,6 +57,7 @@ export class DemergiResolver {
       this.dohTlsServername = this.dohUrl.hostname;
     }
     this.dohTlsPin = dohTlsPin;
+    this.dohPersistent = dohPersistent;
 
     this.dotServer = new URL(`tls://${dotServer}`);
     if (dotTlsServername) {
@@ -123,13 +125,11 @@ export class DemergiResolver {
     return new Promise((resolve, reject) => {
       const question = this.#encodeQuestion(hostname, family);
 
-      if (
-        this.#dohClient === undefined ||
-        this.#dohClient.destroyed ||
-        this.#dohClient.closed
-      ) {
+      let dohClient = this.dohPersistent ? this.#dohClient : undefined;
+
+      if (dohClient === undefined || dohClient.destroyed || dohClient.closed) {
         Logger.debug(`Connecting to DoH server ${this.dohUrl.host}`);
-        this.#dohClient = http2.connect(this.dohUrl.origin, {
+        dohClient = http2.connect(this.dohUrl.origin, {
           servername: this.dohTlsServername,
           createConnection: () => {
             let socket;
@@ -144,12 +144,12 @@ export class DemergiResolver {
                   typeof this.dohTlsPin !== "string",
               });
             } catch (error) {
-              this.#dohClient.destroy(error);
+              dohClient.destroy(error);
               return;
             }
 
             socket.once("error", (error) => {
-              this.#dohClient.destroy(error);
+              dohClient.destroy(error);
             });
 
             socket.once("secureConnect", () => {
@@ -157,7 +157,7 @@ export class DemergiResolver {
                 const cert = socket.getPeerX509Certificate();
                 const pin = this.#pubKeyPin(cert);
                 if (this.dohTlsPin !== pin) {
-                  this.#dohClient.destroy(
+                  dohClient.destroy(
                     new ResolverCertificatePINError(this.dohTlsPin, pin),
                   );
                 }
@@ -168,14 +168,17 @@ export class DemergiResolver {
           },
         });
 
-        this.#dohClient.once("error", (error) => {
+        dohClient.on("error", (error) => {
           reject(error);
         });
 
-        this.#dohClient.unref();
+        if (this.dohPersistent) {
+          this.#dohClient = dohClient;
+          this.#dohClient.unref();
+        }
       }
 
-      const request = this.#dohClient.request({
+      const request = dohClient.request({
         [HTTP2_HEADER_METHOD]: "POST",
         [HTTP2_HEADER_SCHEME]: "https",
         [HTTP2_HEADER_PATH]: this.dohUrl.pathname,
@@ -216,6 +219,9 @@ export class DemergiResolver {
       const answer = [];
       request.on("data", (chunk) => answer.push(chunk));
       request.once("end", () => {
+        if (!this.dohPersistent) {
+          dohClient.close();
+        }
         if (answer.length > 0) {
           try {
             resolve(this.#decodeAnswer(question, Buffer.concat(answer)));
