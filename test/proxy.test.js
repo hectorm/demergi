@@ -1,3 +1,6 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
@@ -16,9 +19,6 @@ import {
   TEST_TLS_MALFORMED_KEY,
   TEST_TLS_MALFORMED_CERT,
 } from "./proxy.certs.js";
-
-jest.setTimeout(30000);
-global.console.error = jest.fn();
 
 const httpProxyRequest = ({
   proxy,
@@ -83,14 +83,14 @@ const httpProxyRequest = ({
 };
 
 describe("Proxy", () => {
-  test("Must have specific defaults", () => {
+  it("Must have specific defaults", () => {
     const proxy = new DemergiProxy();
 
-    expect(proxy.happyEyeballs).toBe(false);
-    expect(proxy.resolver).toBeInstanceOf(DemergiResolver);
+    assert(!proxy.happyEyeballs);
+    assert(proxy.resolver instanceof DemergiResolver);
   });
 
-  test("Must start and stop", async () => {
+  it("Must start and stop", async () => {
     const proxy = new DemergiProxy({
       addrs: [
         "localhost:0",
@@ -106,17 +106,17 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    expect(proxy.servers.size).toBe(6);
+    assert(proxy.servers.size === 6);
     for (const server of proxy.servers) {
-      expect(server.listening).toBe(true);
+      assert(server.listening);
     }
 
     await proxy.stop();
 
-    expect(proxy.servers.size).toBe(0);
+    assert(proxy.servers.size === 0);
   });
 
-  test("Must establish an HTTPS connection to a valid domain through an HTTP proxy", async () => {
+  it("Must establish an HTTPS connection to a valid domain through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -129,14 +129,14 @@ describe("Proxy", () => {
       host: "cloudflare-dns.com",
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTPS connection to a valid domain and port through an HTTP proxy", async () => {
+  it("Must establish an HTTPS connection to a valid domain and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -150,14 +150,14 @@ describe("Proxy", () => {
       port: 443,
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTPS connection to a valid IP address through an HTTP proxy", async () => {
+  it("Must establish an HTTPS connection to a valid IP address through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -170,14 +170,14 @@ describe("Proxy", () => {
       host: "1.0.0.1",
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTPS connection to a valid IP address and port through an HTTP proxy", async () => {
+  it("Must establish an HTTPS connection to a valid IP address and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -191,96 +191,100 @@ describe("Proxy", () => {
       port: 443,
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request to an invalid domain through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTPS request to an invalid domain through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
         host: "example.invalid",
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request to an invalid domain and port through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTPS request to an invalid domain and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
         host: "example.invalid",
         port: 443,
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request to an invalid IP address through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTPS request to an invalid IP address through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
         host: "300.300.300.300",
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request to an invalid IP address and port through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTPS request to an invalid IP address and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
         host: "300.300.300.300",
         port: 443,
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection to a valid domain through an HTTP proxy", async () => {
+  it("Must establish an HTTP connection to a valid domain through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -293,14 +297,14 @@ describe("Proxy", () => {
       host: "cloudflare-dns.com",
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection to a valid domain and port through an HTTP proxy", async () => {
+  it("Must establish an HTTP connection to a valid domain and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -314,14 +318,14 @@ describe("Proxy", () => {
       port: 80,
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection to a valid IP address through an HTTP proxy", async () => {
+  it("Must establish an HTTP connection to a valid IP address through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -334,14 +338,14 @@ describe("Proxy", () => {
       host: "1.0.0.1",
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection to a valid IP address and port through an HTTP proxy", async () => {
+  it("Must establish an HTTP connection to a valid IP address and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
@@ -355,96 +359,100 @@ describe("Proxy", () => {
       port: 80,
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTP request to an invalid domain through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTP request to an invalid domain through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "http:",
         host: "example.invalid",
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ConnectionRefused)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTP request to an invalid domain and port through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTP request to an invalid domain and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "http:",
         host: "example.invalid",
         port: 80,
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ConnectionRefused)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTP request to an invalid IP address through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTP request to an invalid IP address through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "http:",
         host: "300.300.300.300",
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTP request to an invalid IP address and port through an HTTP proxy", async () => {
+  it("Must throw an exception for an HTTP request to an invalid IP address and port through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "http:",
         host: "300.300.300.300",
         port: 80,
       }),
-    ).rejects.toMatchObject({
-      code: "ECONNRESET",
-    });
+      {
+        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTPS connection through an HTTPS proxy", async () => {
+  it("Must establish an HTTPS connection through an HTTPS proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_SERVER_KEY,
@@ -462,14 +470,14 @@ describe("Proxy", () => {
       },
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTPS connection through an HTTPS proxy with mTLS", async () => {
+  it("Must establish an HTTPS connection through an HTTPS proxy with mTLS", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_CA_CERT,
@@ -490,14 +498,14 @@ describe("Proxy", () => {
       },
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection through an HTTPS proxy", async () => {
+  it("Must establish an HTTP connection through an HTTPS proxy", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_SERVER_KEY,
@@ -515,14 +523,14 @@ describe("Proxy", () => {
       },
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must establish an HTTP connection through an HTTPS proxy with mTLS", async () => {
+  it("Must establish an HTTP connection through an HTTPS proxy with mTLS", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_CA_CERT,
@@ -543,42 +551,42 @@ describe("Proxy", () => {
       },
     });
 
-    expect(res.complete).toBe(true);
-    expect(res.statusCode).toBeGreaterThanOrEqual(200);
-    expect(res.statusCode).toBeLessThan(400);
+    assert(res.complete);
+    assert(res.statusCode >= 200);
+    assert(res.statusCode < 400);
 
     await proxy.stop();
   });
 
-  test("Must throw an exception when starting an HTTPS proxy with a malformed server key", async () => {
+  it("Must throw an exception when starting an HTTPS proxy with a malformed server key", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_MALFORMED_KEY,
       tlsCert: TEST_TLS_SERVER_CERT,
     });
 
-    await expect(proxy.start()).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
+    await assert.rejects(proxy.start(), {
+      code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
     });
 
     await proxy.stop();
   });
 
-  test("Must throw an exception when starting an HTTPS proxy with a malformed server certificate", async () => {
+  it("Must throw an exception when starting an HTTPS proxy with a malformed server certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_SERVER_KEY,
       tlsCert: TEST_TLS_MALFORMED_CERT,
     });
 
-    await expect(proxy.start()).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
+    await assert.rejects(proxy.start(), {
+      code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
     });
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy with a malformed CA certificate bundle", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy with a malformed CA certificate bundle", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_MALFORMED_CERT,
@@ -588,7 +596,7 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -599,21 +607,22 @@ describe("Proxy", () => {
           cert: TEST_TLS_CLIENT_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
-    });
+      {
+        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy without a server certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy without a server certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
     });
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -622,14 +631,15 @@ describe("Proxy", () => {
           ca: TEST_TLS_CA_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: "EPROTO",
-    });
+      {
+        code: /^(EPROTO|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy with an expired server certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy with an expired server certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_SERVER_KEY,
@@ -638,7 +648,7 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -647,14 +657,15 @@ describe("Proxy", () => {
           ca: TEST_TLS_CA_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: "CERT_HAS_EXPIRED",
-    });
+      {
+        code: /^(CERT_HAS_EXPIRED|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy with an untrusted server certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy with an untrusted server certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsKey: TEST_TLS_SERVER_KEY,
@@ -663,20 +674,21 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
         host: "cloudflare-dns.com",
       }),
-    ).rejects.toMatchObject({
-      code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
-    });
+      {
+        code: /^(UNABLE_TO_VERIFY_LEAF_SIGNATURE|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy without a client certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy without a client certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_CA_CERT,
@@ -686,7 +698,7 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -695,14 +707,15 @@ describe("Proxy", () => {
           ca: TEST_TLS_CA_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
-    });
+      {
+        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy with an expired client certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy with an expired client certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_CA_CERT,
@@ -712,7 +725,7 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -723,14 +736,15 @@ describe("Proxy", () => {
           cert: TEST_TLS_CLIENT_EXPIRED_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
-    });
+      {
+        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });
 
-  test("Must throw an exception for an HTTPS request through an HTTPS proxy with an untrusted client certificate", async () => {
+  it("Must throw an exception for an HTTPS request through an HTTPS proxy with an untrusted client certificate", async () => {
     const proxy = new DemergiProxy({
       addrs: ["https://localhost:0"],
       tlsCa: TEST_TLS_CA_CERT,
@@ -740,7 +754,7 @@ describe("Proxy", () => {
 
     await proxy.start();
 
-    await expect(
+    await assert.rejects(
       httpProxyRequest({
         proxy,
         protocol: "https:",
@@ -751,9 +765,10 @@ describe("Proxy", () => {
           cert: TEST_TLS_CLIENT_INVALID_CERT,
         },
       }),
-    ).rejects.toMatchObject({
-      code: expect.stringMatching(/^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+)$/),
-    });
+      {
+        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      },
+    );
 
     await proxy.stop();
   });

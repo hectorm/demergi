@@ -1,35 +1,38 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+
 import { LRU } from "../src/lru.js";
 
 describe("LRU", () => {
-  test("Must have specific defaults", () => {
+  it("Must have specific defaults", () => {
     const defaults = new LRU();
 
-    expect(defaults.size).toBe(0);
-    expect(defaults.max).toBe(-1);
+    assert(defaults.size === 0);
+    assert(defaults.max === -1);
   });
 
-  test("Must set and get an entry", () => {
+  it("Must set and get an entry", () => {
     const lru = new LRU();
 
     lru.set("key", "value");
 
     const value = lru.get("key");
-    expect(value).toBe("value");
+    assert(value === "value");
   });
 
-  test("Must set and delete an entry", () => {
+  it("Must set and delete an entry", () => {
     const lru = new LRU();
 
     lru.set("key", "value");
 
     const deleted = lru.delete("key");
-    expect(deleted).toBe("value");
+    assert(deleted === "value");
 
     const unexistent = lru.get("key");
-    expect(unexistent).toBeUndefined();
+    assert(unexistent === undefined);
   });
 
-  test("Must have a size and max properties", () => {
+  it("Must have a size and max properties", () => {
     const lru = new LRU(3);
 
     lru.set("key1", "value1");
@@ -39,11 +42,11 @@ describe("LRU", () => {
     lru.delete("key3");
     lru.delete("key4");
 
-    expect(lru.size).toBe(1);
-    expect(lru.max).toBe(3);
+    assert(lru.size === 1);
+    assert(lru.max === 3);
   });
 
-  test("Must evict old entries", () => {
+  it("Must evict old entries", () => {
     const lru = new LRU(2);
 
     lru.set("key1", "value1");
@@ -51,10 +54,10 @@ describe("LRU", () => {
     lru.set("key3", "value3");
 
     const value = lru.get("key1");
-    expect(value).toBeUndefined();
+    assert(value === undefined);
   });
 
-  test("Must discard expired entries", async () => {
+  it("Must discard expired entries", async () => {
     const lru = new LRU(5);
 
     lru.set("key1", "value1", 2);
@@ -62,13 +65,13 @@ describe("LRU", () => {
     await new Promise((r) => setTimeout(r, 1100));
 
     const value1 = lru.get("key1");
-    expect(value1).toBe("value1");
+    assert(value1 === "value1");
 
     const value2 = lru.get("key2");
-    expect(value2).toBeUndefined();
+    assert(value2 === undefined);
   });
 
-  test("Must be iterable", () => {
+  it("Must be iterable", () => {
     const lru = new LRU(2);
 
     lru.set("key1", "value1");
@@ -76,6 +79,6 @@ describe("LRU", () => {
     lru.set("key3", "value3");
 
     const values = [...lru];
-    expect(values).toStrictEqual(["value3", "value2"]);
+    assert.deepStrictEqual(values, ["value3", "value2"]);
   });
 });
