@@ -39,7 +39,7 @@ npm install -g demergi
 Or directly download the latest version from the releases section.
 
 > **Note**  
-> If you want to install it as a service, you can use [the following systemd unit](./systemd/demergi.service) as a reference.
+> If you want to install it as a service, you can use [the following systemd unit](./systemd/demergi.service) as a reference. On macOS, you use the [launchd system](./launchctl/README.md) to run as background service.
 
 Once installed, you can run it with the `demergi` command.
 
