@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: "Set up Docker Buildx"
+description: "Set up Docker Buildx"
+runs:
+  using: "composite"
+  steps:
+    - uses: "actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea"
+      with:
+        script: |
+          core.exportVariable("ACTIONS_CACHE_URL", process.env.ACTIONS_CACHE_URL);
+          core.exportVariable("ACTIONS_RUNTIME_TOKEN", process.env.ACTIONS_RUNTIME_TOKEN);
+    - shell: "bash"
+      run: |
+        docker run --rm --privileged docker.io/hectorm/qemu-user-static:latest --reset --persistent yes --credential yes
+    - shell: "bash"
+      run: |
+        docker context create ci
+        docker buildx create ci --name builder --bootstrap --use

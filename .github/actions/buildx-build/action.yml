@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: "Build with Docker Buildx"
+description: "Build with Docker Buildx"
+inputs:
+  context:
+    description: "Context to build"
+    required: false
+    default: "./"
+  dockerfile:
+    description: "Dockerfile to build"
+    required: false
+    default: "./Dockerfile"
+  platforms:
+    description: "Platforms to build for"
+    required: false
+    default: "linux/amd64"
+  tags:
+    description: "Tags to apply to the built image"
+    required: false
+    default: ""
+  labels:
+    description: "Labels to apply to the built image"
+    required: false
+    default: ""
+  push:
+    description: "Push the built image"
+    required: false
+    default: "false"
+  cache-from:
+    description: "Cache sources"
+    required: false
+  cache-to:
+    description: "Cache destinations"
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - shell: "bash"
+      env:
+        CONTEXT: "${{ inputs.context }}"
+        DOCKERFILE: "${{ inputs.dockerfile }}"
+        PLATFORMS: "${{ inputs.platforms }}"
+        TAGS: "${{ inputs.tags }}"
+        LABELS: "${{ inputs.labels }}"
+        PUSH: "${{ inputs.push }}"
+        CACHE_FROM: "${{ inputs.cache-from }}"
+        CACHE_TO: "${{ inputs.cache-to }}"
+      run: |
+        set --
+        _IFS="${IFS?}"; IFS="$(printf '\nx')"; IFS="${IFS%x}"
+        for platform   in ${PLATFORMS?};  do set -- "${@}" --platform   "${platform:?}";   done
+        for tag        in ${TAGS?};       do set -- "${@}" --tag        "${tag:?}";        done
+        for label      in ${LABELS?};     do set -- "${@}" --label      "${label:?}";      done
+        for cache_from in ${CACHE_FROM?}; do set -- "${@}" --cache-from "${cache_from:?}"; done
+        for cache_to   in ${CACHE_TO?};   do set -- "${@}" --cache-to   "${cache_to:?}";   done
+        IFS="${_IFS?}"
+        if [ "${PUSH?}" = "true" ]; then set -- "${@}" --push; fi
+        docker buildx build --file "${DOCKERFILE?}" "${@}" "${CONTEXT?}"

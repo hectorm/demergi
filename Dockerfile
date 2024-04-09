@@ -1,87 +1,38 @@
-ARG NODE_VERSION=20
-
-##################################################
-## "base-rootfs" stage
-##################################################
-
-FROM registry.access.redhat.com/ubi9/ubi:latest AS base-rootfs
-
-RUN mkdir /mnt/rootfs/
-WORKDIR /mnt/rootfs/
-
-RUN find /etc/yum.repos.d/ /etc/dnf/vars/ -type f -exec install -vD '{}' '.{}' ';'
-RUN RELEASEVER=$(python3 -c 'import dnf; print(dnf.dnf.Base().conf.substitutions["releasever"])') \
-	&& dnf --installroot "${PWD:?}" install -y --releasever "${RELEASEVER:?}" --setopt install_weak_deps=false --nodocs \
-		coreutils-single \
-		glibc-minimal-langpack \
-	&& rm -rf ./var/cache/* ./var/log/* ./tmp/*
-
-RUN printf '%s\n' 'app:x:172761424:0::/opt/app/:/bin/sh' >> ./etc/passwd
-RUN printf '%s\n' 'app:*:0:0:99999:7:::' >> ./etc/shadow
-RUN mkdir ./opt/app/ && chmod 770 ./opt/app/ && chown 172761424:0 ./opt/app/
-
-##################################################
-## "build-rootfs" stage
-##################################################
-
-FROM base-rootfs AS build-rootfs
-ARG NODE_VERSION
-
-RUN dnf --installroot "${PWD:?}" module install -y --setopt install_weak_deps=true --nodocs \
-		nodejs:"${NODE_VERSION:?}"/development \
-	&& rm -rf ./var/cache/* ./var/log/* ./tmp/*
-
-##################################################
-## "main-rootfs" stage
-##################################################
-
-FROM base-rootfs AS main-rootfs
-ARG NODE_VERSION
-
-RUN dnf --installroot "${PWD:?}" module install -y --setopt install_weak_deps=false --nodocs \
-		nodejs:"${NODE_VERSION:?}"/minimal \
-	&& rm -rf ./var/cache/* ./var/log/* ./tmp/*
-
-##################################################
-## "base" stage
-##################################################
-
-FROM scratch AS base
-
-ENV HOME=/opt/app
-ENV NPM_CONFIG_PREFIX=${HOME}/.npm/global
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV PATH=${HOME}/node_modules/.bin/:${NPM_CONFIG_PREFIX}/bin/:${PATH}
-
-WORKDIR /opt/app/
-USER app:0
-
 ##################################################
 ## "build" stage
 ##################################################
 
-FROM base AS build
+FROM docker.io/node:20.12.1-bookworm@sha256:8a03de2385cb16c4d76aac30bf86ab05f55f1754a5402dc9039916e8043f019a AS build
 
-COPY --from=build-rootfs /mnt/rootfs/ /
+ENV NPM_CONFIG_CACHE=/npm
 
-COPY --chown=app:0 ./package*.json ./
-RUN npm ci
+WORKDIR /src/
 
-COPY --chown=app:0 ./ ./
-RUN npm run lint
-RUN npm run test
-RUN npm run build
+COPY ./package.json ./package-lock.json /src/
+
+RUN --mount=type=cache,id=npm,dst=/npm/ \
+	npm ci
+
+COPY ./ /src/
+
+RUN --mount=type=cache,id=npm,dst=/npm/ \
+	npm run test
+
+RUN --mount=type=cache,id=npm,dst=/npm/ \
+	npm run build:bundle
 
 ##################################################
 ## "main" stage
 ##################################################
 
-FROM base AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:992f8328b3145d361805d3143ab8ca5d84e30e3c17413758ccee9194ba6ca0dc AS main
 
-COPY --from=main-rootfs /mnt/rootfs/ /
+COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/node /node
+COPY --from=build --chown=0:0 --chmod=644 /src/dist/ /app/
 
-COPY --from=build /opt/app/dist/demergi.js ./
+WORKDIR /app/
 
-RUN ["/usr/bin/node", "./demergi.js", "--version"]
-ENTRYPOINT ["/usr/bin/node", "./demergi.js"]
+RUN ["/node", "/app/demergi.js", "--version"]
+
+ENTRYPOINT ["/node", "/app/demergi.js"]
 CMD []

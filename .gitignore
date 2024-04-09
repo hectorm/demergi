@@ -5,3 +5,7 @@ npm-debug.log*
 
 /certs/*
 !/certs/mkcerts.sh
+
+.env
+.env.*
+!.env.sample
