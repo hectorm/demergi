@@ -20,7 +20,7 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "node"
-        versions: ["21.x"]
+        versions: [">= 21.x"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
