@@ -107,10 +107,12 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+      - name: "Export runtime variables"
+        uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
-        uses: "./.github/actions/buildx-setup"
+        uses: "hectorm/ghaction-docker-buildx-setup@fec3efdbb455c2aa58a4fbfd11a9853f5de2cdba"
       - name: "Build"
-        uses: "./.github/actions/buildx-build"
+        uses: "hectorm/ghaction-docker-buildx-build@298dc8203fa9957709e55a37b4b40181618205bb"
         with:
           dockerfile: "${{ matrix.runtime.dockerfile }}"
           platforms: "${{ matrix.platform.arch }}"
@@ -128,8 +130,10 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+      - name: "Export runtime variables"
+        uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
-        uses: "./.github/actions/buildx-setup"
+        uses: "hectorm/ghaction-docker-buildx-setup@fec3efdbb455c2aa58a4fbfd11a9853f5de2cdba"
       - name: "Login to GitHub Container Registry"
         if: "github.event_name != 'pull_request'"
         uses: "docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20"
@@ -157,7 +161,7 @@ jobs:
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
       - name: "Push"
-        uses: "./.github/actions/buildx-build"
+        uses: "hectorm/ghaction-docker-buildx-build@298dc8203fa9957709e55a37b4b40181618205bb"
         with:
           dockerfile: "./Dockerfile"
           platforms: |
@@ -188,7 +192,7 @@ jobs:
         with:
           node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
-      - name: "Publish package"
+      - name: "Publish"
         env:
           NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}"
         run: |
@@ -209,31 +213,8 @@ jobs:
         uses: "actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427"
         with:
           name: "dist"
+          path: "assets"
       - name: "Publish"
-        env:
-          GITHUB_PAT: "${{ secrets.GITHUB_TOKEN }}"
-        run: |
-          RELEASE_STATUS="$(curl -fs --proto '=https' --tlsv1.3 --globoff \
-            --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases/tags/${GITHUB_REF_NAME:?}" \
-            --header "Authorization: Bearer ${GITHUB_PAT:?}" \
-            --header 'Accept: application/vnd.github.v3+json' \
-            --header 'Content-Type: application/json' \
-            --write-out '%{http_code}' --output /dev/null ||:)"
-          if [ "${RELEASE_STATUS:?}" = '200' ]; then exit 0; fi
-          RELEASE_ID="$(curl -fsS --proto '=https' --tlsv1.3 --globoff \
-            --url "https://api.github.com/repos/${GITHUB_REPOSITORY:?}/releases" \
-            --header "Authorization: Bearer ${GITHUB_PAT:?}" \
-            --header 'Accept: application/vnd.github.v3+json' \
-            --header 'Content-Type: application/json' \
-            --data "$(jq -rn --arg tag "${GITHUB_REF_NAME:?}" '{"name": $tag, "tag_name": $tag, "generate_release_notes": true}')" | jq -r '.id')"
-          if [ -z "${RELEASE_ID-}" ] || [ "${RELEASE_ID:?}" = 'null' ]; then exit 1; fi
-          for asset in ./*; do
-            [ -f "${asset:?}" ] || continue
-            encodedAssetName="$(jq -rn --arg v "$(basename "${asset:?}")" '$v|@uri')"
-            curl -fsS --proto '=https' --tlsv1.3 --globoff \
-              --url "https://uploads.github.com/repos/${GITHUB_REPOSITORY:?}/releases/${RELEASE_ID:?}/assets?name=${encodedAssetName:?})" \
-              --header "Authorization: Bearer ${GITHUB_PAT:?}" \
-              --header 'Accept: application/vnd.github.v3+json' \
-              --header 'Content-Type: application/octet-stream' \
-              --data-binary "@${asset:?}" --output /dev/null
-          done
+        uses: "hectorm/ghaction-release@066200d04c3549852afa243d631ea3dc93390f68"
+        with:
+          assets-path: "./assets/"
