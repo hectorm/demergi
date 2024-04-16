@@ -2,7 +2,7 @@
 ## "build" stage
 ##################################################
 
-FROM docker.io/node:20.12.2-bookworm@sha256:3a5851c14972b528fb3a8454544ec86bc90b8ab8c0b90134c8c1cdf7c3ec55b6 AS build
+FROM docker.io/node:20.12.2-bookworm@sha256:844b41cf784f66d7920fd673f7af54ca7b81e289985edc6cd864e7d05e0d133c AS build
 
 ENV NPM_CONFIG_CACHE=/npm
 
