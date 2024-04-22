@@ -20,7 +20,7 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -44,7 +44,7 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Use Node.js ${{ matrix.node_version }}"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -63,7 +63,7 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -106,7 +106,7 @@ jobs:
             arch: "linux/arm64/v8"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
@@ -129,7 +129,7 @@ jobs:
       packages: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
@@ -186,7 +186,7 @@ jobs:
       id-token: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633"
+        uses: "actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
