@@ -211,7 +211,7 @@ describe("Proxy", () => {
         host: "example.invalid",
       }),
       {
-        code: /^(ECONNRESET|FailedToOpenSocket)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -233,7 +233,7 @@ describe("Proxy", () => {
         port: 443,
       }),
       {
-        code: /^(ECONNRESET|FailedToOpenSocket)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -254,7 +254,7 @@ describe("Proxy", () => {
         host: "300.300.300.300",
       }),
       {
-        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -276,7 +276,7 @@ describe("Proxy", () => {
         port: 443,
       }),
       {
-        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -379,7 +379,7 @@ describe("Proxy", () => {
         host: "example.invalid",
       }),
       {
-        code: /^(ECONNRESET|ConnectionRefused)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -401,7 +401,7 @@ describe("Proxy", () => {
         port: 80,
       }),
       {
-        code: /^(ECONNRESET|ConnectionRefused)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -422,7 +422,7 @@ describe("Proxy", () => {
         host: "300.300.300.300",
       }),
       {
-        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -444,7 +444,7 @@ describe("Proxy", () => {
         port: 80,
       }),
       {
-        code: /^(ECONNRESET|ERR_INVALID_ARG_VALUE)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -565,7 +565,7 @@ describe("Proxy", () => {
     });
 
     await assert.rejects(proxy.start(), {
-      code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      code: /^ERR_OSSL_UNSUPPORTED$/,
     });
 
     await proxy.stop();
@@ -579,7 +579,7 @@ describe("Proxy", () => {
     });
 
     await assert.rejects(proxy.start(), {
-      code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+      code: /^ERR_OSSL_ASN1_WRONG_TAG$/,
     });
 
     await proxy.stop();
@@ -607,7 +607,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -631,7 +631,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(EPROTO|FailedToOpenSocket)$/,
+        code: /^EPROTO$/,
       },
     );
 
@@ -657,7 +657,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(CERT_HAS_EXPIRED|FailedToOpenSocket)$/,
+        code: /^CERT_HAS_EXPIRED$/,
       },
     );
 
@@ -680,7 +680,7 @@ describe("Proxy", () => {
         host: "cloudflare-dns.com",
       }),
       {
-        code: /^(UNABLE_TO_VERIFY_LEAF_SIGNATURE|FailedToOpenSocket)$/,
+        code: /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/,
       },
     );
 
@@ -707,7 +707,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+        code: /^ERR_SSL_TLSV13_ALERT_CERTIFICATE_REQUIRED$/,
       },
     );
 
@@ -736,7 +736,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+        code: /^ECONNRESET$/,
       },
     );
 
@@ -765,7 +765,7 @@ describe("Proxy", () => {
         },
       }),
       {
-        code: /^(ECONNRESET|ERR_O?SSL_[0-9A-Z_]+|FailedToOpenSocket)$/,
+        code: /^ERR_OSSL_X509_KEY_VALUES_MISMATCH$/,
       },
     );
 
