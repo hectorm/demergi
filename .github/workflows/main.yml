@@ -55,6 +55,29 @@ jobs:
       - name: "Test"
         run: "npm run test:node"
 
+  test-bun:
+    name: "Test on Bun ${{ matrix.bun_version }} on ${{ matrix.os }}"
+    needs: ["lint"]
+    runs-on: "${{ matrix.os }}"
+    permissions:
+      contents: "read"
+    strategy:
+      fail-fast: false
+      matrix:
+        bun_version: ["latest"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+      - name: "Use Bun ${{ matrix.bun_version }}"
+        uses: "oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135"
+        with:
+          bun-version: "${{ matrix.bun_version }}"
+      - name: "Install dependencies"
+        run: "bun install --frozen-lockfile"
+      - name: "Test"
+        run: "bun run test:bun"
+
   build-dist:
     name: "Build distribution files"
     needs: ["test-node"]
