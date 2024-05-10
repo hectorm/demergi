@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
+/* global describe, it, assert, isBun */
 
 import http from "node:http";
 import https from "node:https";
@@ -18,7 +17,7 @@ import {
   TEST_TLS_CLIENT_INVALID_CERT,
   TEST_TLS_MALFORMED_KEY,
   TEST_TLS_MALFORMED_CERT,
-} from "./proxy.certs.js";
+} from "./certs.js";
 
 const httpProxyRequest = ({
   proxy,
@@ -42,10 +41,10 @@ const httpProxyRequest = ({
           host: proxyHost,
           port: proxyPort,
           method: "CONNECT",
-          path: origin,
+          path: isBun ? `${protocol}//${origin}` : origin,
           ...options,
         })
-        .on("connect", (_, socket) => {
+        .on(isBun ? "response" : "connect", (_, socket) => {
           https
             .request({
               host,
@@ -69,7 +68,7 @@ const httpProxyRequest = ({
           host: proxyHost,
           port: proxyPort,
           method: "HEAD",
-          path: `http://${origin}${path}`,
+          path: `${protocol}//${origin}${path}`,
           ...options,
         })
         .on("response", (res) => {

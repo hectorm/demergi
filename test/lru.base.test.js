@@ -1,5 +1,4 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
+/* global describe, it, assert */
 
 import { LRU } from "../src/lru.js";
 
