@@ -16,7 +16,7 @@ RUN --mount=type=cache,id=npm,dst=/npm/ \
 COPY ./ /src/
 
 RUN --mount=type=cache,id=npm,dst=/npm/ \
-	npm run test
+	npm run test:node
 
 RUN --mount=type=cache,id=npm,dst=/npm/ \
 	npm run build:bundle
