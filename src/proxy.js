@@ -123,10 +123,9 @@ export class DemergiProxy {
       server.once("close", () => this.servers.delete(server));
 
       await new Promise((resolve, reject) => {
-        server.listen(port, host, (error) => {
-          if (error) reject(error);
-          else resolve();
-        });
+        server.once("listening", () => resolve());
+        server.once("error", (error) => reject(error));
+        server.listen(port, host);
       });
     }
 
