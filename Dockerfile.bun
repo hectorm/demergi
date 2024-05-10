@@ -1,0 +1,38 @@
+##################################################
+## "build" stage
+##################################################
+
+FROM docker.io/oven/bun:1.1.8-debian@sha256:6ffc613400a5b69c0b0f0e1d5d954b1656b928f4b254a340dc1fd03377dd7151 AS build
+
+ENV BUN_INSTALL=/bun
+
+WORKDIR /src/
+
+COPY ./package.json ./package-lock.json /src/
+
+RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
+	bun install
+
+COPY ./ /src/
+
+RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
+	bun run test:bun
+
+RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
+	bun run build:bundle
+
+##################################################
+## "main" stage
+##################################################
+
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:b9452f5cd004c1610d4056be70343a8a7ea3d46bcf0fda3ce90f1ed90e70989c AS main
+
+COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/bun /bun
+COPY --from=build --chown=0:0 --chmod=644 /src/dist/ /app/
+
+WORKDIR /app/
+
+RUN ["/bun", "run", "/app/demergi.js", "--version"]
+
+ENTRYPOINT ["/bun", "run", "/app/demergi.js"]
+CMD []
