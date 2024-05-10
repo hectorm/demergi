@@ -92,7 +92,7 @@ export class DemergiProxy {
     for (const addr of this.#addrs) {
       const isHttps = addr.protocol === "https:";
       const host = addr.hostname.match(/^\[(.+)\]$/)?.[1] ?? addr.hostname;
-      const port = addr.port || (isHttps ? 443 : 80);
+      const port = addr.port ? Number.parseInt(addr.port, 10) : (isHttps ? 443 : 80);
 
       let server;
       if (isHttps) {
