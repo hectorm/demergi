@@ -3,6 +3,7 @@ import dns from "node:dns";
 import http2 from "node:http2";
 import net from "node:net";
 import tls from "node:tls";
+import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import { LRU } from "./lru.js";
 import { Logger } from "./logger.js";
