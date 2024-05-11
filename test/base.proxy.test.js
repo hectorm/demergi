@@ -1,4 +1,4 @@
-/* global describe, it, itIf, assert, isBun */
+/* global runtime, describe, it, itIf, assert */
 
 import http from "node:http";
 import https from "node:https";
@@ -41,10 +41,10 @@ const httpProxyRequest = ({
           host: proxyHost,
           port: proxyPort,
           method: "CONNECT",
-          path: isBun ? `${protocol}//${origin}` : origin,
+          path: runtime === "bun" ? `${protocol}//${origin}` : origin,
           ...options,
         })
-        .on(isBun ? "response" : "connect", (_, socket) => {
+        .on(runtime === "bun" ? "response" : "connect", (_, socket) => {
           https
             .request({
               host,
@@ -214,7 +214,7 @@ describe("Proxy", () => {
           host: "example.invalid",
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -243,7 +243,7 @@ describe("Proxy", () => {
           port: 443,
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -271,7 +271,7 @@ describe("Proxy", () => {
           host: "300.300.300.300",
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -300,7 +300,7 @@ describe("Proxy", () => {
           port: 443,
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -410,7 +410,7 @@ describe("Proxy", () => {
           host: "example.invalid",
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -439,7 +439,7 @@ describe("Proxy", () => {
           port: 80,
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -467,7 +467,7 @@ describe("Proxy", () => {
           host: "300.300.300.300",
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -496,7 +496,7 @@ describe("Proxy", () => {
           port: 80,
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -509,7 +509,7 @@ describe("Proxy", () => {
     }
   });
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must establish an HTTPS connection through an HTTPS proxy",
     async () => {
       const proxy = new DemergiProxy({
@@ -537,7 +537,7 @@ describe("Proxy", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must establish an HTTPS connection through an HTTPS proxy with mTLS",
     async () => {
       const proxy = new DemergiProxy({
@@ -568,7 +568,7 @@ describe("Proxy", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must establish an HTTP connection through an HTTPS proxy",
     async () => {
       const proxy = new DemergiProxy({
@@ -596,7 +596,7 @@ describe("Proxy", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must establish an HTTP connection through an HTTPS proxy with mTLS",
     async () => {
       const proxy = new DemergiProxy({
@@ -636,7 +636,7 @@ describe("Proxy", () => {
 
     try {
       await assert.rejects(proxy.start(), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert(error instanceof Error);
         } else {
           assert.match(error.code, /^ERR_OSSL_UNSUPPORTED$/);
@@ -657,7 +657,7 @@ describe("Proxy", () => {
 
     try {
       await assert.rejects(proxy.start(), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert(error instanceof Error);
         } else {
           assert.match(error.code, /^ERR_OSSL_ASN1_WRONG_TAG$/);
@@ -678,7 +678,7 @@ describe("Proxy", () => {
     });
 
     try {
-      if (isBun) {
+      if (runtime === "bun") {
         await assert.rejects(proxy.start(), (error) => {
           assert(error instanceof Error);
           return true;
@@ -726,7 +726,7 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_GET_ISSUER_CERT$/);
           } else {
             assert.match(error.code, /^EPROTO$/);
@@ -759,7 +759,7 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           } else {
             assert.match(error.code, /^CERT_HAS_EXPIRED$/);
@@ -789,7 +789,7 @@ describe("Proxy", () => {
           host: "cloudflare-dns.com",
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           } else {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
@@ -823,7 +823,7 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           } else {
             assert.match(
@@ -862,7 +862,7 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
@@ -898,7 +898,7 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (isBun) {
+          if (runtime === "bun") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           } else {
             assert.match(error.code, /^ERR_OSSL_X509_KEY_VALUES_MISMATCH$/);

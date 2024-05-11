@@ -1,4 +1,4 @@
-/* global describe, it, itIf, assert, isBun */
+/* global runtime, describe, it, itIf, assert */
 
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
@@ -125,7 +125,7 @@ describe("Resolver", () => {
     assert(ipB.family === 4);
   });
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid pinned certificate",
     async () => {
       const resolver = new DemergiResolver({
@@ -143,7 +143,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid server name and a valid pinned certificate",
     async () => {
       const resolver = new DemergiResolver({
@@ -184,7 +184,7 @@ describe("Resolver", () => {
     });
 
     await assert.rejects(resolver.resolve("google.com"), (error) => {
-      if (isBun) {
+      if (runtime === "bun") {
         assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
       } else {
         assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
@@ -194,7 +194,7 @@ describe("Resolver", () => {
     });
   });
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoH mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -211,7 +211,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoH mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -229,7 +229,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoH mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -241,7 +241,7 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
         } else {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
@@ -252,7 +252,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoH mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -264,7 +264,7 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
         } else {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
@@ -438,7 +438,7 @@ describe("Resolver", () => {
     assert(ipB.family === 4);
   });
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate",
     async () => {
       const resolver = new DemergiResolver({
@@ -455,7 +455,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate",
     async () => {
       const resolver = new DemergiResolver({
@@ -493,7 +493,7 @@ describe("Resolver", () => {
     });
 
     await assert.rejects(resolver.resolve("google.com"), (error) => {
-      if (isBun) {
+      if (runtime === "bun") {
         assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
       } else {
         assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
@@ -503,7 +503,7 @@ describe("Resolver", () => {
     });
   });
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -519,7 +519,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -536,7 +536,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -547,7 +547,7 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
         } else {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
@@ -558,7 +558,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(!isBun)(
+  itIf(runtime !== "bun")(
     "Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate for a request to a valid domain",
     async () => {
       const resolver = new DemergiResolver({
@@ -569,7 +569,7 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (isBun) {
+        if (runtime === "bun") {
           assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
         } else {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
