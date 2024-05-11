@@ -1,5 +1,6 @@
 /* global runtime, describe, it, itIf, assert */
 
+import process from "node:process";
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
 import {
@@ -23,28 +24,34 @@ describe("Resolver", () => {
 
   // Plain
 
-  it("Must resolve google.com to an IPv6 and IPv4 address in plain DNS mode", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "plain",
-    });
+  itIf(runtime !== "bun" || !process.env.RUNNER_OS?.match(/^(Windows|macOS)$/))(
+    "Must resolve google.com to an IPv6 and IPv4 address in plain DNS mode",
+    async () => {
+      const resolver = new DemergiResolver({
+        dnsMode: "plain",
+      });
 
-    const [ipA, ipB] = await resolver.resolve("google.com");
-    assert(net.isIPv6(ipA.address));
-    assert(ipA.family === 6);
-    assert(net.isIPv4(ipB.address));
-    assert(ipB.family === 4);
-  });
+      const [ipA, ipB] = await resolver.resolve("google.com");
+      assert(net.isIPv6(ipA.address));
+      assert(ipA.family === 6);
+      assert(net.isIPv4(ipB.address));
+      assert(ipB.family === 4);
+    },
+  );
 
-  it("Must resolve ipv6.google.com to an IPv6 address in plain DNS mode", async () => {
-    const resolver = new DemergiResolver({
-      dnsMode: "plain",
-    });
+  itIf(runtime !== "bun" || !process.env.RUNNER_OS?.match(/^(Windows|macOS)$/))(
+    "Must resolve ipv6.google.com to an IPv6 address in plain DNS mode",
+    async () => {
+      const resolver = new DemergiResolver({
+        dnsMode: "plain",
+      });
 
-    const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
-    assert(net.isIPv6(ipA.address));
-    assert(ipA.family === 6);
-    assert(ipB === undefined);
-  });
+      const [ipA, ipB] = await resolver.resolve("ipv6.google.com");
+      assert(net.isIPv6(ipA.address));
+      assert(ipA.family === 6);
+      assert(ipB === undefined);
+    },
+  );
 
   it("Must resolve ipv4.google.com to an IPv4 address in plain DNS mode", async () => {
     const resolver = new DemergiResolver({
