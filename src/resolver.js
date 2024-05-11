@@ -142,7 +142,9 @@ export class DemergiResolver {
             try {
               socket = tls.connect({
                 host: this.dohUrl.hostname,
-                port: this.dohUrl.port || 443,
+                port: this.dohUrl.port
+                  ? Number.parseInt(this.dohUrl.port, 10)
+                  : 443,
                 servername: this.dohTlsServername,
                 ALPNProtocols: ["h2"],
                 rejectUnauthorized:
