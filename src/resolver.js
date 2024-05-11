@@ -190,7 +190,7 @@ export class DemergiResolver {
         [HTTP2_HEADER_PATH]: this.dohUrl.pathname,
         [HTTP2_HEADER_ACCEPT]: "application/dns-message",
         [HTTP2_HEADER_CONTENT_TYPE]: "application/dns-message",
-        [HTTP2_HEADER_CONTENT_LENGTH]: question.length,
+        [HTTP2_HEADER_CONTENT_LENGTH]: String(question.length),
       });
 
       request.setTimeout(this.#answerTimeout);
