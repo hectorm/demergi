@@ -112,7 +112,12 @@ export class DemergiResolver {
     return new Promise((resolve) => {
       const resolveDns = family === 6 ? dns.resolve6 : dns.resolve4;
       resolveDns(hostname, { ttl: true }, (error, addresses) => {
-        if (error || addresses.length === 0) {
+        if (
+          error ||
+          addresses.length === 0 ||
+          // Skip IPv4-mapped IPv6 addresses
+          (family === 6 && addresses[0].address.startsWith("::ffff:"))
+        ) {
           resolve({ address: null, ttl: this.#ttlMin });
         } else {
           resolve({ address: addresses[0].address, ttl: addresses[0].ttl });
