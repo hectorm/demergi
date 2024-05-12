@@ -111,7 +111,7 @@ jobs:
 
   build-docker:
     name: "Build Docker image for ${{ matrix.runtime.name }} (${{ matrix.platform.arch }})"
-    needs: ["test-node"]
+    needs: ["test-node", "test-bun"]
     runs-on: "ubuntu-latest"
     permissions:
       contents: "read"
@@ -122,6 +122,9 @@ jobs:
           - id: "node"
             name: "Node.js"
             dockerfile: "./Dockerfile"
+          - id: "bun"
+            name: "Bun"
+            dockerfile: "./Dockerfile.bun"
         platform:
           - id: "linux-amd64"
             arch: "linux/amd64"
