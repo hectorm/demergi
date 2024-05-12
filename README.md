@@ -21,10 +21,10 @@ To learn more about how a TLS connection works, I recommend these excellent reso
 
 For HTTP traffic, Demergi also modifies the packet header to make interception more difficult, but as the traffic is not encrypted, this should be avoided where possible.
 
-> **Warning**  
+> [!WARNING]
 > Demergi **should not be used as a replacement for a VPN** if you are concerned about the consequences of your traffic being detected, as the techniques used are not infallible, but are good enough to access blocked content from your own network without the need for a VPN.
 
-## How is it used?
+## How do I use it?
 
 Demergi is an HTTP/HTTPS proxy server designed to be deployed within the network where traffic is being blocked. Either on the device you wish to access the content from or on a network appliance.
 
@@ -40,8 +40,8 @@ npm install -g demergi
 
 Or directly download the latest version from the releases section.
 
-> **Note**  
-> If you want to install it as a service, you can use [the following systemd unit](./systemd/demergi.service) as a reference.
+> [!NOTE]
+> If you want to install it as a service, you can use [the following systemd unit](./resources/systemd/demergi.service) as a reference.
 
 Once installed, you can run it with the `demergi` command.
 
