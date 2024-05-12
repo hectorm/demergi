@@ -3,6 +3,7 @@ import dns from "node:dns";
 import http2 from "node:http2";
 import net from "node:net";
 import tls from "node:tls";
+import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import { LRU } from "./lru.js";
 import { Logger } from "./logger.js";
@@ -112,7 +113,12 @@ export class DemergiResolver {
     return new Promise((resolve) => {
       const resolveDns = family === 6 ? dns.resolve6 : dns.resolve4;
       resolveDns(hostname, { ttl: true }, (error, addresses) => {
-        if (error || addresses.length === 0) {
+        if (
+          error ||
+          addresses.length === 0 ||
+          // Skip IPv4-mapped IPv6 addresses
+          (family === 6 && addresses[0].address.startsWith("::ffff:"))
+        ) {
           resolve({ address: null, ttl: this.#ttlMin });
         } else {
           resolve({ address: addresses[0].address, ttl: addresses[0].ttl });
@@ -136,7 +142,9 @@ export class DemergiResolver {
             try {
               socket = tls.connect({
                 host: this.dohUrl.hostname,
-                port: this.dohUrl.port || 443,
+                port: this.dohUrl.port
+                  ? Number.parseInt(this.dohUrl.port, 10)
+                  : 443,
                 servername: this.dohTlsServername,
                 ALPNProtocols: ["h2"],
                 rejectUnauthorized:
@@ -184,7 +192,7 @@ export class DemergiResolver {
         [HTTP2_HEADER_PATH]: this.dohUrl.pathname,
         [HTTP2_HEADER_ACCEPT]: "application/dns-message",
         [HTTP2_HEADER_CONTENT_TYPE]: "application/dns-message",
-        [HTTP2_HEADER_CONTENT_LENGTH]: question.length,
+        [HTTP2_HEADER_CONTENT_LENGTH]: String(question.length),
       });
 
       request.setTimeout(this.#answerTimeout);
