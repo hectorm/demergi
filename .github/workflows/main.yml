@@ -20,7 +20,7 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -44,7 +44,7 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Use Node.js ${{ matrix.node_version }}"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -68,7 +68,7 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Use Bun ${{ matrix.bun_version }}"
         uses: "oven-sh/setup-bun@8f24390df009a496891208e5e36b8a1de1f45135"
         with:
@@ -86,7 +86,7 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
@@ -132,7 +132,7 @@ jobs:
             arch: "linux/arm64/v8"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
@@ -155,7 +155,7 @@ jobs:
       packages: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
@@ -212,7 +212,7 @@ jobs:
       id-token: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b"
+        uses: "actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b"
       - name: "Use Node.js lts/*"
         uses: "actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8"
         with:
