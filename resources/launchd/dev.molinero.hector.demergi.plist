@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>Label</key>
-		<string>com.hectorm.demergi</string>
+		<string>dev.molinero.hector.demergi</string>
 		<key>Program</key>
 		<string>/usr/local/bin/demergi</string>
 		<key>EnvironmentVariables</key>
