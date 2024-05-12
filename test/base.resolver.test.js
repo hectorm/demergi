@@ -1,6 +1,6 @@
 /* global runtime, describe, it, itIf, assert */
 
-import process from "node:process";
+import os from "node:os";
 import net from "node:net";
 import { DemergiResolver } from "../src/resolver.js";
 import {
@@ -24,7 +24,7 @@ describe("Resolver", () => {
 
   // Plain
 
-  itIf(runtime !== "bun" || !process.env.RUNNER_OS?.match(/^(Windows|macOS)$/))(
+  itIf(runtime !== "bun" || os.platform().match(/^linux$/))(
     "Must resolve google.com to an IPv6 and IPv4 address in plain DNS mode",
     async () => {
       const resolver = new DemergiResolver({
@@ -39,7 +39,7 @@ describe("Resolver", () => {
     },
   );
 
-  itIf(runtime !== "bun" || !process.env.RUNNER_OS?.match(/^(Windows|macOS)$/))(
+  itIf(runtime !== "bun" || os.platform().match(/^linux$/))(
     "Must resolve ipv6.google.com to an IPv6 address in plain DNS mode",
     async () => {
       const resolver = new DemergiResolver({
