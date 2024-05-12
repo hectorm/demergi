@@ -434,7 +434,8 @@ export class DemergiProxy {
     const match = origin.match(
       // Extracts the hostname (also IPv4 or IPv6 address)
       // and port of a URL with or without protocol.
-      /^(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]+?)\]?)(?::([0-9]+))?(?:\/.*)?$/i,
+      // We also accept "/" as a prefix as a hacky workaround for Bun.
+      /^\/?(?:[a-z0-9.+-]+:\/\/)?(?:\[?([^/]+?)\]?)(?::([0-9]+))?(?:\/.*)?$/i,
     );
     if (match !== null) {
       if (match[1] !== undefined) host = match[1].toLowerCase();

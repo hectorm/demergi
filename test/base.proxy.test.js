@@ -41,7 +41,7 @@ const httpProxyRequest = ({
           host: proxyHost,
           port: proxyPort,
           method: "CONNECT",
-          path: runtime === "bun" ? `${protocol}//${origin}` : origin,
+          path: runtime === "bun" ? `/${origin}` : origin,
           ...options,
         })
         .on(runtime === "bun" ? "response" : "connect", (_, socket) => {
@@ -215,7 +215,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^(ConnectionClosed|Syscall)$/);
+            assert.match(error.code, /^FailedToOpenSocket$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
           }
@@ -244,7 +244,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^(ConnectionClosed|Syscall)$/);
+            assert.match(error.code, /^FailedToOpenSocket$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
           }
