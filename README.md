@@ -2,7 +2,7 @@
 [![Docker image size](https://img.shields.io/docker/image-size/hectorm/demergi/latest?label=docker%20image%20size)](https://hub.docker.com/r/hectorm/demergi/tags)
 [![License](https://img.shields.io/github/license/hectorm/demergi?label=license)](./LICENSE.md)
 
-***
+---
 
 # Demergi
 
@@ -15,15 +15,16 @@ Although traffic over an HTTPS connection is encrypted, the client and server ex
 There are promising solutions to the problem of hiding as much information as possible in the initial handshake of a TLS connection, one being [Encrypted Client Hello (ECH)](https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni). However, until these solutions are fully deployed, tools such as Demergi can be useful as evasion mechanisms.
 
 To learn more about how a TLS connection works, I recommend these excellent resources:
- * [The Illustrated TLS 1.2 Connection](https://tls12.xargs.org).
- * [The Illustrated TLS 1.3 Connection](https://tls13.xargs.org).
+
+- [The Illustrated TLS 1.2 Connection](https://tls12.xargs.org).
+- [The Illustrated TLS 1.3 Connection](https://tls13.xargs.org).
 
 For HTTP traffic, Demergi also modifies the packet header to make interception more difficult, but as the traffic is not encrypted, this should be avoided where possible.
 
-> **Warning**  
+> [!WARNING]
 > Demergi **should not be used as a replacement for a VPN** if you are concerned about the consequences of your traffic being detected, as the techniques used are not infallible, but are good enough to access blocked content from your own network without the need for a VPN.
 
-## How is it used?
+## How do I use it?
 
 Demergi is an HTTP/HTTPS proxy server designed to be deployed within the network where traffic is being blocked. Either on the device you wish to access the content from or on a network appliance.
 
@@ -32,13 +33,14 @@ Simply deploy it and adjust the proxy settings of your browser or other software
 ### Command line
 
 You can install Demergi with npm:
+
 ```sh
 npm install -g demergi
 ```
 
 Or directly download the latest version from the releases section.
 
-> **Note**  
+> [!NOTE]
 > If you want to install it as a service, you can use [the following systemd unit](./systemd/demergi.service) as a reference. On macOS, you use the [launchd system](./launchctl/README.md) to run as background service.
 
 Once installed, you can run it with the `demergi` command.
@@ -156,11 +158,13 @@ Info:
 Demergi is also distributed in container images. The default behaviour can be changed using environment variables or container arguments.
 
 #### [Docker Hub](https://hub.docker.com/r/hectorm/demergi/tags):
+
 ```sh
 docker run -p 8080:8080 docker.io/hectorm/demergi:latest
 ```
 
 #### [GitHub Container Registry](https://github.com/hectorm/demergi/pkgs/container/demergi):
+
 ```sh
 docker run -p 8080:8080 ghcr.io/hectorm/demergi:latest
 ```

@@ -1,5 +1,21 @@
 node_modules/
 npm-debug.log*
 
-/Dockerfile
 /dist/
+
+/certs/*
+!/certs/mkcerts.sh
+
+.env
+.env.*
+!.env.sample
+
+Dockerfile
+Dockerfile.*
+compose.yaml
+compose.*.yaml
+
+.github/
+.gitlab-ci.yml
+
+.git/

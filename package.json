@@ -1,6 +1,6 @@
 {
   "name": "demergi",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A proxy server that helps to bypass the DPI systems implemented by various ISPs",
   "author": "Héctor Molinero Fernández <hector@molinero.dev>",
   "license": "MIT",
@@ -22,27 +22,33 @@
     "src/"
   ],
   "scripts": {
-    "lint": "eslint --ext .js --ext .mjs --ext .cjs ./",
-    "test": "node --test",
+    "lint": "run-s lint:*",
+    "lint:eslint": "eslint --max-warnings 0 ./",
+    "lint:prettier": "prettier --list-different ./",
+    "format": "run-s format:*",
+    "format:eslint": "eslint --fix ./",
+    "format:prettier": "prettier --write ./",
+    "test": "run-s test:*",
+    "test:node": "node --test ./test/node.test.js",
+    "test:bun": "bun test ./test/bun.test.js",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
-    "build": "esbuild --bundle --minify --format=cjs --platform=node --target=node20 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
-    "build-binary": "pkg --target=node20-linuxstatic-x64,node20-linuxstatic-arm64,node20-win-x64 --out-path=./dist/ ./dist/demergi.js",
+    "build": "run-s build:*",
+    "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node20 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
+    "build:binary": "pkg --target=node20-linuxstatic-x64,node20-linuxstatic-arm64,node20-win-x64 --out-path=./dist/ ./dist/demergi.js",
     "clean": "rm -rf ./dist/",
     "preversion": "npm run lint && npm run test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
-    "@babel/core": "~7.24.0",
-    "@babel/eslint-parser": "~7.23.10",
-    "@babel/eslint-plugin": "~7.23.5",
-    "@babel/preset-env": "~7.24.0",
+    "@eslint/js": "~9.2.0",
     "@yao-pkg/pkg": "~5.11.5",
-    "esbuild": "~0.20.2",
-    "eslint": "~8.57.0",
+    "esbuild": "~0.21.1",
+    "eslint": "~9.2.0",
     "eslint-config-prettier": "~9.1.0",
-    "eslint-plugin-prettier": "~5.1.3",
+    "globals": "~15.2.0",
     "nodemon": "~3.1.0",
+    "npm-run-all2": "~6.1.2",
     "prettier": "~3.2.5"
   }
 }
