@@ -35,20 +35,20 @@
     "watch": "nodemon -- ./bin/demergi.js",
     "build": "run-s build:bundle build:binary",
     "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node22 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
-    "build:binary": "pkg --target=node22-linuxstatic-x64,node22-linuxstatic-arm64,node22-win-x64 --out-path=./dist/ ./dist/demergi.js",
+    "build:binary": "node ./sea-build.js",
     "clean": "rm -rf ./dist/",
     "preversion": "run-s lint test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
     "@eslint/js": "~9.34.0",
-    "@yao-pkg/pkg": "~6.6.0",
     "esbuild": "~0.25.9",
     "eslint": "~9.34.0",
     "eslint-config-prettier": "~10.1.8",
     "globals": "~16.3.0",
     "nodemon": "~3.1.10",
     "npm-run-all2": "~8.0.4",
+    "postject": "~1.0.0-alpha.6",
     "prettier": "~3.6.2"
   }
 }

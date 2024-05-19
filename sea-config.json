@@ -1,0 +1,6 @@
+{
+  "main": "./dist/demergi.js",
+  "output": "./dist/demergi.blob",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": true
+}
