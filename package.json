@@ -33,22 +33,22 @@
     "test:bun": "bun test ./test/bun.test.js",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
-    "build": "run-s build:*",
-    "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node20 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
-    "build:binary": "pkg --target=node20-linuxstatic-x64,node20-linuxstatic-arm64,node20-win-x64 --out-path=./dist/ ./dist/demergi.js",
+    "build": "run-s build:bundle build:sea",
+    "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node22 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
+    "build:sea": "node ./sea-build.js",
     "clean": "rm -rf ./dist/",
-    "preversion": "npm run lint && npm run test",
+    "preversion": "run-s lint test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
     "@eslint/js": "~9.2.0",
-    "@yao-pkg/pkg": "~5.11.5",
     "esbuild": "~0.21.2",
     "eslint": "~9.2.0",
     "eslint-config-prettier": "~9.1.0",
     "globals": "~15.2.0",
     "nodemon": "~3.1.0",
     "npm-run-all2": "~6.1.2",
+    "postject": "~1.0.0-alpha.6",
     "prettier": "~3.2.5"
   }
 }

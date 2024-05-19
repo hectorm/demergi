@@ -79,11 +79,15 @@ jobs:
         run: "bun run test:bun"
 
   build-dist:
-    name: "Build distribution files"
+    name: "Build distribution files on ${{ matrix.os }}"
     needs: ["test-node"]
-    runs-on: "ubuntu-latest"
+    runs-on: "${{ matrix.os }}"
     permissions:
       contents: "read"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
         uses: "actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29"
@@ -95,14 +99,21 @@ jobs:
       - name: "Install dependencies"
         run: "npm ci"
       - name: "Build"
+        shell: "bash"
         run: |
           npm run build
-          for f in ./dist/*-linuxstatic-*; do gzip -n "${f:?}"; done
-          for f in ./dist/*-win-*.exe; do zip -mj "${f:?}.zip" "${f:?}"; done
+          for f in ./dist/*-linux-* ./dist/*-darwin-*; do
+            [ -f "${f:?}" ] || continue
+            gzip -n "${f:?}"
+          done
+          for f in ./dist/*-win32-*.exe; do
+            [ -f "${f:?}" ] || continue
+            7z a -sdel "${f:?}.zip" "${f:?}"
+          done
       - name: "Upload artifacts"
         uses: "actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808"
         with:
-          name: "dist"
+          name: "dist-${{ matrix.os }}"
           path: |
             ./dist/*.js
             ./dist/*.gz
@@ -238,7 +249,8 @@ jobs:
       - name: "Download artifacts"
         uses: "actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e"
         with:
-          name: "dist"
+          pattern: "dist-*"
+          merge-multiple: true
           path: "assets"
       - name: "Publish"
         uses: "hectorm/ghaction-release@066200d04c3549852afa243d631ea3dc93390f68"
