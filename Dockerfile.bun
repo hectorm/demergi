@@ -2,7 +2,7 @@
 ## "build" stage
 ##################################################
 
-FROM docker.io/oven/bun:1.1.8-debian@sha256:e1f5bb763d299b68ed5a739e6177079efed3a5dd227507420e0a6c6a5cfa99d0 AS build
+FROM docker.io/oven/bun:1.1.10-debian@sha256:e25099bdb312ec058f77ffa71e75a00d652c8a69015311a077d16b129228f26f AS build
 
 ENV BUN_INSTALL=/bun
 
