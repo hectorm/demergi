@@ -120,11 +120,11 @@ export class DemergiProxy {
       }
 
       this.servers.add(server);
-      server.once("close", () => this.servers.delete(server));
+      server.on("close", () => this.servers.delete(server));
 
       await new Promise((resolve, reject) => {
-        server.once("listening", () => resolve());
-        server.once("error", (error) => reject(error));
+        server.on("listening", () => resolve());
+        server.on("error", (error) => reject(error));
         server.listen(port, host);
       });
     }
@@ -151,24 +151,24 @@ export class DemergiProxy {
     clientSocket.setTimeout(this.inactivityTimeout);
     upstreamSocket.setTimeout(this.inactivityTimeout);
 
-    clientSocket.once("timeout", () => {
+    clientSocket.on("timeout", () => {
       this.#socketTimeoutHandler(clientSocket, upstreamSocket);
     });
-    upstreamSocket.once("timeout", () => {
+    upstreamSocket.on("timeout", () => {
       this.#socketTimeoutHandler(upstreamSocket, clientSocket);
     });
 
-    clientSocket.once("close", () => {
+    clientSocket.on("close", () => {
       this.#socketCloseHandler(clientSocket, upstreamSocket);
     });
-    upstreamSocket.once("close", () => {
+    upstreamSocket.on("close", () => {
       this.#socketCloseHandler(upstreamSocket, clientSocket);
     });
 
-    clientSocket.once("error", (error) => {
+    clientSocket.on("error", (error) => {
       this.#socketErrorHandler(error);
     });
-    upstreamSocket.once("error", (error) => {
+    upstreamSocket.on("error", (error) => {
       this.#socketErrorHandler(error);
     });
 
@@ -363,7 +363,7 @@ export class DemergiProxy {
   #socketDestroy(socket, error) {
     if (socket && !socket.destroyed) {
       if (socket.connecting) {
-        socket.once("connect", () => socket.destroy(error));
+        socket.on("connect", () => socket.destroy(error));
       } else {
         socket.destroy(error);
       }

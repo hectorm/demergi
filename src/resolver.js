@@ -156,11 +156,11 @@ export class DemergiResolver {
               return;
             }
 
-            socket.once("error", (error) => {
+            socket.on("error", (error) => {
               dohClient.destroy(error);
             });
 
-            socket.once("secureConnect", () => {
+            socket.on("secureConnect", () => {
               if (typeof this.dohTlsPin === "string") {
                 const cert = socket.getPeerX509Certificate();
                 const pin = this.#pubKeyPin(cert);
@@ -197,11 +197,11 @@ export class DemergiResolver {
 
       request.setTimeout(this.#answerTimeout);
 
-      request.once("timeout", () => {
+      request.on("timeout", () => {
         request.destroy(new ResolverAnswerTimeoutError(question));
       });
 
-      request.once("error", (error) => {
+      request.on("error", (error) => {
         if (request.rstCode === NGHTTP2_REFUSED_STREAM && retry < 5) {
           // Retry with exponential backoff if the server refuses the stream.
           resolve(
@@ -217,7 +217,7 @@ export class DemergiResolver {
         }
       });
 
-      request.once("response", (headers) => {
+      request.on("response", (headers) => {
         const status = headers[HTTP2_HEADER_STATUS];
         if (status !== 200) {
           request.destroy(new ResolverAnswerStatusError(status, question));
@@ -226,7 +226,7 @@ export class DemergiResolver {
 
       const answer = [];
       request.on("data", (chunk) => answer.push(chunk));
-      request.once("end", () => {
+      request.on("end", () => {
         if (!this.dohPersistent) {
           dohClient.close();
         }
@@ -265,15 +265,15 @@ export class DemergiResolver {
 
       socket.setTimeout(this.#answerTimeout);
 
-      socket.once("timeout", () => {
+      socket.on("timeout", () => {
         socket.destroy(new ResolverAnswerTimeoutError(question));
       });
 
-      socket.once("error", (error) => {
+      socket.on("error", (error) => {
         reject(error);
       });
 
-      socket.once("secureConnect", () => {
+      socket.on("secureConnect", () => {
         if (typeof this.dotTlsPin === "string") {
           const cert = socket.getPeerX509Certificate();
           const pin = this.#pubKeyPin(cert);
@@ -291,7 +291,7 @@ export class DemergiResolver {
         socket.write(Buffer.concat([length, question]));
       });
 
-      socket.once("data", (answer) => {
+      socket.on("data", (answer) => {
         socket.destroy();
 
         try {
