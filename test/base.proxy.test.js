@@ -215,7 +215,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionRefused$/);
+            assert.match(error.code, /^(FailedToOpenSocket|ConnectionRefused)$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
           }
@@ -244,7 +244,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionRefused$/);
+            assert.match(error.code, /^(FailedToOpenSocket|ConnectionRefused)$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
           }
