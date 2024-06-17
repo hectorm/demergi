@@ -766,7 +766,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
+            assert.match(error.code, /^CERT_HAS_EXPIRED$/);
           } else {
             assert.match(error.code, /^CERT_HAS_EXPIRED$/);
           }
@@ -830,7 +830,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
+            assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(
               error.code,
@@ -869,7 +869,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
+            assert.match(error.code, /^ConnectionClosed$/);
           } else {
             assert.match(error.code, /^ECONNRESET$/);
           }
@@ -905,7 +905,7 @@ describe("Proxy", () => {
         }),
         (error) => {
           if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
+            assert.match(error.code, /^FailedToOpenSocket$/);
           } else {
             assert.match(error.code, /^ERR_OSSL_X509_KEY_VALUES_MISMATCH$/);
           }
