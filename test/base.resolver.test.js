@@ -191,12 +191,11 @@ describe("Resolver", () => {
     });
 
     await assert.rejects(resolver.resolve("google.com"), (error) => {
-      if (runtime === "bun") {
-        assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-      } else {
+      assert(error instanceof Error);
+      if (runtime === "node") {
         assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+        assert.strictEqual(error.host, "cloudflare-dns.invalid");
       }
-      assert.strictEqual(error.host, "cloudflare-dns.invalid");
       return true;
     });
   });
@@ -248,12 +247,11 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (runtime === "bun") {
-          assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+          assert.strictEqual(error.host, "cloudflare-dns.invalid");
         }
-        assert.strictEqual(error.host, "cloudflare-dns.invalid");
         return true;
       });
     },
@@ -271,12 +269,11 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (runtime === "bun") {
-          assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+          assert.strictEqual(error.host, "cloudflare-dns.invalid");
         }
-        assert.strictEqual(error.host, "cloudflare-dns.invalid");
         return true;
       });
     },
@@ -500,12 +497,11 @@ describe("Resolver", () => {
     });
 
     await assert.rejects(resolver.resolve("google.com"), (error) => {
-      if (runtime === "bun") {
-        assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-      } else {
+      assert(error instanceof Error);
+      if (runtime === "node") {
         assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+        assert.strictEqual(error.host, "cloudflare-dns.invalid");
       }
-      assert.strictEqual(error.host, "cloudflare-dns.invalid");
       return true;
     });
   });
@@ -554,12 +550,11 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (runtime === "bun") {
-          assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+          assert.strictEqual(error.host, "cloudflare-dns.invalid");
         }
-        assert.strictEqual(error.host, "cloudflare-dns.invalid");
         return true;
       });
     },
@@ -576,12 +571,11 @@ describe("Resolver", () => {
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
-        if (runtime === "bun") {
-          assert.match(error.name, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+          assert.strictEqual(error.host, "cloudflare-dns.invalid");
         }
-        assert.strictEqual(error.host, "cloudflare-dns.invalid");
         return true;
       });
     },

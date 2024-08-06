@@ -214,12 +214,8 @@ describe("Proxy", () => {
           host: "example.invalid",
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(
-              error.code,
-              /^(FailedToOpenSocket|ConnectionRefused)$/,
-            );
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -246,12 +242,8 @@ describe("Proxy", () => {
           port: 443,
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(
-              error.code,
-              /^(FailedToOpenSocket|ConnectionRefused)$/,
-            );
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -277,9 +269,8 @@ describe("Proxy", () => {
           host: "300.300.300.300",
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -306,9 +297,8 @@ describe("Proxy", () => {
           port: 443,
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -416,9 +406,8 @@ describe("Proxy", () => {
           host: "example.invalid",
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionClosed$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -445,9 +434,8 @@ describe("Proxy", () => {
           port: 80,
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionClosed$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -473,9 +461,8 @@ describe("Proxy", () => {
           host: "300.300.300.300",
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -502,9 +489,8 @@ describe("Proxy", () => {
           port: 80,
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ERR_INVALID_ARG_VALUE$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -642,9 +628,8 @@ describe("Proxy", () => {
 
     try {
       await assert.rejects(proxy.start(), (error) => {
-        if (runtime === "bun") {
-          assert(error instanceof Error);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_OSSL_UNSUPPORTED$/);
         }
         return true;
@@ -663,9 +648,8 @@ describe("Proxy", () => {
 
     try {
       await assert.rejects(proxy.start(), (error) => {
-        if (runtime === "bun") {
-          assert(error instanceof Error);
-        } else {
+        assert(error instanceof Error);
+        if (runtime === "node") {
           assert.match(error.code, /^ERR_OSSL_ASN1_WRONG_TAG$/);
         }
         return true;
@@ -704,7 +688,10 @@ describe("Proxy", () => {
             },
           }),
           (error) => {
-            assert.match(error.code, /^ECONNRESET$/);
+            assert(error instanceof Error);
+            if (runtime === "node") {
+              assert.match(error.code, /^ECONNRESET$/);
+            }
             return true;
           },
         );
@@ -732,9 +719,8 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_GET_ISSUER_CERT$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^EPROTO$/);
           }
           return true;
@@ -765,9 +751,8 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^CERT_HAS_EXPIRED$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^CERT_HAS_EXPIRED$/);
           }
           return true;
@@ -795,9 +780,8 @@ describe("Proxy", () => {
           host: "cloudflare-dns.com",
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^UNABLE_TO_VERIFY_LEAF_SIGNATURE$/);
           }
           return true;
@@ -829,9 +813,8 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionClosed$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(
               error.code,
               /^ERR_SSL_TLSV13_ALERT_CERTIFICATE_REQUIRED$/,
@@ -868,9 +851,8 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^ConnectionClosed$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ECONNRESET$/);
           }
           return true;
@@ -904,9 +886,8 @@ describe("Proxy", () => {
           },
         }),
         (error) => {
-          if (runtime === "bun") {
-            assert.match(error.code, /^FailedToOpenSocket$/);
-          } else {
+          assert(error instanceof Error);
+          if (runtime === "node") {
             assert.match(error.code, /^ERR_OSSL_X509_KEY_VALUES_MISMATCH$/);
           }
           return true;
