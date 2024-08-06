@@ -134,6 +134,8 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332"
+      - name: "Enable IPv6"
+        uses: "hectorm/ghaction-ipv6-setup@29f4b33d8d583df20dd8a380804e8a62f9c968ce"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
