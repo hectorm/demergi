@@ -1,6 +1,6 @@
 {
   "name": "demergi",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "A proxy server that helps to bypass the DPI systems implemented by various ISPs",
   "author": "Héctor Molinero Fernández <hector@molinero.dev>",
   "license": "MIT",
