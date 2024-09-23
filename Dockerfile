@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=npm,dst=/npm/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:eeb716b8a36ecf37992cb8f1e716a4b5737c086fd3bcbb08b5c9588ad5c8a701 AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:791911d7030e233b4eaf2b8c3d930d09c538785b4a559cab794d1cb62c295ac4 AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/node /node
 COPY --from=build --chown=0:0 --chmod=644 /src/dist/ /app/
