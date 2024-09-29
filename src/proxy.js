@@ -138,7 +138,13 @@ export class DemergiProxy {
     }
 
     for (const server of this.servers) {
-      await new Promise((resolve) => server.close(resolve));
+      await new Promise((resolve) => {
+        if (server.listening) {
+          server.close(resolve);
+        } else {
+          resolve();
+        }
+      });
     }
   }
 
