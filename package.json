@@ -33,7 +33,7 @@
     "test:bun": "bun test ./test/bun.test.js",
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
-    "build": "run-s build:*",
+    "build": "run-s build:bundle build:binary",
     "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node22 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
     "build:binary": "pkg --target=node22-linuxstatic-x64,node22-linuxstatic-arm64,node22-win-x64 --out-path=./dist/ ./dist/demergi.js",
     "clean": "rm -rf ./dist/",
