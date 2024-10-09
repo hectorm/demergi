@@ -1,4 +1,4 @@
-/* global runtime, describe, it, itIf, assert */
+/* global runtime, describe, it, assert */
 
 import http from "node:http";
 import https from "node:https";
@@ -501,123 +501,111 @@ describe("Proxy", () => {
     }
   });
 
-  itIf(runtime !== "bun")(
-    "Must establish an HTTPS connection through an HTTPS proxy",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["https://localhost:0"],
-        tlsKey: TEST_TLS_SERVER_KEY,
-        tlsCert: TEST_TLS_SERVER_CERT,
+  it("Must establish an HTTPS connection through an HTTPS proxy", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["https://localhost:0"],
+      tlsKey: TEST_TLS_SERVER_KEY,
+      tlsCert: TEST_TLS_SERVER_CERT,
+    });
+
+    try {
+      await proxy.start();
+
+      const res = await httpProxyRequest({
+        proxy,
+        protocol: "https:",
+        host: "cloudflare-dns.com",
+        options: {
+          ca: TEST_TLS_CA_CERT,
+        },
       });
 
-      try {
-        await proxy.start();
+      assert(res.statusCode >= 200 && res.statusCode < 400);
+    } finally {
+      await proxy.stop();
+    }
+  });
 
-        const res = await httpProxyRequest({
-          proxy,
-          protocol: "https:",
-          host: "cloudflare-dns.com",
-          options: {
-            ca: TEST_TLS_CA_CERT,
-          },
-        });
+  it("Must establish an HTTPS connection through an HTTPS proxy with mTLS", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["https://localhost:0"],
+      tlsCa: TEST_TLS_CA_CERT,
+      tlsKey: TEST_TLS_SERVER_KEY,
+      tlsCert: TEST_TLS_SERVER_CERT,
+    });
 
-        assert(res.statusCode >= 200 && res.statusCode < 400);
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+    try {
+      await proxy.start();
 
-  itIf(runtime !== "bun")(
-    "Must establish an HTTPS connection through an HTTPS proxy with mTLS",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["https://localhost:0"],
-        tlsCa: TEST_TLS_CA_CERT,
-        tlsKey: TEST_TLS_SERVER_KEY,
-        tlsCert: TEST_TLS_SERVER_CERT,
+      const res = await httpProxyRequest({
+        proxy,
+        protocol: "https:",
+        host: "cloudflare-dns.com",
+        options: {
+          ca: TEST_TLS_CA_CERT,
+          key: TEST_TLS_CLIENT_KEY,
+          cert: TEST_TLS_CLIENT_CERT,
+        },
       });
 
-      try {
-        await proxy.start();
+      assert(res.statusCode >= 200 && res.statusCode < 400);
+    } finally {
+      await proxy.stop();
+    }
+  });
 
-        const res = await httpProxyRequest({
-          proxy,
-          protocol: "https:",
-          host: "cloudflare-dns.com",
-          options: {
-            ca: TEST_TLS_CA_CERT,
-            key: TEST_TLS_CLIENT_KEY,
-            cert: TEST_TLS_CLIENT_CERT,
-          },
-        });
+  it("Must establish an HTTP connection through an HTTPS proxy", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["https://localhost:0"],
+      tlsKey: TEST_TLS_SERVER_KEY,
+      tlsCert: TEST_TLS_SERVER_CERT,
+    });
 
-        assert(res.statusCode >= 200 && res.statusCode < 400);
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+    try {
+      await proxy.start();
 
-  itIf(runtime !== "bun")(
-    "Must establish an HTTP connection through an HTTPS proxy",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["https://localhost:0"],
-        tlsKey: TEST_TLS_SERVER_KEY,
-        tlsCert: TEST_TLS_SERVER_CERT,
+      const res = await httpProxyRequest({
+        proxy,
+        protocol: "http:",
+        host: "cloudflare-dns.com",
+        options: {
+          ca: TEST_TLS_CA_CERT,
+        },
       });
 
-      try {
-        await proxy.start();
+      assert(res.statusCode >= 200 && res.statusCode < 400);
+    } finally {
+      await proxy.stop();
+    }
+  });
 
-        const res = await httpProxyRequest({
-          proxy,
-          protocol: "http:",
-          host: "cloudflare-dns.com",
-          options: {
-            ca: TEST_TLS_CA_CERT,
-          },
-        });
+  it("Must establish an HTTP connection through an HTTPS proxy with mTLS", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["https://localhost:0"],
+      tlsCa: TEST_TLS_CA_CERT,
+      tlsKey: TEST_TLS_SERVER_KEY,
+      tlsCert: TEST_TLS_SERVER_CERT,
+    });
 
-        assert(res.statusCode >= 200 && res.statusCode < 400);
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+    try {
+      await proxy.start();
 
-  itIf(runtime !== "bun")(
-    "Must establish an HTTP connection through an HTTPS proxy with mTLS",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["https://localhost:0"],
-        tlsCa: TEST_TLS_CA_CERT,
-        tlsKey: TEST_TLS_SERVER_KEY,
-        tlsCert: TEST_TLS_SERVER_CERT,
+      const res = await httpProxyRequest({
+        proxy,
+        protocol: "http:",
+        host: "cloudflare-dns.com",
+        options: {
+          ca: TEST_TLS_CA_CERT,
+          key: TEST_TLS_CLIENT_KEY,
+          cert: TEST_TLS_CLIENT_CERT,
+        },
       });
 
-      try {
-        await proxy.start();
-
-        const res = await httpProxyRequest({
-          proxy,
-          protocol: "http:",
-          host: "cloudflare-dns.com",
-          options: {
-            ca: TEST_TLS_CA_CERT,
-            key: TEST_TLS_CLIENT_KEY,
-            cert: TEST_TLS_CLIENT_CERT,
-          },
-        });
-
-        assert(res.statusCode >= 200 && res.statusCode < 400);
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+      assert(res.statusCode >= 200 && res.statusCode < 400);
+    } finally {
+      await proxy.stop();
+    }
+  });
 
   it("Must throw an exception when starting an HTTPS proxy with a malformed server key", async () => {
     const proxy = new DemergiProxy({
