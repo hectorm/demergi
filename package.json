@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@eslint/js": "~9.13.0",
-    "@yao-pkg/pkg": "~5.16.1",
+    "@yao-pkg/pkg": "~6.0.0",
     "esbuild": "~0.24.0",
     "eslint": "~9.13.0",
     "eslint-config-prettier": "~9.1.0",
