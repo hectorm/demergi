@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:fe61a509ada74719dbab670d4c0d127bd9b2e0114d18d4bb0a3b25c5d6695a49 AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:ce79e1448516ef8909ccdc7f09b7e9186c53e5c964394580f92d9726a349286c AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/bun /bun
 COPY --from=build --chown=0:0 --chmod=644 /src/dist/ /app/
