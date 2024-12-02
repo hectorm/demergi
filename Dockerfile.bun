@@ -2,7 +2,7 @@
 ## "build" stage
 ##################################################
 
-FROM docker.io/oven/bun:1.1.36-debian@sha256:48b11a401046ddd3e93ead4cf8dfe17346241d92ee34eafe0ff04d837c46428d AS build
+FROM docker.io/oven/bun:1.1.38-debian@sha256:69fea2ef06a6138c9c4ba83f615689112c418924b828071226c43235fa6ac65d AS build
 
 ENV BUN_INSTALL=/bun
 
@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:ce79e1448516ef8909ccdc7f09b7e9186c53e5c964394580f92d9726a349286c AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:594b5200fd1f06d17a877ebee16d4af84a9a7ab83c898632a2d5609c0593cbab AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/bun /bun
 COPY --from=build --chown=0:0 --chmod=644 /src/dist/ /app/
