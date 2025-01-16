@@ -138,7 +138,7 @@ describe("Resolver", () => {
       const resolver = new DemergiResolver({
         dnsMode: "doh",
         dohUrl: "https://1.0.0.1/dns-query",
-        dohTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+        dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
         dohPersistent: false,
       });
 
@@ -157,7 +157,7 @@ describe("Resolver", () => {
         dnsMode: "doh",
         dohUrl: "https://1.0.0.1/dns-query",
         dohTlsServername: "cloudflare-dns.com",
-        dohTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+        dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
         dohPersistent: false,
       });
 
@@ -240,7 +240,7 @@ describe("Resolver", () => {
       dnsMode: "doh",
       dohUrl: "https://1.0.0.1/dns-query",
       dohTlsServername: "cloudflare-dns.invalid",
-      dohTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+      dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
       dohPersistent: false,
     });
 
@@ -442,7 +442,7 @@ describe("Resolver", () => {
       const resolver = new DemergiResolver({
         dnsMode: "dot",
         dotServer: "1.0.0.1",
-        dotTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
       });
 
       const [ipA, ipB] = await resolver.resolve("google.com");
@@ -460,7 +460,7 @@ describe("Resolver", () => {
         dnsMode: "dot",
         dotServer: "1.0.0.1",
         dotTlsServername: "cloudflare-dns.com",
-        dotTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
       });
 
       const [ipA, ipB] = await resolver.resolve("google.com");
@@ -540,7 +540,7 @@ describe("Resolver", () => {
         dnsMode: "dot",
         dotServer: "1.0.0.1",
         dotTlsServername: "cloudflare-dns.invalid",
-        dotTlsPin: "4pqQ+yl3lAtRvKdoCCUR8iDmA53I+cJ7orgBLiF08kQ=",
+        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
       });
 
       await assert.rejects(resolver.resolve("google.com"), (error) => {
