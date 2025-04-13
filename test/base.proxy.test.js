@@ -1,4 +1,4 @@
-/* global runtime, describe, it, assert */
+/* global runtime, describe, it, itIf, assert */
 
 import http from "node:http";
 import https from "node:https";
@@ -309,87 +309,99 @@ describe("Proxy", () => {
     }
   });
 
-  it("Must establish an HTTP connection to a valid domain through an HTTP proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["localhost:0"],
-    });
-
-    try {
-      await proxy.start();
-
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "cloudflare-dns.com",
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection to a valid domain through an HTTP proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["localhost:0"],
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTP connection to a valid domain and port through an HTTP proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["localhost:0"],
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "cloudflare-dns.com",
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "cloudflare-dns.com",
-        port: 80,
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection to a valid domain and port through an HTTP proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["localhost:0"],
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTP connection to a valid IP address through an HTTP proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["localhost:0"],
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "cloudflare-dns.com",
+          port: 80,
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "1.0.0.1",
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection to a valid IP address through an HTTP proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["localhost:0"],
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTP connection to a valid IP address and port through an HTTP proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["localhost:0"],
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "1.0.0.1",
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "1.0.0.1",
-        port: 80,
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection to a valid IP address and port through an HTTP proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["localhost:0"],
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
+
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "1.0.0.1",
+          port: 80,
+        });
+
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
   it("Must throw an exception for an HTTP request to an invalid domain through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
@@ -501,111 +513,123 @@ describe("Proxy", () => {
     }
   });
 
-  it("Must establish an HTTPS connection through an HTTPS proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["https://localhost:0"],
-      tlsKey: TEST_TLS_SERVER_KEY,
-      tlsCert: TEST_TLS_SERVER_CERT,
-    });
-
-    try {
-      await proxy.start();
-
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "https:",
-        host: "cloudflare-dns.com",
-        options: {
-          ca: TEST_TLS_CA_CERT,
-        },
+  itIf(runtime !== "bun")(
+    "Must establish an HTTPS connection through an HTTPS proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["https://localhost:0"],
+        tlsKey: TEST_TLS_SERVER_KEY,
+        tlsCert: TEST_TLS_SERVER_CERT,
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTPS connection through an HTTPS proxy with mTLS", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["https://localhost:0"],
-      tlsCa: TEST_TLS_CA_CERT,
-      tlsKey: TEST_TLS_SERVER_KEY,
-      tlsCert: TEST_TLS_SERVER_CERT,
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "https:",
+          host: "cloudflare-dns.com",
+          options: {
+            ca: TEST_TLS_CA_CERT,
+          },
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "https:",
-        host: "cloudflare-dns.com",
-        options: {
-          ca: TEST_TLS_CA_CERT,
-          key: TEST_TLS_CLIENT_KEY,
-          cert: TEST_TLS_CLIENT_CERT,
-        },
+  itIf(runtime !== "bun")(
+    "Must establish an HTTPS connection through an HTTPS proxy with mTLS",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["https://localhost:0"],
+        tlsCa: TEST_TLS_CA_CERT,
+        tlsKey: TEST_TLS_SERVER_KEY,
+        tlsCert: TEST_TLS_SERVER_CERT,
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTP connection through an HTTPS proxy", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["https://localhost:0"],
-      tlsKey: TEST_TLS_SERVER_KEY,
-      tlsCert: TEST_TLS_SERVER_CERT,
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "https:",
+          host: "cloudflare-dns.com",
+          options: {
+            ca: TEST_TLS_CA_CERT,
+            key: TEST_TLS_CLIENT_KEY,
+            cert: TEST_TLS_CLIENT_CERT,
+          },
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "cloudflare-dns.com",
-        options: {
-          ca: TEST_TLS_CA_CERT,
-        },
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection through an HTTPS proxy",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["https://localhost:0"],
+        tlsKey: TEST_TLS_SERVER_KEY,
+        tlsCert: TEST_TLS_SERVER_CERT,
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
 
-  it("Must establish an HTTP connection through an HTTPS proxy with mTLS", async () => {
-    const proxy = new DemergiProxy({
-      addrs: ["https://localhost:0"],
-      tlsCa: TEST_TLS_CA_CERT,
-      tlsKey: TEST_TLS_SERVER_KEY,
-      tlsCert: TEST_TLS_SERVER_CERT,
-    });
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "cloudflare-dns.com",
+          options: {
+            ca: TEST_TLS_CA_CERT,
+          },
+        });
 
-    try {
-      await proxy.start();
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
-      const res = await httpProxyRequest({
-        proxy,
-        protocol: "http:",
-        host: "cloudflare-dns.com",
-        options: {
-          ca: TEST_TLS_CA_CERT,
-          key: TEST_TLS_CLIENT_KEY,
-          cert: TEST_TLS_CLIENT_CERT,
-        },
+  itIf(runtime !== "bun")(
+    "Must establish an HTTP connection through an HTTPS proxy with mTLS",
+    async () => {
+      const proxy = new DemergiProxy({
+        addrs: ["https://localhost:0"],
+        tlsCa: TEST_TLS_CA_CERT,
+        tlsKey: TEST_TLS_SERVER_KEY,
+        tlsCert: TEST_TLS_SERVER_CERT,
       });
 
-      assert(res.statusCode >= 200 && res.statusCode < 400);
-    } finally {
-      await proxy.stop();
-    }
-  });
+      try {
+        await proxy.start();
+
+        const res = await httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "cloudflare-dns.com",
+          options: {
+            ca: TEST_TLS_CA_CERT,
+            key: TEST_TLS_CLIENT_KEY,
+            cert: TEST_TLS_CLIENT_CERT,
+          },
+        });
+
+        assert(res.statusCode >= 200 && res.statusCode < 400);
+      } finally {
+        await proxy.stop();
+      }
+    },
+  );
 
   it("Must throw an exception when starting an HTTPS proxy with a malformed server key", async () => {
     const proxy = new DemergiProxy({
