@@ -132,42 +132,36 @@ describe("Resolver", () => {
     assert(ipB.family === 4);
   });
 
-  itIf(runtime !== "bun")(
-    "Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid pinned certificate",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "doh",
-        dohUrl: "https://1.0.0.1/dns-query",
-        dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-        dohPersistent: false,
-      });
+  it("Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid pinned certificate", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "doh",
+      dohUrl: "https://1.0.0.1/dns-query",
+      dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
+      dohPersistent: false,
+    });
 
-      const [ipA, ipB] = await resolver.resolve("google.com");
-      assert(net.isIPv6(ipA.address));
-      assert(ipA.family === 6);
-      assert(net.isIPv4(ipB.address));
-      assert(ipB.family === 4);
-    },
-  );
+    const [ipA, ipB] = await resolver.resolve("google.com");
+    assert(net.isIPv6(ipA.address));
+    assert(ipA.family === 6);
+    assert(net.isIPv4(ipB.address));
+    assert(ipB.family === 4);
+  });
 
-  itIf(runtime !== "bun")(
-    "Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid server name and a valid pinned certificate",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "doh",
-        dohUrl: "https://1.0.0.1/dns-query",
-        dohTlsServername: "cloudflare-dns.com",
-        dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-        dohPersistent: false,
-      });
+  it("Must resolve google.com to an IPv6 and IPv4 address in DoH mode using Cloudflare DNS with a valid server name and a valid pinned certificate", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "doh",
+      dohUrl: "https://1.0.0.1/dns-query",
+      dohTlsServername: "cloudflare-dns.com",
+      dohTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
+      dohPersistent: false,
+    });
 
-      const [ipA, ipB] = await resolver.resolve("google.com");
-      assert(net.isIPv6(ipA.address));
-      assert(ipA.family === 6);
-      assert(net.isIPv4(ipB.address));
-      assert(ipB.family === 4);
-    },
-  );
+    const [ipA, ipB] = await resolver.resolve("google.com");
+    assert(net.isIPv6(ipA.address));
+    assert(ipA.family === 6);
+    assert(net.isIPv4(ipB.address));
+    assert(ipB.family === 4);
+  });
 
   it("Must throw an exception in DoH mode using Cloudflare DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
@@ -200,40 +194,34 @@ describe("Resolver", () => {
     });
   });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoH mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "doh",
-        dohUrl: "https://1.0.0.1/dns-query",
-        dohTlsPin: "aHVudGVyMg==",
-        dohPersistent: false,
-      });
+  it("Must throw an exception in DoH mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "doh",
+      dohUrl: "https://1.0.0.1/dns-query",
+      dohTlsPin: "aHVudGVyMg==",
+      dohPersistent: false,
+    });
 
-      await assert.rejects(
-        resolver.resolve("google.com"),
-        ResolverCertificatePINError,
-      );
-    },
-  );
+    await assert.rejects(
+      resolver.resolve("google.com"),
+      ResolverCertificatePINError,
+    );
+  });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoH mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "doh",
-        dohUrl: "https://1.0.0.1/dns-query",
-        dohTlsServername: "cloudflare-dns.com",
-        dohTlsPin: "aHVudGVyMg==",
-        dohPersistent: false,
-      });
+  it("Must throw an exception in DoH mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "doh",
+      dohUrl: "https://1.0.0.1/dns-query",
+      dohTlsServername: "cloudflare-dns.com",
+      dohTlsPin: "aHVudGVyMg==",
+      dohPersistent: false,
+    });
 
-      await assert.rejects(
-        resolver.resolve("google.com"),
-        ResolverCertificatePINError,
-      );
-    },
-  );
+    await assert.rejects(
+      resolver.resolve("google.com"),
+      ResolverCertificatePINError,
+    );
+  });
 
   it("Must throw an exception in DoH mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain", async () => {
     const resolver = new DemergiResolver({
@@ -436,40 +424,34 @@ describe("Resolver", () => {
     assert(ipB.family === 4);
   });
 
-  itIf(runtime !== "bun")(
-    "Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-      });
+  it("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid pinned certificate", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
+    });
 
-      const [ipA, ipB] = await resolver.resolve("google.com");
-      assert(net.isIPv6(ipA.address));
-      assert(ipA.family === 6);
-      assert(net.isIPv4(ipB.address));
-      assert(ipB.family === 4);
-    },
-  );
+    const [ipA, ipB] = await resolver.resolve("google.com");
+    assert(net.isIPv6(ipA.address));
+    assert(ipA.family === 6);
+    assert(net.isIPv4(ipB.address));
+    assert(ipB.family === 4);
+  });
 
-  itIf(runtime !== "bun")(
-    "Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsServername: "cloudflare-dns.com",
-        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-      });
+  it("Must resolve google.com to an IPv6 and IPv4 address in DoT mode using Cloudflare DNS with a valid server name and a valid pinned certificate", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsServername: "cloudflare-dns.com",
+      dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
+    });
 
-      const [ipA, ipB] = await resolver.resolve("google.com");
-      assert(net.isIPv6(ipA.address));
-      assert(ipA.family === 6);
-      assert(net.isIPv4(ipB.address));
-      assert(ipB.family === 4);
-    },
-  );
+    const [ipA, ipB] = await resolver.resolve("google.com");
+    assert(net.isIPv6(ipA.address));
+    assert(ipA.family === 6);
+    assert(net.isIPv4(ipB.address));
+    assert(ipB.family === 4);
+  });
 
   it("Must throw an exception in DoT mode using Cloudflare DNS for a request to an invalid domain", async () => {
     const resolver = new DemergiResolver({
@@ -500,80 +482,68 @@ describe("Resolver", () => {
     });
   });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsPin: "aHVudGVyMg==",
-      });
+  it("Must throw an exception in DoT mode using Cloudflare DNS with an invalid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsPin: "aHVudGVyMg==",
+    });
 
-      await assert.rejects(
-        resolver.resolve("google.com"),
-        ResolverCertificatePINError,
-      );
-    },
-  );
+    await assert.rejects(
+      resolver.resolve("google.com"),
+      ResolverCertificatePINError,
+    );
+  });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsServername: "cloudflare-dns.com",
-        dotTlsPin: "aHVudGVyMg==",
-      });
+  it("Must throw an exception in DoT mode using Cloudflare DNS with a valid server name and an invalid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsServername: "cloudflare-dns.com",
+      dotTlsPin: "aHVudGVyMg==",
+    });
 
-      await assert.rejects(
-        resolver.resolve("google.com"),
-        ResolverCertificatePINError,
-      );
-    },
-  );
+    await assert.rejects(
+      resolver.resolve("google.com"),
+      ResolverCertificatePINError,
+    );
+  });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsServername: "cloudflare-dns.invalid",
-        dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
-      });
+  it("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and a valid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsServername: "cloudflare-dns.invalid",
+      dotTlsPin: "SPfg6FluPIlUc6a5h313BDCxQYNGX+THTy7ig5X3+VA=",
+    });
 
-      await assert.rejects(resolver.resolve("google.com"), (error) => {
-        assert(error instanceof Error);
-        if (runtime === "node") {
-          assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-          assert.strictEqual(error.host, "cloudflare-dns.invalid");
-        }
-        return true;
-      });
-    },
-  );
+    await assert.rejects(resolver.resolve("google.com"), (error) => {
+      assert(error instanceof Error);
+      if (runtime === "node") {
+        assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+        assert.strictEqual(error.host, "cloudflare-dns.invalid");
+      }
+      return true;
+    });
+  });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate for a request to a valid domain",
-    async () => {
-      const resolver = new DemergiResolver({
-        dnsMode: "dot",
-        dotServer: "1.0.0.1",
-        dotTlsServername: "cloudflare-dns.invalid",
-        dotTlsPin: "aHVudGVyMg==",
-      });
+  it("Must throw an exception in DoT mode using Cloudflare DNS with an invalid server name and an invalid pinned certificate for a request to a valid domain", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "dot",
+      dotServer: "1.0.0.1",
+      dotTlsServername: "cloudflare-dns.invalid",
+      dotTlsPin: "aHVudGVyMg==",
+    });
 
-      await assert.rejects(resolver.resolve("google.com"), (error) => {
-        assert(error instanceof Error);
-        if (runtime === "node") {
-          assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
-          assert.strictEqual(error.host, "cloudflare-dns.invalid");
-        }
-        return true;
-      });
-    },
-  );
+    await assert.rejects(resolver.resolve("google.com"), (error) => {
+      assert(error instanceof Error);
+      if (runtime === "node") {
+        assert.match(error.code, /^ERR_TLS_CERT_ALTNAME_INVALID$/);
+        assert.strictEqual(error.host, "cloudflare-dns.invalid");
+      }
+      return true;
+    });
+  });
 
   // DoT - Google
 
