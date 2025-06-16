@@ -2,7 +2,7 @@
 ## "build" stage
 ##################################################
 
-FROM docker.io/oven/bun:1.2.13-debian@sha256:0538136de28963e645f42a9d99da3091c20144a058f27af8fc0dd996ccb4a745 AS build
+FROM docker.io/oven/bun:1.2.16-debian@sha256:df45cf7e7578b31c5888a270fa9fad9ba6939d239b6d3e907118cf986b861077 AS build
 
 ENV BUN_INSTALL=/bun
 
@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=bun,dst=/bun/install/cache/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:20111f02d53c645d42d68fc2be1c82f471f3b6377063fada1643ef06182214b9 AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:a3c413a866ff27d0ae9e8555fd7c29991799aba085d1d7eb3348acac171a1752 AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/bun /bun
 COPY --from=build --chown=0:0 --chmod=755 /src/dist/demergi.js /app/demergi.js

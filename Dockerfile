@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=npm,dst=/npm/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:20111f02d53c645d42d68fc2be1c82f471f3b6377063fada1643ef06182214b9 AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:a3c413a866ff27d0ae9e8555fd7c29991799aba085d1d7eb3348acac171a1752 AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/node /node
 COPY --from=build --chown=0:0 --chmod=755 /src/dist/demergi.js /app/demergi.js
