@@ -270,7 +270,7 @@ if (options.workers > 0 && cluster.isPrimary) {
   for (const event of ["SIGINT", "SIGTERM"]) {
     process.once(event, (signal) => {
       Logger.info("Exiting");
-      for (const worker in Object.values(cluster.workers)) {
+      for (const worker of Object.values(cluster.workers)) {
         worker.process?.kill(signal);
       }
     });
