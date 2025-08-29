@@ -391,66 +391,60 @@ describe("Proxy", () => {
     }
   });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception for an HTTP request to an invalid domain through an HTTP proxy",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["localhost:0"],
-      });
+  it("Must throw an exception for an HTTP request to an invalid domain through an HTTP proxy", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["localhost:0"],
+    });
 
-      try {
-        await proxy.start();
+    try {
+      await proxy.start();
 
-        await assert.rejects(
-          httpProxyRequest({
-            proxy,
-            protocol: "http:",
-            host: "example.invalid",
-          }),
-          (error) => {
-            assert(error instanceof Error);
-            if (runtime === "node") {
-              assert.match(error.code, /^ECONNRESET$/);
-            }
-            return true;
-          },
-        );
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+      await assert.rejects(
+        httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "example.invalid",
+        }),
+        (error) => {
+          assert(error instanceof Error);
+          if (runtime === "node") {
+            assert.match(error.code, /^ECONNRESET$/);
+          }
+          return true;
+        },
+      );
+    } finally {
+      await proxy.stop();
+    }
+  });
 
-  itIf(runtime !== "bun")(
-    "Must throw an exception for an HTTP request to an invalid domain and port through an HTTP proxy",
-    async () => {
-      const proxy = new DemergiProxy({
-        addrs: ["localhost:0"],
-      });
+  it("Must throw an exception for an HTTP request to an invalid domain and port through an HTTP proxy", async () => {
+    const proxy = new DemergiProxy({
+      addrs: ["localhost:0"],
+    });
 
-      try {
-        await proxy.start();
+    try {
+      await proxy.start();
 
-        await assert.rejects(
-          httpProxyRequest({
-            proxy,
-            protocol: "http:",
-            host: "example.invalid",
-            port: 80,
-          }),
-          (error) => {
-            assert(error instanceof Error);
-            if (runtime === "node") {
-              assert.match(error.code, /^ECONNRESET$/);
-            }
-            return true;
-          },
-        );
-      } finally {
-        await proxy.stop();
-      }
-    },
-  );
+      await assert.rejects(
+        httpProxyRequest({
+          proxy,
+          protocol: "http:",
+          host: "example.invalid",
+          port: 80,
+        }),
+        (error) => {
+          assert(error instanceof Error);
+          if (runtime === "node") {
+            assert.match(error.code, /^ECONNRESET$/);
+          }
+          return true;
+        },
+      );
+    } finally {
+      await proxy.stop();
+    }
+  });
 
   it("Must throw an exception for an HTTP request to an invalid IP address through an HTTP proxy", async () => {
     const proxy = new DemergiProxy({
