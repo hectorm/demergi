@@ -8,6 +8,7 @@ import { LRU } from "./lru.js";
 import { Logger } from "./logger.js";
 import {
   ResolverAnswerCountError,
+  ResolverAnswerDecompressionError,
   ResolverAnswerFlagError,
   ResolverAnswerIDError,
   ResolverAnswerLengthError,
@@ -441,7 +442,10 @@ export class DemergiResolver {
     return Buffer.from(arr);
   }
 
-  #decodeName(buf, offset = 0) {
+  #decodeName(buf, offset = 0, depth = 0) {
+    if (depth++ > 100) {
+      throw new ResolverAnswerDecompressionError(null, null);
+    }
     const labels = [];
     let bytesLen = 0;
     let len = buf.readUInt8(offset);
@@ -450,12 +454,14 @@ export class DemergiResolver {
       return [name, 1];
     }
     if (len >= 0xc0) {
-      const [name] = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
+      offset = buf.readUInt16BE(offset) - 0xc000;
+      const [name] = this.#decodeName(buf, offset, depth);
       return [name, 2];
     }
     while (len > 0) {
       if (len >= 0xc0) {
-        const [lbl] = this.#decodeName(buf, buf.readUInt16BE(offset) - 0xc000);
+        offset = buf.readUInt16BE(offset) - 0xc000;
+        const [lbl] = this.#decodeName(buf, offset, depth);
         labels.push(lbl);
         const name = labels.join(".");
         bytesLen += 2;

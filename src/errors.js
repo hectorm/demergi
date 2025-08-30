@@ -135,3 +135,9 @@ export class ResolverAnswerResourceDataLengthError extends ResolverAnswerError {
     super("Unexpected answer resource data length", question, answer);
   }
 }
+
+export class ResolverAnswerDecompressionError extends ResolverAnswerError {
+  constructor(question, answer) {
+    super("DNS name decompression recursion depth exceeded", question, answer);
+  }
+}
