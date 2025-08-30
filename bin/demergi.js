@@ -8,7 +8,8 @@ import {
   toInt,
   toBool,
   toList,
-  readFile,
+  readTextFile,
+  readJsonFile,
 } from "../src/utils.js";
 import { DemergiProxy } from "../src/proxy.js";
 import { DemergiResolver } from "../src/resolver.js";
@@ -18,14 +19,15 @@ const options = {
   addrs: toList(getEnv("DEMERGI_ADDRS")),
   hosts: toList(getEnv("DEMERGI_HOSTS")),
   workers: toInt(getEnv("DEMERGI_WORKERS")),
-  tlsCa: readFile(getEnv("DEMERGI_TLS_CA")),
-  tlsKey: readFile(getEnv("DEMERGI_TLS_KEY")),
-  tlsCert: readFile(getEnv("DEMERGI_TLS_CERT")),
+  tlsCa: readTextFile(getEnv("DEMERGI_TLS_CA")),
+  tlsKey: readTextFile(getEnv("DEMERGI_TLS_KEY")),
+  tlsCert: readTextFile(getEnv("DEMERGI_TLS_CERT")),
   inactivityTimeout: toInt(getEnv("DEMERGI_INACTIVITY_TIMEOUT")),
   happyEyeballs: toBool(getEnv("DEMERGI_HAPPY_EYEBALLS")),
   happyEyeballsTimeout: toInt(getEnv("DEMERGI_HAPPY_EYEBALLS_TIMEOUT")),
   dnsMode: toStr(getEnv("DEMERGI_DNS_MODE")),
   dnsCacheSize: toInt(getEnv("DEMERGI_DNS_CACHE_SIZE")),
+  dnsIpOverrides: readJsonFile(getEnv("DEMERGI_DNS_IP_OVERRIDES")),
   dohUrl: toStr(getEnv("DEMERGI_DOH_URL")),
   dohTlsServername: toStr(getEnv("DEMERGI_DOH_TLS_SERVERNAME")),
   dohTlsPin: toStr(getEnv("DEMERGI_DOH_TLS_PIN")),
@@ -58,13 +60,13 @@ getopts: for (let i = 0; i < argv.length; i++) {
       options.workers = toInt(argv[++i]);
       break;
     case "--tls-ca":
-      options.tlsCa = readFile(argv[++i]);
+      options.tlsCa = readTextFile(argv[++i]);
       break;
     case "--tls-key":
-      options.tlsKey = readFile(argv[++i]);
+      options.tlsKey = readTextFile(argv[++i]);
       break;
     case "--tls-cert":
-      options.tlsCert = readFile(argv[++i]);
+      options.tlsCert = readTextFile(argv[++i]);
       break;
     case "--inactivity-timeout":
       options.inactivityTimeout = toInt(argv[++i]);
@@ -80,6 +82,9 @@ getopts: for (let i = 0; i < argv.length; i++) {
       break;
     case "--dns-cache-size":
       options.dnsCacheSize = toInt(argv[++i]);
+      break;
+    case "--dns-ip-overrides":
+      options.dnsIpOverrides = readJsonFile(argv[++i]);
       break;
     case "--doh-url":
       options.dohUrl = toStr(argv[++i]);
@@ -176,6 +181,11 @@ getopts: for (let i = 0; i < argv.length; i++) {
           ``,
           `  --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE`,
           `  The maximum number of entries in the DNS cache (100000 by default).`,
+          ``,
+          `  --dns-ip-overrides STR, $DEMERGI_DNS_IP_OVERRIDES`,
+          `  JSON file containing a map of CIDRs to IP addresses to override DNS lookups;`,
+          `  useful to bypass some IP-based blocks in CDNs (unspecified by default). e.g.:`,
+          `  {"198.51.100.0/24": "198.51.100.1", "203.0.113.0/24": "198.51.100.1"}`,
           ``,
           `  --doh-url STR, $DEMERGI_DOH_URL`,
           `  The DoH server URL ("https://1.0.0.1/dns-query" by default).`,
@@ -299,6 +309,7 @@ if (options.workers > 0 && cluster.isPrimary) {
     resolver: new DemergiResolver({
       dnsMode: options.dnsMode,
       dnsCacheSize: options.dnsCacheSize,
+      dnsIpOverrides: options.dnsIpOverrides,
       dohUrl: options.dohUrl,
       dohTlsServername: options.dohTlsServername,
       dohTlsPin: options.dohTlsPin,

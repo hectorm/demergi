@@ -652,4 +652,27 @@ describe("Resolver", () => {
       ResolverNoAddressError,
     );
   });
+
+  // IP overrides
+
+  it("Must override IPv4 and IPv6 addresses using default-any CIDRs", async () => {
+    const resolver = new DemergiResolver({
+      dnsMode: "doh",
+      dohUrl: "https://1.0.0.1/dns-query",
+      dohPersistent: false,
+      dnsIpOverrides: {
+        "0.0.0.0/0": "198.51.100.1",
+        "::/0": "2001:db8::1",
+        "203.0.113.0/33": "203.0.113.1", // invalid prefix
+        "2001:db8::/32": "198.51.100.2", // family mismatch
+      },
+    });
+
+    const addrs = await resolver.resolve("google.com");
+    assert(addrs.length >= 1);
+    for (const a of addrs) {
+      if (a.family === 4) assert.strictEqual(a.address, "198.51.100.1");
+      if (a.family === 6) assert.strictEqual(a.address, "2001:db8::1");
+    }
+  });
 });

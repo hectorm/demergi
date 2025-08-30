@@ -91,6 +91,11 @@ Resolver:
   --dns-cache-size NUM, $DEMERGI_DNS_CACHE_SIZE
   The maximum number of entries in the DNS cache (100000 by default).
 
+  --dns-ip-overrides STR, $DEMERGI_DNS_IP_OVERRIDES
+  JSON file containing a map of CIDRs to IP addresses to override DNS lookups;
+  useful to bypass some IP-based blocks in CDNs (unspecified by default). e.g.:
+  {"198.51.100.0/24": "198.51.100.1", "203.0.113.0/24": "198.51.100.1"}
+
   --doh-url STR, $DEMERGI_DOH_URL
   The DoH server URL ("https://1.0.0.1/dns-query" by default).
 

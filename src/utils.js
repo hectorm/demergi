@@ -21,8 +21,12 @@ export const toList = (value) => {
   return value !== undefined ? `${value}`.split(/[\s,]+/) : undefined;
 };
 
-export const readFile = (path) => {
-  return path !== undefined ? fs.readFileSync(path) : undefined;
+export const readTextFile = (path) => {
+  return path !== undefined ? fs.readFileSync(path, "utf8") : undefined;
+};
+
+export const readJsonFile = (path) => {
+  return path !== undefined ? JSON.parse(readTextFile(path)) : undefined;
 };
 
 export const isBun = process.versions.bun !== undefined;

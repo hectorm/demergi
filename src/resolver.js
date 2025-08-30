@@ -42,6 +42,7 @@ export class DemergiResolver {
   constructor({
     dnsMode = "doh",
     dnsCacheSize = 100000,
+    dnsIpOverrides = {},
     dohUrl = "https://1.0.0.1/dns-query",
     dohTlsServername,
     dohTlsPin,
@@ -52,6 +53,7 @@ export class DemergiResolver {
   } = {}) {
     this.dnsMode = dnsMode;
     this.dnsCache = new LRU(dnsCacheSize);
+    this.dnsIpOverrides = this.#compileIpOverrides(dnsIpOverrides);
 
     this.dohUrl = new URL(dohUrl);
     if (dohTlsServername) {
@@ -80,9 +82,14 @@ export class DemergiResolver {
         if (address === undefined) {
           Logger.debug(`Resolving ${hostname} (${family})`);
           const answer = await this.#resolve(hostname, family);
-          Logger.debug(`Resolved ${hostname} (${family}) to ${answer.address}`);
-          this.dnsCache.set(cacheKey, answer.address, answer.ttl);
-          address = answer.address;
+          let resolved = answer.address;
+          if (resolved !== null) {
+            const override = this.#findIpOverride(resolved, family);
+            if (override !== null) resolved = override;
+          }
+          Logger.debug(`Resolved ${hostname} (${family}) to ${resolved}`);
+          this.dnsCache.set(cacheKey, resolved, answer.ttl);
+          address = resolved;
         }
         return { address, family };
       }),
@@ -483,5 +490,136 @@ export class DemergiResolver {
     // https://www.rfc-editor.org/rfc/rfc7858.html#section-4.2
     const pubKey = cert.publicKey.export({ type: "spki", format: "der" });
     return crypto.createHash("sha256").update(pubKey).digest("base64");
+  }
+
+  #compileIpOverrides(map) {
+    const overrides = { v4: [], v6: [] };
+
+    if (!map || typeof map !== "object") {
+      return overrides;
+    }
+
+    for (const [cidr, ip] of Object.entries(map)) {
+      if (typeof cidr !== "string" || typeof ip !== "string") {
+        Logger.warn(`Ignoring invalid entry: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      const ipFamily = net.isIP(ip);
+      if (ipFamily !== 4 && ipFamily !== 6) {
+        Logger.warn(`Ignoring entry with invalid IP: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      const cidrSlashPos = cidr.indexOf("/");
+      if (cidrSlashPos <= 0 || cidrSlashPos === cidr.length - 1) {
+        Logger.warn(`Ignoring entry with invalid CIDR: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      const cidrIp = cidr.slice(0, cidrSlashPos);
+      const cidrFamily = net.isIP(cidrIp);
+      if (cidrFamily !== ipFamily) {
+        Logger.warn(`Ignoring entry with mismatched family: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      const cidrPrefix = Number.parseInt(cidr.slice(cidrSlashPos + 1), 10);
+      if (!Number.isFinite(cidrPrefix)) {
+        Logger.warn(`Ignoring entry with invalid prefix: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      const maxPrefix = ipFamily === 6 ? 128 : 32;
+      if (cidrPrefix < 0 || cidrPrefix > maxPrefix) {
+        Logger.warn(`Ignoring entry with invalid prefix: ${cidr} -> ${ip}`);
+        continue;
+      }
+
+      try {
+        const cidrIpBytes = this.#ipToBytes(cidrIp, cidrFamily);
+        const rule = { cidrIpBytes, cidrPrefix, ip };
+        if (ipFamily === 6) overrides.v6.push(rule);
+        else overrides.v4.push(rule);
+      } catch {
+        Logger.warn(`Ignoring invalid entry: ${cidr} -> ${ip}`);
+        continue;
+      }
+    }
+
+    // Longest prefix first.
+    overrides.v6.sort((a, b) => b.cidrPrefix - a.cidrPrefix);
+    overrides.v4.sort((a, b) => b.cidrPrefix - a.cidrPrefix);
+
+    return overrides;
+  }
+
+  #ipToBytes(ip, family) {
+    const bytes = family === 6 ? new Uint8Array(16) : new Uint8Array(4);
+    if (family === 6) {
+      let [head, tail] = ip.split("::");
+      let hp = head ? head.split(":") : [];
+      let tp = tail ? tail.split(":") : [];
+      if (ip.includes("::")) {
+        const mi = 8 - (hp.filter(Boolean).length + tp.filter(Boolean).length);
+        const ze = new Array(mi).fill("0");
+        const gr = [...(hp[0] ? hp : []), ...ze, ...(tp[0] ? tp : [])];
+        hp = gr;
+        tp = [];
+      }
+      const groups = tp.length ? [...hp, ...tp] : hp;
+      if (groups.length !== 8) {
+        throw new Error("invalid ipv6");
+      }
+      for (let i = 0, j = 0; i < 8; i++, j += 2) {
+        const n = Number.parseInt(groups[i] || "0", 16);
+        if (!Number.isFinite(n) || n < 0 || n > 0xffff) {
+          throw new Error("invalid ipv6");
+        }
+        bytes[j] = (n >> 8) & 0xff;
+        bytes[j + 1] = n & 0xff;
+      }
+    } else {
+      const p = ip.split(".");
+      if (p.length !== 4) {
+        throw new Error("invalid ipv4");
+      }
+      for (let i = 0; i < 4; i++) {
+        const n = Number.parseInt(p[i], 10);
+        if (!Number.isFinite(n) || n < 0 || n > 255) {
+          throw new Error("invalid ipv4");
+        }
+        bytes[i] = n;
+      }
+    }
+    return bytes;
+  }
+
+  #ipMatchesCidr(ipBytes, cidrIpBytes, cidrPrefix) {
+    const full = Math.floor(cidrPrefix / 8);
+    const rest = cidrPrefix % 8;
+    for (let i = 0; i < full; i++) {
+      if (ipBytes[i] !== cidrIpBytes[i]) return false;
+    }
+    if (rest === 0) return true;
+    const mask = 0xff << (8 - rest);
+    return (ipBytes[full] & mask) === (cidrIpBytes[full] & mask);
+  }
+
+  #findIpOverride(ip, family) {
+    const rules = this.dnsIpOverrides[family === 6 ? "v6" : "v4"];
+    if (rules.length === 0) return null;
+    try {
+      const ipBytes = this.#ipToBytes(ip, family);
+      for (const rule of rules) {
+        if (this.#ipMatchesCidr(ipBytes, rule.cidrIpBytes, rule.cidrPrefix)) {
+          return rule.ip;
+        }
+      }
+    } catch {
+      // If parsing the resolved IP fails (shouldn't happen), do not override.
+      Logger.warn(`Failed to parse resolved IP address: ${ip}`);
+    }
+    return null;
   }
 }
