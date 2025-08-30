@@ -15,10 +15,10 @@ describe("Resolver", () => {
     assert(defaults.dnsMode === "doh");
     assert(defaults.dnsCache.max === 100000);
     assert(defaults.dohUrl.toString() === "https://1.0.0.1/dns-query");
-    assert(defaults.dohTlsServername === "1.0.0.1");
+    assert(defaults.dohTlsServername === undefined);
     assert(defaults.dohTlsPin === undefined);
     assert(defaults.dotServer.toString() === "tls://1.0.0.1");
-    assert(defaults.dotTlsServername === "1.0.0.1");
+    assert(defaults.dotTlsServername === undefined);
     assert(defaults.dotTlsPin === undefined);
   });
 
