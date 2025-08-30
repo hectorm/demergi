@@ -34,8 +34,8 @@
     "start": "node -- ./bin/demergi.js",
     "watch": "nodemon -- ./bin/demergi.js",
     "build": "run-s build:bundle build:binary",
-    "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node22 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
-    "build:binary": "pkg --target=node22-linuxstatic-x64,node22-linuxstatic-arm64,node22-win-x64 --out-path=./dist/ ./dist/demergi.js",
+    "build:bundle": "esbuild --bundle --minify --format=cjs --platform=node --target=node20 --analyze --outfile=./dist/demergi.js ./bin/demergi.js",
+    "build:binary": "pkg --target=node20-linuxstatic-x64,node20-linuxstatic-arm64,node20-win-x64 --out-path=./dist/ ./dist/demergi.js",
     "clean": "rm -rf ./dist/",
     "preversion": "run-s lint test",
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
