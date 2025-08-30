@@ -24,3 +24,5 @@ export const toList = (value) => {
 export const readFile = (path) => {
   return path !== undefined ? fs.readFileSync(path) : undefined;
 };
+
+export const isBun = process.versions.bun !== undefined;

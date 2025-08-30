@@ -5,6 +5,7 @@ import net from "node:net";
 import tls from "node:tls";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
+import { isBun } from "./utils.js";
 import { LRU } from "./lru.js";
 import { Logger } from "./logger.js";
 import {
@@ -55,7 +56,7 @@ export class DemergiResolver {
     this.dohUrl = new URL(dohUrl);
     if (dohTlsServername) {
       this.dohTlsServername = dohTlsServername;
-    } else if (net.isIP(this.dohUrl.hostname) === 0) {
+    } else if (net.isIP(this.dohUrl.hostname) === 0 || isBun) {
       this.dohTlsServername = this.dohUrl.hostname;
     }
     this.dohTlsPin = dohTlsPin;
@@ -64,7 +65,7 @@ export class DemergiResolver {
     this.dotServer = new URL(`tls://${dotServer}`);
     if (dotTlsServername) {
       this.dotTlsServername = dotTlsServername;
-    } else if (net.isIP(this.dotServer.hostname) === 0) {
+    } else if (net.isIP(this.dotServer.hostname) === 0 || isBun) {
       this.dotTlsServername = this.dotServer.hostname;
     }
     this.dotTlsPin = dotTlsPin;
