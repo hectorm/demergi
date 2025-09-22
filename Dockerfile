@@ -2,7 +2,7 @@
 ## "build" stage
 ##################################################
 
-FROM docker.io/node:22.19.0-bookworm@sha256:6fe286835c595e53cdafc4889e9eff903dd3008a3050c1675809148d8e0df805 AS build
+FROM docker.io/node:22.19.0-bookworm@sha256:afff6d8c97964a438d2e6a9c96509367e45d8bf93f790ad561a1eaea926303d9 AS build
 
 ENV NPM_CONFIG_CACHE=/npm
 
@@ -25,7 +25,7 @@ RUN --mount=type=cache,id=npm,dst=/npm/ \
 ## "main" stage
 ##################################################
 
-FROM gcr.io/distroless/cc-debian12:nonroot@sha256:71c8c9f567572da433cf7ecdada692ea753d6bda71257afae4fa09080aa75ec6 AS main
+FROM gcr.io/distroless/cc-debian12:nonroot@sha256:15b189376c7556cf06fc93a8e3e2879f8555ff253b8c11a3e45dc634f0ac85c7 AS main
 
 COPY --from=build --chown=0:0 --chmod=755 /usr/local/bin/node /node
 COPY --from=build --chown=0:0 --chmod=755 /src/dist/demergi.js /app/demergi.js
