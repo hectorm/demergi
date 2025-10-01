@@ -23,7 +23,7 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        uses: "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444"
         with:
           node-version: "lts/*"
           cache: "npm"
@@ -47,7 +47,7 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8"
       - name: "Use Node.js ${{ matrix.node_version }}"
-        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        uses: "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444"
         with:
           node-version: "${{ matrix.node_version }}"
           cache: "npm"
@@ -89,7 +89,7 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        uses: "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444"
         with:
           node-version: "lts/*"
           cache: "npm"
@@ -165,14 +165,14 @@ jobs:
         uses: "hectorm/ghaction-docker-buildx-setup@fec3efdbb455c2aa58a4fbfd11a9853f5de2cdba"
       - name: "Login to GitHub Container Registry"
         if: "github.event_name != 'pull_request'"
-        uses: "docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1"
+        uses: "docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef"
         with:
           registry: "ghcr.io"
           username: "${{ github.actor }}"
           password: "${{ secrets.GITHUB_TOKEN }}"
       - name: "Login to Docker Hub"
         if: "github.event_name != 'pull_request'"
-        uses: "docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1"
+        uses: "docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef"
         with:
           registry: "docker.io"
           username: "${{ secrets.DOCKERHUB_USERNAME }}"
@@ -217,7 +217,7 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        uses: "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444"
         with:
           node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
