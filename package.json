@@ -41,14 +41,14 @@
     "version": "sed -i \"s|Demergi ${npm_old_version:?}|Demergi ${npm_new_version:?}|g\" ./bin/*.js && git add -A"
   },
   "devDependencies": {
-    "@eslint/js": "~9.37.0",
-    "@yao-pkg/pkg": "~6.8.0",
-    "esbuild": "~0.25.10",
-    "eslint": "~9.37.0",
+    "@eslint/js": "~9.39.1",
+    "@yao-pkg/pkg": "~6.10.1",
+    "esbuild": "~0.27.0",
+    "eslint": "~9.39.1",
     "eslint-config-prettier": "~10.1.8",
-    "globals": "~16.4.0",
-    "nodemon": "~3.1.10",
+    "globals": "~16.5.0",
+    "nodemon": "~3.1.11",
     "npm-run-all2": "~8.0.4",
-    "prettier": "~3.6.2"
+    "prettier": "~3.7.3"
   }
 }
