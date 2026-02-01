@@ -21,9 +21,9 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f"
+        uses: "actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238"
         with:
           node-version: "lts/*"
           cache: "npm"
@@ -45,9 +45,9 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Use Node.js ${{ matrix.node_version }}"
-        uses: "actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f"
+        uses: "actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238"
         with:
           node-version: "${{ matrix.node_version }}"
           cache: "npm"
@@ -69,9 +69,9 @@ jobs:
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Use Bun ${{ matrix.bun_version }}"
-        uses: "oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76"
+        uses: "oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3"
         with:
           bun-version: "${{ matrix.bun_version }}"
       - name: "Install dependencies"
@@ -87,9 +87,9 @@ jobs:
       contents: "read"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f"
+        uses: "actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238"
         with:
           node-version: "lts/*"
           cache: "npm"
@@ -133,7 +133,7 @@ jobs:
             arch: "linux/arm64/v8"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Enable IPv6"
         uses: "hectorm/ghaction-ipv6-setup@48fda86ab22a4c1702aae6553016ceb7cdc490c4"
       - name: "Export runtime variables"
@@ -141,7 +141,7 @@ jobs:
       - name: "Set up Docker Buildx"
         uses: "hectorm/ghaction-docker-buildx-setup@fec3efdbb455c2aa58a4fbfd11a9853f5de2cdba"
       - name: "Build"
-        uses: "hectorm/ghaction-docker-buildx-build@c93d4a99aad23d7c6c25e1210e3700dcb7298830"
+        uses: "hectorm/ghaction-docker-buildx-build@cc28557c639a7ccb0dbe0d57a8afd6c381eb38f9"
         with:
           dockerfile: "${{ matrix.runtime.dockerfile }}"
           platforms: "${{ matrix.platform.arch }}"
@@ -158,21 +158,21 @@ jobs:
       packages: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Export runtime variables"
         uses: "hectorm/ghaction-runtime-export@c8ec870e62dd2ab91765f8a65e244c3ce842227c"
       - name: "Set up Docker Buildx"
         uses: "hectorm/ghaction-docker-buildx-setup@fec3efdbb455c2aa58a4fbfd11a9853f5de2cdba"
       - name: "Login to GitHub Container Registry"
         if: "github.event_name != 'pull_request'"
-        uses: "docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef"
+        uses: "docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9"
         with:
           registry: "ghcr.io"
           username: "${{ github.actor }}"
           password: "${{ secrets.GITHUB_TOKEN }}"
       - name: "Login to Docker Hub"
         if: "github.event_name != 'pull_request'"
-        uses: "docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef"
+        uses: "docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9"
         with:
           registry: "docker.io"
           username: "${{ secrets.DOCKERHUB_USERNAME }}"
@@ -190,7 +190,7 @@ jobs:
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{major}}
       - name: "Push"
-        uses: "hectorm/ghaction-docker-buildx-build@c93d4a99aad23d7c6c25e1210e3700dcb7298830"
+        uses: "hectorm/ghaction-docker-buildx-build@cc28557c639a7ccb0dbe0d57a8afd6c381eb38f9"
         with:
           dockerfile: "./Dockerfile"
           platforms: |
@@ -215,9 +215,9 @@ jobs:
       id-token: "write"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd"
       - name: "Use Node.js lts/*"
-        uses: "actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f"
+        uses: "actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238"
         with:
           node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
